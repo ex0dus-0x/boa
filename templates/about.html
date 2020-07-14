@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="col-md-12">
+    <h1>what's boa?</h1>
+    <br>
+    <p><b>boa</b> is a web-based automated reverse engineering platform that helps extrapolate original and readable Python source from a compiled and packed executables. It undergoes the following when an executable sample is processed through its pipeline:</p>
+    <br>
+    <pre>
+                   [ Initial Sanity Checks ]
+
+                             |
+                             |
+
+                   [ Executable Unpacking ]
+
+                             |
+                             |
+
+                   [ Bytecode Decompilation ]
+
+                             |
+                             |
+
+                    [ Bytecode Patching ]
+
+                             |
+                             |
+
+                  [ Recovered Python Source ]
+    </pre>
+    <br>
+    <p>At the current moment, <b>boa's</b> functionality is still being implemented. PE executables are currently only supported for unpacking and decompilation, and there is still very limited support for virtualization-based deobfucation.</p>
+    <br>
+    <h1>what can I use it to reverse?</h1>
+    <br>
+    <ul>
+        <li><b>closed black-box applications</b> for a security audit / bughunting</li>
+        <li><b>malware samples</b> that rely on a Python-based executable packer</li>
+        <li><b>ctf and wargame challenges</b></li>
+    </ul>
+    <br>
+    <h1>what can I do to contribute?</h1>
+    <br>
+</div>
+
+{% endblock %}
