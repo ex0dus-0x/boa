@@ -12,13 +12,32 @@
 | )___) )| (___) || )   ( |
 |/ \___/ (_______)|/     \|
     </pre>
-	<p><b>Executables Scanned:</b> 0{{ files_scanned }} <b>Source Files Recovered:</b> 0{{ source_file_recovered }} </p>
+    <p><b>Executables Scanned:</b> {{ files_scanned }} <b>Source Files Recovered:</b> {{ source_files_recovered }} <b>Security Threats Found:<b> {{ security_threats }} </p>
 	<hr>
-    <form class="text-center">
-        <input type="button" value="Select File">
+    <form class="text-center" action="http://localhost:5000/scan" method="POST" enctype="multipart/form-data" id="form">
+		{% with messages = get_flashed_messages() %}
+		  {% if messages %}
+			{% for message in messages %}
+            <p><b>{{ message }}</b></p>
+			{% endfor %}
+		  {% endif %}
+		{% endwith %}
+		<br>
+        <div class="upload-btn-wrapper text-center">
+            <button class="btn-custom">Select File</button>
+            <input type="file" name="file" id="file">
+        </div>
     </form>
     <br>
-    <p style="font-size: 8px;"><i>Only .exe files are supported for reversing at the moment.</i></p>
+    <p style="font-size: 8px; opacity: 0.6;"><i>Only .exe files are supported for reversing at the moment.</i></p>
 </div>
+{% endblock %}
 
+
+{% block scripts %}
+<script>
+	document.getElementById("file").onchange = function() {
+    	document.getElementById("form").submit();
+	};
+</script>
 {% endblock %}

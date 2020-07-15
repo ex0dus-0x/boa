@@ -71,8 +71,43 @@ input, select, textarea, textarea::-webkit-input-placeholder { text-indent: 0px;
 input[type=submit] { font-size: 12.5px; font-family: "Source Code Pro", monospace; line-height: 1.5; cursor: pointer; color: var(--link-color); background-color: var(--background-color); }
 input[type=submit]:hover { color: var(--background-color); background-color: var(--base-color); }
 
-input[type=button] { border: 1px dotted #fff; background-color: var(--background-color); color: #fff; padding: 0.2rem 0.2rem; }
-input[type=button]:hover { color: var(--background-color); background-color: var(--base-color); }
+/*
+input[type=submit] { border: 1px dotted #fff; background-color: var(--background-color); color: #fff; padding: 0.2rem 0.2rem; }
+input[type=submit]:hover { color: var(--background-color); background-color: var(--base-color); }
+*/
+
+.upload-btn-wrapper {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.btn-custom {
+  border: 1px dotted white;
+  border-radius: 4px;
+  background-color: transparent;
+  z-index: -1;
+  color: white;
+}
+
+.btn-custom:hover {
+  color: var(--background-color) !important;
+  background-color: var(--base-color);
+}
+
+
+.upload-btn-wrapper input[type=file] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}
+
+.upload-btn-wrapper input[type=file]:hover {
+  color: var(--background-color) !important;
+  background-color: var(--base-color) !important;
+}
+
 
 *:focus { outline: none; }
 

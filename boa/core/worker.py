@@ -23,6 +23,15 @@ class BoaWorker(object):
         self.checksum = ""
 
 
+    @staticmethod
+    def get_pyversion(filepath) -> str:
+        pass
+
+    @staticmethod
+    def get_packer(filepath) -> str:
+        pass
+
+
     def identify(self):
         pass
 

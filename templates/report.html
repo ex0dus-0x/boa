@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="col-md-12">
+    <h1>Scan Report</h1>
+    <hr>
+    <p><b>Name:</b></p>
+    <p><b>Scan UUID:</b> <code>123-456-789</code></p>
+    <p><b>SHA-2 Checksum:</b></p>
+    <p><b>Time Uploaded:</b></p>
+
+    <br>
+    <h2>Reverse Engineering Results</h2>
+    <hr>
+
+    <!-- Table -->
+	<table class="table">
+	  <tbody>
+		<tr>
+		  <td>Python Files Recovered</td>
+		  <td>100</td>
+		</tr>
+		<tr>
+		  <td>Dependencies Found:</td>
+		  <td>Thornton</td>
+		</tr>
+		<tr>
+		  <td>Larry</td>
+		  <td>the Bird</td>
+		</tr>
+	  </tbody>
+	</table>
+
+    <br>
+    <h2>Security Audit</h2>
+    <hr>
+
+    <!-- Dropdowns with issue name, severity, and shows patch when clicked -->
+
+</div>
+
+{% endblock %}
