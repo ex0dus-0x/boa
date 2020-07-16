@@ -70,12 +70,17 @@ def scan():
         # TODO: remove `not` once set
         if input_file and not utils.allowed_file(filename):
 
-            # check if file is safe
+            # retrieve a secure version of the file's name
             path = secure_filename(filename)
 
-            # create in upload directory and store
-            upload_path = os.path.join(app.config["UPLOAD_FOLDER"], path)
-            input_file.save(upload_path)
+            # create a new worker to interface file interaction
+            worker = BoaWorker(path)
+
+            # instantiate the workspace, and path back to workspace dir
+            ws_path = worker.init_workspace(app.config["UPLOAD_DIR"])
+
+            # save file to workspace path in upload directory
+            input_file.save(ws_path)
             return redirect(request.url)
 
         flash("Filetype not allowed!")

@@ -1,10 +1,12 @@
-# Editable Git install with no remote (boa==1.0)
--e /home/nemesis/Code/boa
 click==7.1.2
 Flask==1.1.2
+future==0.18.2
 gunicorn==20.0.4
 itsdangerous==1.1.0
 Jinja2==2.11.2
 MarkupSafe==1.1.1
+pefile==2019.4.18
+six==1.15.0
+unpy2exe==0.4
 Werkzeug==1.0.1
 yara==1.7.7
