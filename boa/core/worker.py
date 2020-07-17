@@ -5,6 +5,7 @@ worker.py
     Consumes a target, reads it from a mounted storage system, and
 
 """
+import os
 import uuid
 
 import boa.core.unpack
@@ -19,8 +20,15 @@ class BoaWorker(object):
     reverse engineering on the given application.
     """
 
-    @staticmethod
-    def init_workspace(root: str, filename: str) -> str:
+
+    def __init__(self, filename: str):
+        self.name = filename
+        self.timestamp = ""
+        self.file_checksum = ""
+        self.uuid = uuid.uuid1()
+
+
+    def init_workspace(self, root: str) -> str:
         """
         Given an input sample to analyze, create a workspace surrounding it with the
         following structure:
@@ -31,15 +39,24 @@ class BoaWorker(object):
             - recovered/
         """
 
-    def __init__(self, root: str, name: str):
+        # construct the absolute path to store workspace
+        self.workspace = os.path.join(root, self.name + "_analyzed")
 
-        # simple metadata for identification
-        self.name = name
-        self.file_checksum = ""
-        self.uuid = uuid.uuid1()
+        # if already analyzed before, return path without reinstantiating
+        if os.path.exists(self.workspace):
+            return os.path.join(self.workspace, self.name)
 
-        # initialize the workspace
-        self.ws_path = BoaWorker.init_workspace(root, self.name)
+        # create the directory if it doesn't exist
+        os.mkdir(self.workspace)
+
+        # create its underlying components
+        os.mkdir(os.path.join(self.workspace, "unpacked"))
+        os.mkdir(os.path.join(self.workspace, "recovered"))
+
+        # write empty configuration file with stats
+
+        # return the name of the workspace plus binary for user to interact with
+        return os.path.join(self.workspace, self.name)
 
 
     @staticmethod
@@ -52,5 +69,3 @@ class BoaWorker(object):
 
     def identify(self):
         pass
-
-

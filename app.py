@@ -10,17 +10,22 @@ app.py
 import os
 import json
 import flask
+import flask_socketio as sio
 
 import boa.config as config
 import boa.utils as utils
+import boa.core.worker as worker
 
-from werkzeug.utils import secure_filename
 from flask import redirect, render_template, request, flash
+from werkzeug.utils import secure_filename
 
 # initialize the Flask application with proper configuration
 app = flask.Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(12)
 app.config.from_object("boa.config")
+
+# initialize Socket.IO interface
+socketio = sio.SocketIO(app)
 
 # create directory to store executable artifacts and workspaces
 if not os.path.exists(config.UPLOAD_FOLDER):
@@ -74,13 +79,15 @@ def scan():
             path = secure_filename(filename)
 
             # create a new worker to interface file interaction
-            worker = BoaWorker(path)
+            w = worker.BoaWorker(filename)
 
             # instantiate the workspace, and path back to workspace dir
-            ws_path = worker.init_workspace(app.config["UPLOAD_DIR"])
+            ws_path = w.init_workspace(app.config["UPLOAD_FOLDER"])
 
             # save file to workspace path in upload directory
             input_file.save(ws_path)
+
+            flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
 
         flash("Filetype not allowed!")
@@ -91,6 +98,14 @@ def scan():
     return render_template("scan.html",
             files_scanned=files_scanned,
             source_files_recovered=source_files_recovered)
+
+#============================
+# Socket.io Handlers for Scan
+#============================
+
+@socketio.on("identify")
+def on_identify(data):
+    pass
 
 #=======================
 # Dynamic Content Routes
@@ -125,4 +140,4 @@ def api_scan():
     pass
 
 if __name__ == "__main__":
-    app.run(use_reloader=True, host="0.0.0.0")
+    socketio.run(app, use_reloader=True, host="0.0.0.0")
