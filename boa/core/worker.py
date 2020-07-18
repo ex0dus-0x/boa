@@ -7,31 +7,35 @@ worker.py
 """
 import os
 import uuid
+import flask_socketio as sio
 
 import boa.core.unpack
 
-class WorkerException(Exception):
-    pass
 
-
-class BoaWorker(object):
+class BoaWorker(sio.Namespace):
     """
-    Represents a worker that encapsulates the functionality of performing static analysis and
-    reverse engineering on the given application.
+    Represents a stateful worker that consumes a checked Python-compiled executable path,
+    instantiates a workspace, performs the necessary analysis workflow and implements handlers
+    for WebSocket connections requesting functionality.
     """
 
-
-    def __init__(self, filename: str):
+    def __init__(self, root: str, filename: str) -> None:
         self.name = filename
         self.timestamp = ""
         self.file_checksum = ""
         self.uuid = uuid.uuid1()
 
+        # initialize workspace and set path
+        self.path = BoaWorker.init_workspace(root, filename)
 
-    def init_workspace(self, root: str) -> str:
+        # initialize base object with no namespace identifier
+        super().__init__()
+
+
+    @staticmethod
+    def init_workspace(root: str, filename: str) -> str:
         """
-        Given an input sample to analyze, create a workspace surrounding it with the
-        following structure:
+        Given an input sample to analyze, create a workspace with the following structure:
 
         dir_name/
             - config.json
@@ -39,33 +43,50 @@ class BoaWorker(object):
             - recovered/
         """
 
-        # construct the absolute path to store workspace
-        self.workspace = os.path.join(root, self.name + "_analyzed")
+        # construct the path to the workspace directory, ie `artifacts/File.exe_analyzed`
+        workspace = os.path.join(root, filename + "_analyzed")
 
-        # if already analyzed before, return path without reinstantiating
-        if os.path.exists(self.workspace):
-            return os.path.join(self.workspace, self.name)
+        # if already analyzed before, return path without recreating workspace
+        # TODO: useful for testing, remove after
+        if os.path.exists(workspace):
+            return os.path.join(workspace, filename)
 
         # create the directory if it doesn't exist
-        os.mkdir(self.workspace)
+        os.mkdir(workspace)
 
         # create its underlying components
-        os.mkdir(os.path.join(self.workspace, "unpacked"))
-        os.mkdir(os.path.join(self.workspace, "recovered"))
+        os.mkdir(os.path.join(workspace, "unpacked"))
+        os.mkdir(os.path.join(workspace, "recovered"))
 
-        # write empty configuration file with stats
+        # create a metadata.json file
+        os.mknod(os.path.join(workspace, "metadata.json"))
 
         # return the name of the workspace plus binary for user to interact with
-        return os.path.join(self.workspace, self.name)
+        return os.path.join(workspace, filename)
 
 
-    @staticmethod
-    def get_pyversion(filepath) -> str:
-        pass
+    #============================
+    # Socket.io Channel Callbacks
+    #============================
 
-    @staticmethod
-    def get_packer(filepath) -> str:
-        pass
+    def on_identify(self):
+        """
+        Server-side message handler when requested to parse out file information from the
+        filename stored
+        """
+        self.emit("identify_reply", { "is_malware": False })
 
-    def identify(self):
+
+    def on_unpack(self):
+        """
+        Server-side message handler to call unpacker routine against the executable stored
+        in the workspace.
+        """
+        self.emit("unpack_reply")
+
+
+    def on_finalize(self):
+        """
+        Finalizes the analysis execution, write all results back into config.json
+        """
         pass

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-app.py
+manager.py
 
     Main web application service for handling all routes and content delivery for the boa service.
     Built in Flask, it contains all the static and dynamic content routes, as well as API endpoints
@@ -11,13 +11,13 @@ import os
 import json
 import flask
 import flask_socketio as sio
+import werkzeug
 
 import boa.config as config
 import boa.utils as utils
 import boa.core.worker as worker
 
 from flask import redirect, render_template, request, flash
-from werkzeug.utils import secure_filename
 
 # initialize the Flask application with proper configuration
 app = flask.Flask(__name__, template_folder="templates")
@@ -27,9 +27,12 @@ app.config.from_object("boa.config")
 # initialize Socket.IO interface
 socketio = sio.SocketIO(app)
 
-# create directory to store executable artifacts and workspaces
+# create directory to store executable artifacts and workspaces, and staging directory
+# for binaries the need to be sanity-checked for Python-based packing.
+# TODO: option to disable if configured to use S3
 if not os.path.exists(config.UPLOAD_FOLDER):
      os.mkdir(config.UPLOAD_FOLDER)
+     os.mkdir(os.path.join(config.UPLOAD_FOLDER), "staging")
 
 #======================
 # Static Content Routes
@@ -75,17 +78,19 @@ def scan():
         # TODO: remove `not` once set
         if input_file and not utils.allowed_file(filename):
 
+            # TODO: check against database to see if sample exists, and
+            # redirect to report if found
+
             # retrieve a secure version of the file's name
-            path = secure_filename(filename)
+            path = werkzeug.utils.secure_filename(filename)
 
-            # create a new worker to interface file interaction
-            w = worker.BoaWorker(filename)
+            # instantiate the workspace, and register namespace with socketio
+            w = worker.BoaWorker(app.config["UPLOAD_FOLDER"], filename)
 
-            # instantiate the workspace, and path back to workspace dir
-            ws_path = w.init_workspace(app.config["UPLOAD_FOLDER"])
+            socketio.on_namespace(w)
 
             # save file to workspace path in upload directory
-            input_file.save(ws_path)
+            input_file.save(filename)
 
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
@@ -99,13 +104,6 @@ def scan():
             files_scanned=files_scanned,
             source_files_recovered=source_files_recovered)
 
-#============================
-# Socket.io Handlers for Scan
-#============================
-
-@socketio.on("identify")
-def on_identify(data):
-    pass
 
 #=======================
 # Dynamic Content Routes

@@ -18,7 +18,7 @@
 		{% with messages = get_flashed_messages() %}
 		  {% if messages %}
 			{% for message in messages %}
-            <p><b>{{ message }}</b></p>
+            <p id="message"><b>{{ message }}</b></p>
 			{% endfor %}
 		  {% endif %}
 		{% endwith %}
@@ -49,32 +49,31 @@
 {% block scripts %}
 <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 <script type="text/javascript" charset="utf-8">
-
-    // automatically submit after uploading a form
-    $("#file").change(function() {
-        $("#form").submit();
-    });
-
     $(document).ready(function() {
+
+        // automatically submit after uploading a form
+        $("#file").change(function() {
+            $("#form").submit();
+        });
 
         // connect to the socket.io server
         var socket = io.connect("http://" + document.domain + ":" + location.port);
 
-        // once a file is uploaded, also trigger this specific function that executes the communication with the websockets
-        // server in order to start the analysis of the file. This will instantiate the analysis pipeline by first identifying
-        // the file and parsing the information.
-        function startAnalysis(name) {
-            socket.emit("identify", { name: name });
+        // once file is uploaded and page reloaded, check if message has changed, and if so,
+        // start the analysis workflow!
+        if ($("#message").text().indexOf("Successfully uploaded!") > -1) {
+            console.log("Starting analysis...");
+            socket.emit("identify");
         }
 
         // message handler to handle response from service after identifying basic file info
         socket.on("identify_reply", function(msg) {
             console.log(msg);
-            // TODO: start appending to #alerts
-            socket.emit("unpack")
+            socket.emit("unpack");
         });
 
-        // message handler to handle service after it has appropriately unpacked the file and parsed out the dependencies and bytecode source.
+        // message handler to handle service after it has appropriately unpacked the file and
+        // parsed out the dependencies and bytecode source.
         socket.on("unpack_reply", function(msg) {
             console.log(msg);
             socket.emit("decompile")
