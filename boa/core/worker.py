@@ -9,7 +9,10 @@ import os
 import uuid
 import flask_socketio as sio
 
-import boa.core.unpack
+import boa.core.unpack as unpack
+
+class WorkerException(Exception):
+    pass
 
 
 class BoaWorker(sio.Namespace):
@@ -19,8 +22,17 @@ class BoaWorker(sio.Namespace):
     for WebSocket connections requesting functionality.
     """
 
-    def __init__(self, root: str, filename: str) -> None:
-        self.name = filename
+
+    def __init__(self, name, filecontent) -> None:
+
+        # sanity-check: check if valid PE file or throw exception
+        if not unpack.is_valid_pe(filecontent):
+            raise WorkerException("Malformed PE file! Cannot scan.")
+
+        # sanity-check: get the origina packer or throw exception
+        if unpack.is
+
+        self.name = name
         self.timestamp = ""
         self.file_checksum = ""
         self.uuid = uuid.uuid1()
@@ -32,8 +44,7 @@ class BoaWorker(sio.Namespace):
         super().__init__()
 
 
-    @staticmethod
-    def init_workspace(root: str, filename: str) -> str:
+    def init_workspace(self, root: str, filename: str) -> str:
         """
         Given an input sample to analyze, create a workspace with the following structure:
 

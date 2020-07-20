@@ -8,6 +8,7 @@ manager.py
 
 """
 import os
+import shutil
 import json
 import flask
 import flask_socketio as sio
@@ -15,9 +16,10 @@ import werkzeug
 
 import boa.config as config
 import boa.utils as utils
-import boa.core.worker as worker
 
 from flask import redirect, render_template, request, flash
+
+from boa.core import worker, unpack
 
 # initialize the Flask application with proper configuration
 app = flask.Flask(__name__, template_folder="templates")
@@ -27,12 +29,15 @@ app.config.from_object("boa.config")
 # initialize Socket.IO interface
 socketio = sio.SocketIO(app)
 
+# reusable constants
+STAGING_DIR = os.path.join(config.UPLOAD_FOLDER, "staging")
+
 # create directory to store executable artifacts and workspaces, and staging directory
 # for binaries the need to be sanity-checked for Python-based packing.
 # TODO: option to disable if configured to use S3
 if not os.path.exists(config.UPLOAD_FOLDER):
      os.mkdir(config.UPLOAD_FOLDER)
-     os.mkdir(os.path.join(config.UPLOAD_FOLDER), "staging")
+     os.mkdir(STAGING_DIR)
 
 #======================
 # Static Content Routes
@@ -84,13 +89,19 @@ def scan():
             # retrieve a secure version of the file's name
             path = werkzeug.utils.secure_filename(filename)
 
+            # TODO: rudimentary malware check with Virustotal
+
             # instantiate the workspace, and register namespace with socketio
-            w = worker.BoaWorker(app.config["UPLOAD_FOLDER"], filename)
+            try:
+                w = worker.BoaWorker(input_file)
+            except worker.WorkerException as e:
+                flash(e)
+                return redirect(request.url)
 
             socketio.on_namespace(w)
 
-            # save file to workspace path in upload directory
-            input_file.save(filename)
+            # instantiate the rest of the workspace
+            w.init_workspace(app.config["UPLOAD_FOLDER"], filename)
 
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
@@ -114,7 +125,9 @@ def report(uuid):
     """
     Dynamically generates a presentable report for consumption by the user for the binary parsed out.
     """
+    # TODO: given a uuid, find entry in database, and return dynamic content
     return render_template("report.html")
+
 
 #==================
 # API Functionality

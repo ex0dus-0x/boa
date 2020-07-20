@@ -14,7 +14,7 @@
     </pre>
     <p><b>Executables Scanned:</b> {{ files_scanned }} <b>Source Files Recovered:</b> {{ source_files_recovered }} <b>Security Threats Found:<b> {{ security_threats }} </p>
 	<hr>
-    <form class="text-center" action="http://localhost:5000/scan" method="POST" enctype="multipart/form-data" id="form">
+    <form class="text-center" action="/scan" method="POST" enctype="multipart/form-data" id="form">
 		{% with messages = get_flashed_messages() %}
 		  {% if messages %}
 			{% for message in messages %}

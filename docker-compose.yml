@@ -11,15 +11,3 @@ services:
     command: gunicorn app:app
     volumes:
       - .:/usr/src/boa
-    depends_on:
-      - redis
-
-  redis:
-    image: redis:5.0.7-alpine
-
-  dashboard:
-    image: eoranged/rq-dashboard
-    ports:
-      - 9181:9181
-    depends_on:
-      - redis
