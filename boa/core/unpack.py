@@ -9,7 +9,7 @@ def is_py2exe(binary, rule_path="rules/py2exe.yar"):
     """
     Uses a YARA-based check to determine if the file is compiled with Py2Exe
     """
-    with open(rule_path, "w") as fd:
+    with open(rule_path, "r") as fd:
         content = fd.read()
 
     # compile the rule and check for a match
@@ -24,7 +24,7 @@ def is_pyinstaller(binary, rule_path="rules/pyinstaller.yar"):
     """
     Uses a YARA-based check to determien if the fiel is compiled with PyInstaller
     """
-    with open(rule_path, "w") as fd:
+    with open(rule_path, "r") as fd:
         content = fd.read()
 
     # compile the rule and check for a match

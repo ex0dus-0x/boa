@@ -29,15 +29,10 @@ app.config.from_object("boa.config")
 # initialize Socket.IO interface
 socketio = sio.SocketIO(app)
 
-# reusable constants
-STAGING_DIR = os.path.join(config.UPLOAD_FOLDER, "staging")
-
-# create directory to store executable artifacts and workspaces, and staging directory
-# for binaries the need to be sanity-checked for Python-based packing.
+# create directory to store executable artifacts and workspaces
 # TODO: option to disable if configured to use S3
 if not os.path.exists(config.UPLOAD_FOLDER):
      os.mkdir(config.UPLOAD_FOLDER)
-     os.mkdir(STAGING_DIR)
 
 #======================
 # Static Content Routes
@@ -93,15 +88,13 @@ def scan():
 
             # instantiate the workspace, and register namespace with socketio
             try:
-                w = worker.BoaWorker(input_file)
+                w = worker.BoaWorker(filename, app.config["UPLOAD_FOLDER"], input_file)
             except worker.WorkerException as e:
-                flash(e)
+                flash(str(e))
                 return redirect(request.url)
 
+            # register the namespace for socket communication once instantiated
             socketio.on_namespace(w)
-
-            # instantiate the rest of the workspace
-            w.init_workspace(app.config["UPLOAD_FOLDER"], filename)
 
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)

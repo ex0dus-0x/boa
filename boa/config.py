@@ -14,5 +14,5 @@ API_VERSION = "v1"
 
 # File upload configurations
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "artifacts")
-ALLOWED_EXTENSIONS = ["exe"]
+ALLOWED_EXTENSIONS = ["exe", "pe"]
 MAX_CONTENT_LENGTH = 1024 ** 3

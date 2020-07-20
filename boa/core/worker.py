@@ -5,6 +5,7 @@ worker.py
     Consumes a target, reads it from a mounted storage system, and
 
 """
+import io
 import os
 import uuid
 import flask_socketio as sio
@@ -23,28 +24,40 @@ class BoaWorker(sio.Namespace):
     """
 
 
-    def __init__(self, name, filecontent) -> None:
+    def __init__(self, name, root, input_file) -> None:
 
-        # sanity-check: check if valid PE file or throw exception
-        if not unpack.is_valid_pe(filecontent):
-            raise WorkerException("Malformed PE file! Cannot scan.")
+        # first save the file to a temporary in-memory file object for sanity-checks
+        # before even bothering storing to a workspace
+        filecontent = io.BytesIO()
+        input_file.save(filecontent)
 
-        # sanity-check: get the origina packer or throw exception
-        if unpack.is
+        # sanity-check: get the original packer, or cleanup and throw exception
+        if unpack.is_py2exe(filecontent.read()):
+            self.packer = "py2exe"
+        elif unpack.is_pyinstaller(filecontent.read()):
+            self.packer = "pyinstaller"
+        else:
+            filecontent.close()
+            raise WorkerException("Unable to determine the Python-based packer used!")
 
+        # if a valid executable, create some valid metadata for it
         self.name = name
         self.timestamp = ""
         self.file_checksum = ""
         self.uuid = uuid.uuid1()
 
-        # initialize workspace and set path
-        self.path = BoaWorker.init_workspace(root, filename)
+        # instantiate new workspace directory
+        self.workspace = BoaWorker.init_workspace(root, self.name)
+
+        # also include path to workspace and binary for convenience
+        self.path = os.path.join(self.workspace, self.name)
 
         # initialize base object with no namespace identifier
         super().__init__()
 
 
-    def init_workspace(self, root: str, filename: str) -> str:
+    @staticmethod
+    def init_workspace(root: str, name: str) -> str:
         """
         Given an input sample to analyze, create a workspace with the following structure:
 
@@ -55,12 +68,12 @@ class BoaWorker(sio.Namespace):
         """
 
         # construct the path to the workspace directory, ie `artifacts/File.exe_analyzed`
-        workspace = os.path.join(root, filename + "_analyzed")
+        workspace = os.path.join(root, name + "_analyzed")
 
         # if already analyzed before, return path without recreating workspace
         # TODO: useful for testing, remove after
         if os.path.exists(workspace):
-            return os.path.join(workspace, filename)
+            return workspace
 
         # create the directory if it doesn't exist
         os.mkdir(workspace)
@@ -73,7 +86,7 @@ class BoaWorker(sio.Namespace):
         os.mknod(os.path.join(workspace, "metadata.json"))
 
         # return the name of the workspace plus binary for user to interact with
-        return os.path.join(workspace, filename)
+        return workspace
 
 
     #============================
