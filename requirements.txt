@@ -1,9 +1,9 @@
--e git+git@github.com:ex0dus-0x/boa.git@8be3ba205704670d31ed49d818bbeb2784714bab#egg=boa
 click==7.1.2
 dnspython==1.16.0
 eventlet==0.25.2
 Flask==1.1.2
 Flask-SocketIO==4.3.1
+Flask-SQLAlchemy==2.4.4
 future==0.18.2
 greenlet==0.4.16
 gunicorn==20.0.4
@@ -15,6 +15,7 @@ pefile==2019.4.18
 python-engineio==3.13.1
 python-socketio==4.6.0
 six==1.15.0
+SQLAlchemy==1.3.18
 unpy2exe==0.4
 Werkzeug==1.0.1
-yara==1.7.7
+yara-python==4.0.2

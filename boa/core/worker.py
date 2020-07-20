@@ -8,11 +8,14 @@ worker.py
 import io
 import os
 import uuid
+import datetime
+import hashlib
 import flask_socketio as sio
 
 import boa.core.unpack as unpack
 
 class WorkerException(Exception):
+    """ Exception that gets raised with a displayed error message when worker fails """
     pass
 
 
@@ -23,34 +26,38 @@ class BoaWorker(sio.Namespace):
     for WebSocket connections requesting functionality.
     """
 
-
     def __init__(self, name, root, input_file) -> None:
 
         # first save the file to a temporary in-memory file object for sanity-checks
         # before even bothering storing to a workspace
-        filecontent = io.BytesIO()
-        input_file.save(filecontent)
+        filecontent = input_file.read()
 
         # sanity-check: get the original packer, or cleanup and throw exception
-        if unpack.is_py2exe(filecontent.read()):
+        if unpack.is_py2exe(filecontent):
             self.packer = "py2exe"
-        elif unpack.is_pyinstaller(filecontent.read()):
+        elif unpack.is_pyinstaller(filecontent):
             self.packer = "pyinstaller"
         else:
             filecontent.close()
             raise WorkerException("Unable to determine the Python-based packer used!")
 
-        # if a valid executable, create some valid metadata for it
+        # if a valid executable, then start creating valid metadata for it
         self.name = name
-        self.timestamp = ""
-        self.file_checksum = ""
+        self.timestamp = datetime.datetime.utcnow
         self.uuid = uuid.uuid1()
+
+        # store file's checksum to check against for file uniquity
+        hasher = hashlib.sha256()
+        for block in iter(lambda: input_file.read(4096), b""):
+            hasher.update(block)
+        self.checksum = hasher.hexdigest()
 
         # instantiate new workspace directory
         self.workspace = BoaWorker.init_workspace(root, self.name)
 
-        # also include path to workspace and binary for convenience
+        # include path to binary in workspace as well, and save
         self.path = os.path.join(self.workspace, self.name)
+        input_file.save(self.path)
 
         # initialize base object with no namespace identifier
         super().__init__()
