@@ -14,6 +14,10 @@
     </pre>
     <p><b>Executables Scanned:</b> {{ files_scanned }} <b>Source Files Recovered:</b> {{ source_files_recovered }} <b>Security Threats Found:<b> {{ security_threats }} </p>
 	<hr>
+    <span id="progress">
+        <!-- Content gets dynamically appended and updated here -->
+    </span>
+    <br>
     <form class="text-center" action="/scan" method="POST" enctype="multipart/form-data" id="form">
 		{% with messages = get_flashed_messages() %}
 		  {% if messages %}
@@ -31,17 +35,9 @@
     <br>
     <p style="font-size: 8px; opacity: 0.6;"><i>Only .exe files are supported for reversing at the moment.</i></p>
     <br>
-    <div class="progress">
-          <div class="progress-bar progress-bar-striped bg-white" role="progressbar" style="width: 50%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+    <div id="alerts">
+        <!-- Content gets dynamically appended and updated here -->
     </div>
-    <br>
-	<div id="alerts">
-	  <div class="alert alert-dark" role="alert">
-          <div class="col-md-3 text-left">
-              <p style="font-size: 10px;">Basic File Check</p>
-          </div>
-	  </div>
-	</div>
 </div>
 {% endblock %}
 
@@ -49,6 +45,7 @@
 {% block scripts %}
 <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 <script type="text/javascript" charset="utf-8">
+
     $(document).ready(function() {
 
         // automatically submit after uploading a form
@@ -56,20 +53,74 @@
             $("#form").submit();
         });
 
+
+		// convenient helper to create or update a loading bar during the scan
+        function loadingBar(value) {
+
+            // if the loading bar exists, update its values
+			if ($("#bar").length) {
+				$("#bar").css("width", value + "%");
+				$("#bar").attr("aria-valuenow", value);
+
+            // otherwise create the bar
+			} else {
+                bar_html = `
+                <div class="progress" id="progress">
+                    <div class="progress-bar progress-bar-striped bg-white" role="progressbar" style="width: ` + value +
+                `%" aria-valuenow="` + value +
+                `" aria-valuemin="0" aria-valuemax="100" id="bar">
+                    </div>
+                </div>
+                <br>
+                `
+                $("#progress").append(bar_html)
+			}
+        }
+
+
+        // convenient helper to help create a new alert with a key and corresponding value
+        function newAlert(key, value) {
+            // TODO: handle if value has different types
+            $("#alerts").append(`
+            <div class="alert alert-dark" role="alert">
+                <span class="text-right" style="font-size: 10px;"><b>
+                ` + key + `</b></span>
+                <span class="text-right" style="font-size: 10px;">
+                ` + value + `
+                </span>
+              </div>
+            </div>
+            <br>
+            `);
+        }
+
+
         // connect to the socket.io server
         var socket = io.connect("http://" + document.domain + ":" + location.port);
 
         // once file is uploaded and page reloaded, check if message has changed, and if so,
         // start the analysis workflow!
+        // TODO: maybe kinda hacky, is there a better ay?
         if ($("#message").text().indexOf("Successfully uploaded!") > -1) {
-            console.log("Starting analysis...");
+            // show results of basic file check
+			loadingBar(0);
             socket.emit("identify");
         }
 
         // message handler to handle response from service after identifying basic file info
-        socket.on("identify_reply", function(msg) {
-            console.log(msg);
-            socket.emit("unpack");
+        socket.on("identify_reply", function(resp) {
+            // create a new status loading bar
+			loadingBar(25);
+
+            // create new alert for file checks
+            newAlert("Basic File Check", resp["packer"])
+
+            // if no errors, continue with unpacking
+            if (resp["continue"] != false) {
+                socket.emit("unpack");
+            } else {
+
+            }
         });
 
         // message handler to handle service after it has appropriately unpacked the file and

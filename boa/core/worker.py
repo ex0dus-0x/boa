@@ -28,8 +28,7 @@ class BoaWorker(sio.Namespace):
 
     def __init__(self, name, root, input_file) -> None:
 
-        # first save the file to a temporary in-memory file object for sanity-checks
-        # before even bothering storing to a workspace
+        # read content in-memory before storing to path
         filecontent = input_file.read()
 
         # sanity-check: get the original packer, or cleanup and throw exception
@@ -38,7 +37,6 @@ class BoaWorker(sio.Namespace):
         elif unpack.is_pyinstaller(filecontent):
             self.packer = "pyinstaller"
         else:
-            filecontent.close()
             raise WorkerException("Unable to determine the Python-based packer used!")
 
         # if a valid executable, then start creating valid metadata for it
