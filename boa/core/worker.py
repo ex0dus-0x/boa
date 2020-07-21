@@ -5,9 +5,11 @@ worker.py
     Consumes a target, reads it from a mounted storage system, and
 
 """
+import time
 import io
 import os
 import uuid
+import pefile
 import datetime
 import hashlib
 import flask_socketio as sio
@@ -28,16 +30,15 @@ class BoaWorker(sio.Namespace):
 
     def __init__(self, name, root, input_file) -> None:
 
-        # read content in-memory before storing to path
+        # sanity-check: do not instantiate if PE is malformed
         filecontent = input_file.read()
+        try:
+            _ = pefile.PE(data=filecontent)
+        except pefile.PEFormatError:
+            raise WorkerException("Malformed PE file! Cannot parse.")
 
-        # sanity-check: get the original packer, or cleanup and throw exception
-        if unpack.is_py2exe(filecontent):
-            self.packer = "py2exe"
-        elif unpack.is_pyinstaller(filecontent):
-            self.packer = "pyinstaller"
-        else:
-            raise WorkerException("Unable to determine the Python-based packer used!")
+        # store copy of file object in-memory for analysis workflow
+        self.filecontent = filecontent
 
         # if a valid executable, then start creating valid metadata for it
         self.name = name
@@ -100,10 +101,24 @@ class BoaWorker(sio.Namespace):
 
     def on_identify(self):
         """
-        Server-side message handler when requested to parse out file information from the
-        filename stored
+        Server-side message handler used to identify the packer for the specific exeutable
+        in context. If not failed, return error to stop analysis flow.
         """
-        self.emit("identify_reply", { "is_malware": False })
+
+        # identify the packer that was used to compile the binary
+        if unpack.is_py2exe(self.filecontent):
+            self.packer = "py2exe"
+        elif unpack.is_pyinstaller(self.filecontent):
+            self.packer = "pyinstaller"
+
+        # delete workspace created since the packer is unknown
+        else:
+            self.packer = None
+            shutil.rmtree(self.workspace)
+
+        # flag is set to continue execution if packer is identified
+        cont = self.packer != None
+        self.emit("identify_reply", { "packer": self.packer, "continue": cont })
 
 
     def on_unpack(self):
@@ -111,7 +126,8 @@ class BoaWorker(sio.Namespace):
         Server-side message handler to call unpacker routine against the executable stored
         in the workspace.
         """
-        self.emit("unpack_reply")
+        time.sleep(5)
+        self.emit("unpack_reply", { "continue": False })
 
 
     def on_finalize(self):

@@ -15,7 +15,7 @@
     <p><b>Executables Scanned:</b> {{ files_scanned }} <b>Source Files Recovered:</b> {{ source_files_recovered }} <b>Security Threats Found:<b> {{ security_threats }} </p>
 	<hr>
     <span id="progress">
-        <!-- Content gets dynamically appended and updated here -->
+        <!-- Any changes in progress will be represented by an animated loading bar -->
     </span>
     <br>
     <form class="text-center" action="/scan" method="POST" enctype="multipart/form-data" id="form">
@@ -35,8 +35,11 @@
     <br>
     <p style="font-size: 8px; opacity: 0.6;"><i>Only .exe files are supported for reversing at the moment.</i></p>
     <br>
+    <div id="statustable">
+        <!-- As analysis occurs, the status table will dynamically be updated here -->
+	</div>
     <div id="alerts">
-        <!-- Content gets dynamically appended and updated here -->
+        <!-- Any results from execution are dynamically appended to this specific div -->
     </div>
 </div>
 {% endblock %}
@@ -52,6 +55,41 @@
         $("#file").change(function() {
             $("#form").submit();
         });
+
+
+        // initializes a new status table to display results in
+        function initTable() {
+            $("#statustable").append(`
+            <br>
+            <table id="table" class="table order-list">
+			    <thead>
+				<tr>
+                    <td><p style="font-size: 10.5px;">Event</p></td>
+                    <td><p style="font-size: 10.5px;">Status</p></td>
+                    <td><p style="font-size: 10.5px;">Output</p></td>
+				</tr>
+			    </thead>
+			    <tbody>
+				    <tr>
+				    </tr>
+			    </tbody>
+		    </table>`)
+        }
+
+        // given an initialized status table, append a new row with a key and value
+        function updateTable(key, stat, msg) {
+            var newRow = $("<tr>");
+            var cols = "";
+            cols += "<td><p style='font-size: 8.5px; font-weight: normal;'>" + key + "</p></td>"
+            if (stat) {
+                cols += "<td>✔️</td>"
+            } else {
+                cols += "<td>X</td>"
+            }
+            cols += "<td><p style='font-size: 8.5px; font-weight: normal;'>" + msg + "</p></td>"
+            newRow.append(cols)
+            $("table.order-list").append(newRow);
+        }
 
 
 		// convenient helper to create or update a loading bar during the scan
@@ -78,17 +116,11 @@
         }
 
 
-        // convenient helper to help create a new alert with a key and corresponding value
-        function newAlert(key, value) {
-            // TODO: handle if value has different types
+        // convenient helper to help create a new alert with a message
+        function newAlert(msg) {
             $("#alerts").append(`
             <div class="alert alert-dark" role="alert">
-                <span class="text-right" style="font-size: 10px;"><b>
-                ` + key + `</b></span>
-                <span class="text-right" style="font-size: 10px;">
-                ` + value + `
-                </span>
-              </div>
+                <p style="font-size: 10.5px;">` + msg + `</p>
             </div>
             <br>
             `);
@@ -99,35 +131,57 @@
         var socket = io.connect("http://" + document.domain + ":" + location.port);
 
         // once file is uploaded and page reloaded, check if message has changed, and if so,
-        // start the analysis workflow!
+        // create a loading bar and start the analysis workflow!
         // TODO: maybe kinda hacky, is there a better ay?
         if ($("#message").text().indexOf("Successfully uploaded!") > -1) {
-            // show results of basic file check
 			loadingBar(0);
+            initTable();
             socket.emit("identify");
         }
 
         // message handler to handle response from service after identifying basic file info
         socket.on("identify_reply", function(resp) {
-            // create a new status loading bar
-			loadingBar(25);
-
-            // create new alert for file checks
-            newAlert("Basic File Check", resp["packer"])
-
-            // if no errors, continue with unpacking
+            var header = "Packer Detection";
             if (resp["continue"] != false) {
+                // update the loading bar
+			    loadingBar(25);
+
+                // append a new row to the status table
+                updateTable(header, true, resp["packer"]);
+
+                // continue execution and actually unpack
                 socket.emit("unpack");
             } else {
-
+                updateTable(header, false, "Unknown Packer");
+                newAlert("Cannot continue execution, unable to identify packer.");
             }
         });
 
         // message handler to handle service after it has appropriately unpacked the file and
         // parsed out the dependencies and bytecode source.
-        socket.on("unpack_reply", function(msg) {
-            console.log(msg);
-            socket.emit("decompile")
+        socket.on("unpack_reply", function(resp) {
+            var header = "Bytecode Unpacking";
+            if (resp["continue"]) {
+                loadingBar(50);
+                updateTable(header, false, "Not supported yet!");
+                socket.emit("decompile");
+            } else {
+                updateTable(header, false, "Not supported yet!");
+                newAlert("Aight we out");
+            }
+        });
+
+
+        socket.on("decompile_reply", function(msg) {
+            var header = "Bytecode Decompilation";
+            if (resp["continue"]) {
+                loadingBar(75);
+                updateTable(header, false, "Not supported yet!");
+                socket.emit("finalize");
+            } else {
+                updateTable(header, false, "Not supported yet!");
+                newAlert("Aight we out");
+            }
         });
     });
 </script>
