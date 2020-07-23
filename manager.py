@@ -5,8 +5,8 @@ manager.py
     Main web application service for handling all routes and content delivery for the boa service.
     Built in Flask, it contains all the static and dynamic content routes, as well as API endpoints
     that perform a bulk of the reverse engineering functionality.
-
 """
+
 import os
 import shutil
 import json
@@ -19,7 +19,7 @@ import boa.utils as utils
 
 from flask import redirect, render_template, request, flash
 
-from boa.core import worker, unpack
+from boa import worker
 
 # initialize the Flask application with proper configuration
 app = flask.Flask(__name__, template_folder="templates")

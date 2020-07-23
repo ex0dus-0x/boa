@@ -162,11 +162,16 @@
         socket.on("unpack_reply", function(resp) {
             var header = "Bytecode Unpacking";
             if (resp["continue"]) {
+                // update he loading bar
                 loadingBar(50);
+
+                // append a row with the number of decompilable bytecode files recovered
                 updateTable(header, false, "Not supported yet!");
+
+                // continue execution and start decompiling the relevant bytecode
                 socket.emit("decompile");
             } else {
-                updateTable(header, false, "Not supported yet!");
+                updateTable(header, false, resp["error"]);
                 newAlert("Aight we out");
             }
         });

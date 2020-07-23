@@ -9,12 +9,13 @@ import time
 import io
 import os
 import uuid
+import shutil
 import pefile
 import datetime
 import hashlib
 import flask_socketio as sio
 
-import boa.core.unpack as unpack
+import boa.unpack as unpack
 
 class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
@@ -37,9 +38,6 @@ class BoaWorker(sio.Namespace):
         except pefile.PEFormatError:
             raise WorkerException("Malformed PE file! Cannot parse.")
 
-        # store copy of file object in-memory for analysis workflow
-        self.filecontent = filecontent
-
         # if a valid executable, then start creating valid metadata for it
         self.name = name
         self.timestamp = datetime.datetime.utcnow
@@ -54,9 +52,15 @@ class BoaWorker(sio.Namespace):
         # instantiate new workspace directory
         self.workspace = BoaWorker.init_workspace(root, self.name)
 
-        # include path to binary in workspace as well, and save
+        # include path to binary in workspace as well
         self.path = os.path.join(self.workspace, self.name)
+
+        # move file pointer back to beginning, and save
+        input_file.stream.seek(0)
         input_file.save(self.path)
+
+        # stores any errors parsed out during execution
+        self.error = None
 
         # initialize base object with no namespace identifier
         super().__init__()
@@ -101,24 +105,29 @@ class BoaWorker(sio.Namespace):
 
     def on_identify(self):
         """
-        Server-side message handler used to identify the packer for the specific exeutable
-        in context. If not failed, return error to stop analysis flow.
+        Server-side message handler used to identify and instantiate the packer for the specific exeutable
+        in context. If parsing and instantiating failed, return error to stop analysis flow.
         """
 
-        # identify the packer that was used to compile the binary
-        if unpack.is_py2exe(self.filecontent):
-            self.packer = "py2exe"
-        elif unpack.is_pyinstaller(self.filecontent):
-            self.packer = "pyinstaller"
-
-        # delete workspace created since the packer is unknown
-        else:
+        # identify the packer that was used to compile the binary given a path,
+        # and error-handle appropriately by creating error if
+        try:
+            self.packer = unpack.get_packer(self.path)
+        except Exception as e:
             self.packer = None
+            self.error = str(e)
+
+        # delete workspace created if the packer is unknown
+        cont = self.packer != None
+        if not cont:
             shutil.rmtree(self.workspace)
 
-        # flag is set to continue execution if packer is identified
-        cont = self.packer != None
-        self.emit("identify_reply", { "packer": self.packer, "continue": cont })
+        # send back payload to UI with appropriate response
+        self.emit("identify_reply", {
+            "packer": str(self.packer),
+            "continue": cont,
+            "error": self.error
+        })
 
 
     def on_unpack(self):
@@ -126,8 +135,20 @@ class BoaWorker(sio.Namespace):
         Server-side message handler to call unpacker routine against the executable stored
         in the workspace.
         """
-        time.sleep(5)
-        self.emit("unpack_reply", { "continue": False })
+
+        # wait a bit and send back payload >:)
+        time.sleep(1.5)
+        self.emit("unpack_reply", { "continue": False, "error": self.error })
+
+
+    def on_decompile(self):
+        """
+        Server-side message handler to interface uncompyle6 to decompile the bytecode source that
+        has been recovered
+        """
+        error = "Unable to patch and decompile the bytecode"
+        cont = False
+        self.emit("decompile_reply", { "continue": cont, "error": error })
 
 
     def on_finalize(self):
