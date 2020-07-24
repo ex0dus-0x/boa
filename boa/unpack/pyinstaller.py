@@ -15,6 +15,9 @@ import types
 import uuid
 import struct
 import marshal
+import pathlib
+
+import boa.unpack
 
 
 class CTOCEntry:
@@ -43,12 +46,13 @@ class PyInstaller:
         self.file = open(path, 'rb')
         self.fileSize = os.stat(path).st_size
 
-        # parse out PyInstaller version
+        # try to figure out the version of Pyinstaller used
+        self.version = 0
+
+        # Check for pyinstaller 2.0 before bailing out
         self.file.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
         magicFromFile = self.file.read(len(self.MAGIC))
         if magicFromFile == self.MAGIC:
-
-            # set version as 2.0, and parse out CArchive cookie to get other info
             self.version = 20
             self.file.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
 
@@ -60,8 +64,6 @@ class PyInstaller:
         self.file.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
         magicFromFile = self.file.read(len(self.MAGIC))
         if magicFromFile == self.MAGIC:
-
-            # set version as 2.1+, and parse out CArchve cookie to get other info
             self.version = 21
             self.file.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
 
@@ -69,7 +71,7 @@ class PyInstaller:
             struct.unpack('!8siiii64s', self.file.read(self.PYINST21_COOKIE_SIZE))
 
         # if no version parsed out, return an exception
-        if not getattr(self, "version"):
+        if self.version == 0:
             raise Exception("Cannot determine PyInstaller version. Works with 2.0/2.1+.")
 
 
@@ -81,7 +83,7 @@ class PyInstaller:
         # Go to the table of contents
         self.file.seek(tocPos, os.SEEK_SET)
 
-        # Parse out table of contents
+        # Parse out all file entries for the table of contents
         self.tocList = []
         parsedLen = 0
         while parsedLen < tocSize:
@@ -111,17 +113,35 @@ class PyInstaller:
             parsedLen += entrySize
 
 
-    def unpack(self):
+        # other attributes to instantiate for unpacking
+        self.pyz_len = 0
+        self.bytecode_paths = []
+
+
+    def unpack(self, unpacked_dir):
         """
-        Given a parsed out table of contents
+        Given a parsed out table of contents, iterate over each file, read it from the
+        executable, and write it to the directory. For PYZ files specifically create another
+        extracted folder to store bytecode files.
+
+        When finalized, return a list of all bytecode file paths for decompilation.
         """
+
+        # go to `workspace/unpacked`
+        os.chdir(unpacked_dir)
         for entry in self.tocList:
-            basePath = os.path.dirname(entry.name)
+
+            # hacky: make paths Unix-friendly
+            entry_name = entry.name.replace("\\", "/")
+
+            # check and instantiate if doesn't exist
+            basePath = os.path.dirname(entry_name)
             if basePath != '':
                 # Check if path exists, create if not
                 if not os.path.exists(basePath):
                     os.makedirs(basePath)
 
+            # go to the specific entries position in file and extract out
             self.file.seek(entry.position, os.SEEK_SET)
             data = self.file.read(entry.cmprsdDataSize)
 
@@ -131,37 +151,46 @@ class PyInstaller:
                 # Comment out the assertion in such a case
                 assert len(data) == entry.uncmprsdDataSize # Sanity Check
 
-            with open(entry.name, 'wb') as f:
+            # write to directory
+            with open(entry_name, 'wb') as f:
                 f.write(data)
 
+            # check if PYZ file to be extracted
             if entry.typeCmprsData == b'z':
-                self._extractPyz(entry.name)
+                self._extract_pyz(entry_name)
+
+        return self.bytecode_paths
 
 
-    def _extractPyz(self, name):
-        dirName =  name + '_extracted'
+
+    def _extract_pyz(self, name):
+        """
+        Helper utility to help extract PYZ files into bytecode files in its seperate directory.
+        """
+
         # Create a directory for the contents of the pyz
+        dirName =  name + '_extracted'
         if not os.path.exists(dirName):
             os.mkdir(dirName)
 
+        # parse out all the bytecode, and store paths for return
         with open(name, 'rb') as f:
-            pyzMagic = f.read(4)
-            assert pyzMagic == b'PYZ\0' # Sanity Check
 
-            pycHeader = f.read(4) # Python magic value
+            # sanity check the magic number
+            pyzMagic = f.read(4)
+            if pyzMagic != b'PYZ\0':
+                raise Exception("Found an invalid PYZ file.")
 
             # TODO: differing versions, but should be ok
+            pycHeader = f.read(4)
 
+            # read out and marshal bytecode files
             (tocPosition, ) = struct.unpack('!i', f.read(4))
             f.seek(tocPosition, os.SEEK_SET)
+            toc = marshal.load(f)
 
-            try:
-                toc = marshal.load(f)
-            except:
-                print('[!] Unmarshalling FAILED. Cannot extract {0}. Extracting remaining files.'.format(name))
-                return
-
-            print('[*] Found {0} files in PYZ archive'.format(len(toc)))
+            # store number of pyz files parsed
+            self.pyz_len = len(toc)
 
             # From pyinstaller 3.1+ toc is a list of tuples
             if type(toc) == list:
@@ -184,17 +213,26 @@ class PyInstaller:
                 if not os.path.exists(destDirName):
                     os.makedirs(destDirName)
 
+                # if anything errors when attempting to read, assume its encrypted and write as is
                 try:
                     data = f.read(length)
                     data = zlib.decompress(data)
                 except:
-                    print('[!] Error: Failed to decompress {0}, probably encrypted. Extracting as is.'.format(fileName))
-                    open(destName + '.pyc.encrypted', 'wb').write(data)
+                    with open(destName + '.pyc.encrypted', 'wb') as fd:
+                        fd.write(data)
                     continue
 
-                with open(destName + '.pyc', 'wb') as pycFile:
+                # finalize the pyc file if valid
+                dest = destName + ".pyc"
+                with open(dest, 'wb') as pycFile:
                     pycFile.write(pycHeader)      # Write pyc magic
                     pycFile.write(b'\0' * 4)      # Write timestamp
                     if self.pyver >= 33:
                         pycFile.write(b'\0' * 4)  # Size parameter added in Python 3.3
                     pycFile.write(data)
+
+                # add valid pyc path
+                self.bytecode_paths += [dest]
+
+            # done with executable, close file
+            self.file.close()

@@ -132,14 +132,14 @@
 
         // once file is uploaded and page reloaded, check if message has changed, and if so,
         // create a loading bar and start the analysis workflow!
-        // TODO: maybe kinda hacky, is there a better ay?
+        // TODO: maybe kinda hacky, is there a better way?
         if ($("#message").text().indexOf("Successfully uploaded!") > -1) {
 			loadingBar(0);
             initTable();
             socket.emit("identify");
         }
 
-        // message handler to handle response from service after identifying basic file info
+
         socket.on("identify_reply", function(resp) {
             var header = "Packer Detection";
             if (resp["continue"] != false) {
@@ -157,35 +157,35 @@
             }
         });
 
-        // message handler to handle service after it has appropriately unpacked the file and
-        // parsed out the dependencies and bytecode source.
+
         socket.on("unpack_reply", function(resp) {
             var header = "Bytecode Unpacking";
             if (resp["continue"]) {
-                // update he loading bar
+                // update the loading bar
                 loadingBar(50);
 
                 // append a row with the number of decompilable bytecode files recovered
-                updateTable(header, false, "Not supported yet!");
+                msg = resp["extracted"] + " .pyc bytecode files extracted"
+                updateTable(header, true, msg);
 
                 // continue execution and start decompiling the relevant bytecode
                 socket.emit("decompile");
             } else {
                 updateTable(header, false, resp["error"]);
-                newAlert("Aight we out");
+                newAlert("Cannot continue execution, error during unpacking.");
             }
         });
 
 
-        socket.on("decompile_reply", function(msg) {
+        socket.on("decompile_reply", function(resp) {
             var header = "Bytecode Decompilation";
             if (resp["continue"]) {
                 loadingBar(75);
                 updateTable(header, false, "Not supported yet!");
                 socket.emit("finalize");
             } else {
-                updateTable(header, false, "Not supported yet!");
-                newAlert("Aight we out");
+                updateTable(header, false, resp["error"]);
+                newAlert("Cannot continue execution, failed during decompilation.");
             }
         });
     });

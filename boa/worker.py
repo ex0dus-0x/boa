@@ -136,19 +136,55 @@ class BoaWorker(sio.Namespace):
         in the workspace.
         """
 
-        # wait a bit and send back payload >:)
+        # stores bytecode paths parsed out
+        self.bytecode_paths = []
+
+        # start unpacking into the workspace directory
+        unpacked_dir = os.path.join(self.workspace, "unpacked")
+        try:
+            self.bytecode_paths = self.packer.unpack(unpacked_dir)
+        except Exception as e:
+            self.error = str(e)
+
+        # delete workspace if unpacking failed at some point
+        cont = False if self.error else True
+        if not cont:
+            shutil.rmtree(self.workspace)
+
+        # wait a bit and send back response
         time.sleep(1.5)
-        self.emit("unpack_reply", { "continue": False, "error": self.error })
+        self.emit("unpack_reply", {
+            "extracted": len(self.bytecode_paths),
+            "continue": cont,
+            "error": self.error
+        })
 
 
     def on_decompile(self):
         """
         Server-side message handler to interface uncompyle6 to decompile the bytecode source that
-        has been recovered
+        has been recovered from unpacking.
         """
-        error = "Unable to patch and decompile the bytecode"
-        cont = False
-        self.emit("decompile_reply", { "continue": cont, "error": error })
+
+        # throw error if no bytecode to parse
+        # TODO: otherwise go straight to final report
+        if len(self.bytecode_paths) == 0:
+            self.error = "No bytecode to decompile!"
+            cont = False
+
+        # otherwise use uncompyle6 to retrieve original source
+        else:
+            pass
+
+
+        # delete workspace if decompilation failed at some point
+        cont = False if self.error else True
+        if not cont:
+            shutil.rmtree(self.workspace)
+
+        # wait a bit and send back response
+        time.sleep(1.5)
+        self.emit("decompile_reply", { "continue": cont, "error": self.error })
 
 
     def on_finalize(self):
