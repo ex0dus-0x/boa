@@ -147,7 +147,8 @@
 			    loadingBar(25);
 
                 // append a new row to the status table
-                updateTable(header, true, resp["packer"]);
+                msg = "Identified: " + resp["packer"]
+                updateTable(header, true, msg);
 
                 // continue execution and actually unpack
                 socket.emit("unpack");
@@ -159,7 +160,7 @@
 
 
         socket.on("unpack_reply", function(resp) {
-            var header = "Bytecode Unpacking";
+            var header = "Executable Unpacking";
             if (resp["continue"]) {
                 // update the loading bar
                 loadingBar(50);

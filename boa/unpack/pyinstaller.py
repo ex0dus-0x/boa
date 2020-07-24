@@ -226,9 +226,9 @@ class PyInstaller:
                 dest = destName + ".pyc"
                 with open(dest, 'wb') as pycFile:
                     pycFile.write(pycHeader)      # Write pyc magic
-                    pycFile.write(b'\0' * 4)      # Write timestamp
-                    if self.pyver >= 33:
-                        pycFile.write(b'\0' * 4)  # Size parameter added in Python 3.3
+                    pycFile.write(b'\0' * 12)      # Write timestamp
+                    #if self.pyver >= 33:
+                    #    pycFile.write(b'\0' * 4)  # Size parameter added in Python 3.3
                     pycFile.write(data)
 
                 # add valid pyc path
