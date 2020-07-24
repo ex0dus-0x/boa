@@ -10,9 +10,11 @@ manager.py
 import os
 import shutil
 import json
+import werkzeug
+
 import flask
 import flask_socketio as sio
-import werkzeug
+import flask_sqlalchemy as fsql
 
 import boa.config as config
 import boa.utils as utils
@@ -28,6 +30,9 @@ app.config.from_object("boa.config")
 
 # initialize Socket.IO interface
 socketio = sio.SocketIO(app)
+
+# initialize database
+db = fsql.SQLAlchemy(app)
 
 # create directory to store executable artifacts and workspaces
 # TODO: option to disable if configured to use S3

@@ -2,31 +2,49 @@
 {% block content %}
 
 <div class="col-md-12">
-    <h1>Scan Report</h1>
-    <hr>
+    <h1 style="font-size: 22px;">Boa Scan Report</h1>
+    <hr><br>
     <p><b>Name:</b></p>
     <p><b>Scan UUID:</b> <code>123-456-789</code></p>
     <p><b>SHA-2 Checksum:</b></p>
     <p><b>Time Uploaded:</b></p>
 
     <br>
-    <h2>Reverse Engineering Results</h2>
-    <hr>
 
-    <!-- Table -->
+    <!-- Shows relevant informational results -->
+    <h2 style="font-size: 18px;">Informational Results</h2>
+    <hr><br>
+
+    <h3 style="font-size: 14px;">Basic Information</h3>
+    <br>
+    <table class="table">
+	  <tbody>
+		<tr>
+          <td>Python Version</td>
+		  <td>3.6</td>
+		</tr>
+		<tr>
+          <td>Packer</td>
+		  <td>PyInstaller</td>
+		</tr>
+	  </tbody>
+	</table>
+
+    <h3 style="font-size: 14px;">Reverse Engineering</h3>
+    <br>
 	<table class="table">
 	  <tbody>
 		<tr>
-		  <td>Python Files Recovered</td>
+          <td>Archive Files (<code>.pyz</code>) Recovered</td>
 		  <td>100</td>
 		</tr>
 		<tr>
-		  <td>Dependencies Found:</td>
-		  <td>Thornton</td>
+          <td>Bytecode Files (<code>.pyc</code>) Recovered</td>
+		  <td>20</td>
 		</tr>
 		<tr>
-		  <td>Larry</td>
-		  <td>the Bird</td>
+		  <td>Relevant Bytecode Files Decompiled</td>
+		  <td>12</td>
 		</tr>
 	  </tbody>
 	</table>

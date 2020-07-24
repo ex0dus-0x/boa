@@ -12,6 +12,10 @@ TEMPLATES_AUTO_RELOAD = True
 # API configurations
 API_VERSION = "v1"
 
+# Database configurations
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+SQLALCHEMY_DATABASE_URI = "sqlite://boa.db"
+
 # File upload configurations
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "artifacts")
 ALLOWED_EXTENSIONS = ["exe", "pe"]
