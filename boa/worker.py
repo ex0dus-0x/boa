@@ -5,17 +5,20 @@ worker.py
     Consumes a target, reads it from a mounted storage system, and
 
 """
-import time
 import io
 import os
+import time
 import uuid
 import shutil
 import pefile
 import datetime
 import hashlib
+
 import flask_socketio as sio
+import flask_sqlalchemy as fsql
 
 import boa.unpack as unpack
+import boa.decompile as decompile
 
 class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
@@ -109,10 +112,14 @@ class BoaWorker(sio.Namespace):
         in context. If parsing and instantiating failed, return error to stop analysis flow.
         """
 
+        # info parsed out: version
+        self.pyver = None
+
         # identify the packer that was used to compile the binary given a path,
         # and error-handle appropriately by creating error if
         try:
             self.packer = unpack.get_packer(self.path)
+            self.pyver = self.packer.pyver
         except Exception as e:
             self.packer = None
             self.error = str(e)
@@ -162,9 +169,12 @@ class BoaWorker(sio.Namespace):
 
     def on_decompile(self):
         """
-        Server-side message handler to interface uncompyle6 to decompile the bytecode source that
-        has been recovered from unpacking.
+        Server-side message handler to interface our decompiler abstraction to
+        decompile the bytecode source that has been recovered from unpacking.
         """
+
+        # represents paths to finalized source files that were recovered
+        self.recovered_src = []
 
         # throw error if no bytecode to parse
         # TODO: otherwise go straight to final report
@@ -172,10 +182,10 @@ class BoaWorker(sio.Namespace):
             self.error = "No bytecode to decompile!"
             cont = False
 
-        # otherwise use uncompyle6 to retrieve original source
+        # otherwise instantiate decompiler and start recovering source
         else:
-            pass
-
+            decomp = decompile.BoaDecompiler(self.pyver)
+            self.recovered_src = [decomp.decompile_file(path) for path in self.bytecode_paths]
 
         # delete workspace if decompilation failed at some point
         cont = False if self.error else True
@@ -184,11 +194,14 @@ class BoaWorker(sio.Namespace):
 
         # wait a bit and send back response
         time.sleep(1.5)
-        self.emit("decompile_reply", { "continue": cont, "error": self.error })
+        self.emit("decompile_reply", {
+            "continue": cont,
+            "error": self.error
+        })
 
 
     def on_finalize(self):
         """
-        Finalizes the analysis execution, write all results back into config.json
+        Finalizes the analysis execution, write all results back into config.json, and use
         """
         pass

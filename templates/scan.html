@@ -181,8 +181,16 @@
         socket.on("decompile_reply", function(resp) {
             var header = "Bytecode Decompilation";
             if (resp["continue"]) {
+                // update the loading bar
                 loadingBar(75);
-                updateTable(header, false, "Not supported yet!");
+
+                // append a row with number of Python source files recovered
+                msg = resp["src_files"] + " relevant source files recovered"
+                updateTable(header, true, msg);
+
+                // TODO: add additional row for patching info
+
+                // finalize execution and generate report
                 socket.emit("finalize");
             } else {
                 updateTable(header, false, resp["error"]);
