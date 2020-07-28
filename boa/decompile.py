@@ -32,11 +32,11 @@ class BoaDecompiler(object):
         # if set, all bytecode files will be indiscriminantly decompiled
         self.decomp_all = decomp_all
 
-        # stores a list of paths
-        self.paths = set()
+        # stores a list of paths to actually decompile
+        self.paths = list()
 
-        # stores a list of external deps that are present in the executable
-        self.deps = set()
+        # total number of modules
+        self.total_deps = set()
 
 
     def _check_if_decompile(self, name) -> bool:
@@ -51,7 +51,7 @@ class BoaDecompiler(object):
 
         # check if dependency exists as a built-in module
         if any([val in dep for val in list(sys.builtin_module_names)]):
-            return False
+            return
 
         # check if dependency exists as a standard library module
         stdlib = [
@@ -59,7 +59,7 @@ class BoaDecompiler(object):
             if pkg is False
         ]
         if any([val in dep for val in stdlib]):
-            return False
+            return
 
         # if dependency has multiple submodules, chances are it is an existing PyPI package
         # parse out module name, and check to see if version exists upstream, and ignore if so
@@ -86,11 +86,12 @@ class BoaDecompiler(object):
         return True
 
 
-    def decompile_file(self, path):
+    def decompile(self, paths):
         """
         Given a list of paths to a .pyc bytecode file, check if decompilation is necessary, ...
         """
-        if not self._check_if_decompile(path):
-            return None
+        self.total_deps = set([
+            ntpath.basename(path).split(".")[0]
+            for path in paths
+        ])
 
-        return path

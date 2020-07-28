@@ -4,8 +4,10 @@ models.py
     Database models that are used by Boa for storing persistent information.
 
 """
-import flask_sqlalchemy as fsql
+from flask_sqlalchemy import SQLAlchemy
 
+
+db = SQLAlchemy()
 
 class Scan(db.Model):
     """

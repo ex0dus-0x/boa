@@ -22,6 +22,7 @@ import boa.utils as utils
 from flask import redirect, render_template, request, flash
 
 from boa import worker
+from boa.models import db
 
 # initialize the Flask application with proper configuration
 app = flask.Flask(__name__, template_folder="templates")
@@ -32,7 +33,7 @@ app.config.from_object("boa.config")
 socketio = sio.SocketIO(app)
 
 # initialize database
-db = fsql.SQLAlchemy(app)
+db.init_app(app)
 
 # create directory to store executable artifacts and workspaces
 # TODO: option to disable if configured to use S3
