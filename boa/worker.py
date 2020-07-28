@@ -2,7 +2,8 @@
 worker.py
 
     Implements the main execution functionality of the reverse engineering pipeline for Boa.
-    Consumes a target, reads it from a mounted storage system, and
+    A worker first consumes a binary path, validates it, and instantiates a workspace for it in the
+    storage medium. The executable is then unpacked, decompiled and patched.
 
 """
 import io
@@ -184,8 +185,11 @@ class BoaWorker(sio.Namespace):
 
         # otherwise instantiate decompiler and start recovering source
         else:
-            decomp = decompile.BoaDecompiler(self.pyver)
-            self.recovered_src = [decomp.decompile_file(path) for path in self.bytecode_paths]
+            decomp = decompile.BoaDecompiler(self.workspace, self.pyver)
+            for path in self.bytecode_paths:
+                res = decomp.decompile_file(path)
+                if res != None:
+                    self.recovered_src += [res]
 
         # delete workspace if decompilation failed at some point
         cont = False if self.error else True
@@ -193,7 +197,6 @@ class BoaWorker(sio.Namespace):
             shutil.rmtree(self.workspace)
 
         # wait a bit and send back response
-        time.sleep(1.5)
         self.emit("decompile_reply", {
             "continue": cont,
             "error": self.error
