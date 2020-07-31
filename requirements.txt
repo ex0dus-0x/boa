@@ -28,6 +28,7 @@ six==1.15.0
 smmap==3.0.4
 spark-parser==1.8.9
 SQLAlchemy==1.3.18
+stdlib-list==0.7.0
 stevedore==3.2.0
 uncompyle6==3.7.2
 unpy2exe==0.4
