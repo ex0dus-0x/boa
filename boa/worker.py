@@ -185,8 +185,8 @@ class BoaWorker(sio.Namespace):
 
         # otherwise instantiate decompiler and start recovering source
         else:
-            decomp = decompile.BoaDecompiler(self.workspace, self.pyver)
-            decomp.decompile(self.bytecode_paths)
+            decomp = decompile.BoaDecompiler(self.workspace, self.pyver, self.bytecode_paths)
+            decomp.decompile_all()
 
         # delete workspace if decompilation failed at some point
         cont = False if self.error else True
