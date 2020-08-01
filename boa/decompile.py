@@ -1,8 +1,10 @@
 """
 decompiler.py
 
-    Aggregates a single decompilation interface over several decompilers, since many have varying bugs
-    in different versions and implementations.
+    Provides an interface object for decompilation, consuming a codebase of bytecode paths
+    and recovering the source from only the ones that are relevant to the program execution.
+    Aggregates fallback decompiler APIs besides `uncompyle6` in order to fix potential bugs that
+    may arise from the decompiler.
 
 """
 import os
@@ -39,24 +41,24 @@ class BoaDecompiler(object):
     Defines the decompiler interface used that aggregates different decompiler
     modules for source recovery when given bytecode. Implements rudimentary
     bytecode patching if decompilers are unable to parse the input further.
-    """
-    def __init__(self, workspace, pyver, paths, decomp_all=False):
 
-        # reuse workspace for writing source
-        self.workspace = workspace
+    TODO: check and deal with files that are encrypted
+    """
+    def __init__(self, pyver, paths, decomp_all=False):
 
         # instantiate list of all standard library modules
+        # TODO: convert pyver to str for stdlib_list
         self.stdlib = stdlib_list.stdlib_list("3.8")
 
         # instantiate a local dataset of top PyPI packages
         self.packages = BoaDecompiler.iter_packages()
 
-        # Main decompiler used: uncompyle
+        # Main decompiler used: uncompyle6
         # However, in case uncompyle6 fails decompilation, we fallback:
         #   Python 3.x: decompyle3
-        #   Python 2.7.x: py2
-        self.pyver = pyver
+        #   Python 2.7.x: uncompyle2
         self.decompiler = "uncompyle6"
+        self.fallback = "uncompyle2" if 20 <= int(pyver) < 30 else "decompyle3"
 
         # used to cache deps already tested to ignore
         self.cached_ignore_deps = set()
@@ -97,7 +99,8 @@ class BoaDecompiler(object):
     @staticmethod
     def iter_packages():
         """
-        Helper function to Get dataset of top PyPI packages to check deps against
+        Helper function to obtain a dataset of top PyPI packages to check dependencies against. If present and known,
+        we should NOT decompile it to save time.
         """
         res = requests.get("https://hugovk.github.io/top-pypi-packages/top-pypi-packages-365-days.json")
         if res.status_code != 200:
@@ -145,22 +148,19 @@ class BoaDecompiler(object):
         return True
 
 
-    def decompile_all(self):
+    def decompile_all(self, workspace):
         """
         Given all the stored paths of relevant bytecode files, decompile all of them into the workspace directory.
         """
-        for _, paths in self.dep_mapping.items():
-            for path in paths:
 
-                # get abspath to bytecode path and call decompiler
-                decomp_path = os.path.join(self.workspace, "unpacked", path)
-                proc = subprocess.Popen([self.decompiler, decomp_path], stdout=subprocess.PIPE)
-                output = proc.stdout.read()
+        # set directories to read and write to after decompilation
+        input_dir = os.path.join(workspace, "unpacked")
+        output_dir = os.path.join(workspace, "recovered")
 
-                # write result to path
-                filename = ntpath.basename(path).replace("pyc", "py")
-                store_path = os.path.join(self.workspace, "recovered", filename)
-                with open(store_path, "wb") as fd:
-                    fd.write(output)
+        # create a flattened list of all relevant files to decompile
+        decomp_files = sorted({os.path.join(input_dir, x) for v in self.dep_mapping.values() for x in v})
+        print(decomp_files)
 
+        # run decompilation on all files given with appropriate paths in place
+        uncompyle6.main.main(input_dir, output_dir, decomp_files, decomp_files)
         print("Done")
