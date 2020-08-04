@@ -144,7 +144,7 @@
             var header = "Packer Detection";
             if (resp["continue"] != false) {
                 // update the loading bar
-			    loadingBar(25);
+			    loadingBar(20);
 
                 // append a new row to the status table
                 msg = "Identified: " + resp["packer"]
@@ -163,7 +163,7 @@
             var header = "Executable Unpacking";
             if (resp["continue"]) {
                 // update the loading bar
-                loadingBar(50);
+                loadingBar(40);
 
                 // append a row with the number of decompilable bytecode files recovered
                 msg = resp["extracted"] + " .pyc bytecode files extracted"
@@ -182,7 +182,7 @@
             var header = "Bytecode Decompilation";
             if (resp["continue"]) {
                 // update the loading bar
-                loadingBar(75);
+                loadingBar(60);
 
                 // append a row with number of Python source files recovered
                 msg = resp["src_files"] + " relevant source files recovered"
@@ -190,12 +190,37 @@
 
                 // TODO: add additional row for patching info
 
-                // finalize execution and generate report
-                socket.emit("finalize");
             } else {
                 updateTable(header, false, resp["error"]);
                 newAlert("Cannot continue execution, failed during decompilation.");
             }
+        });
+
+
+        socket.on("sast_reply", function(resp) {
+            var header = "Static Analysis";
+
+            // update the loading bar
+            loadingBar(80);
+
+            // append a row with number of Python source files recovered
+            if resp["error"] != null {
+                msg = resp["sec_issues"] + " potential security issues found"
+                updateTable(header, true, msg);
+
+            // displaying with errors is fine, continue anyway
+            } else {
+                updateTable(header, false, resp["error"]);
+            }
+
+            // finalize execution and generate report
+            socket.emit("finalize");
+        });
+
+
+        socket.on("finalize_reply", function(resp) {
+            loadingBar(100);
+            newAlert("Done! Here's your link");
         });
     });
 </script>
