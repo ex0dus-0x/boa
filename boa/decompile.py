@@ -57,8 +57,7 @@ class BoaDecompiler(object):
         # However, in case uncompyle6 fails decompilation, we fallback:
         #   Python 3.x: decompyle3
         #   Python 2.7.x: uncompyle2
-        self.decompiler = "uncompyle6"
-        self.fallback = "uncompyle2" if 20 <= int(pyver) < 30 else "decompyle3"
+        self.fallback_decompiler = "uncompyle2" if 20 <= int(pyver) < 30 else "decompyle3"
 
         # used to cache deps already tested to ignore
         self.cached_ignore_deps = set()
@@ -148,19 +147,27 @@ class BoaDecompiler(object):
         return True
 
 
-    def decompile_all(self, workspace):
+    def decompile_all(self, workspace, no_fallback=False):
         """
         Given all the stored paths of relevant bytecode files, decompile all of them into the workspace directory.
+
+        If a decompiler fails to
         """
 
+        # create a flattened list of all relevant files to decompile
+        unpack_dir = os.path.join(workspace, "unpacked")
+        decomp_files = sorted({os.path.join(unpack_dir, x) for v in self.dep_mapping.values() for x in v})
+
         # set directories to read and write to after decompilation
-        input_dir = os.path.join(workspace, "unpacked")
+        input_dir = os.path.join(unpack_dir, os.path.commonprefix(decomp_files))
         output_dir = os.path.join(workspace, "recovered")
 
-        # create a flattened list of all relevant files to decompile
-        decomp_files = sorted({os.path.join(input_dir, x) for v in self.dep_mapping.values() for x in v})
-        print(decomp_files)
-
         # run decompilation on all files given with appropriate paths in place
-        uncompyle6.main.main(input_dir, output_dir, decomp_files, decomp_files)
-        print("Done")
+        try:
+            uncompyle6.main.main(input_dir, output_dir, decomp_files, [])
+
+        # TODO: at an exception, unless configured, call the fallback decompiler
+        except Exception as e:
+            pass
+
+        return len(decomp_files)

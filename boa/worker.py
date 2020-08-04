@@ -159,8 +159,8 @@ class BoaWorker(sio.Namespace):
         if not cont:
             shutil.rmtree(self.workspace)
 
-        # wait a bit and send back response
-        time.sleep(1.5)
+        # add a bit of latency since this is pretty quick
+        time.sleep(1)
         self.emit("unpack_reply", {
             "extracted": len(self.bytecode_paths),
             "continue": cont,
@@ -174,8 +174,8 @@ class BoaWorker(sio.Namespace):
         decompile the bytecode source that has been recovered from unpacking.
         """
 
-        # represents paths to finalized source files that were recovered
-        self.recovered_src = []
+        # number of relevant files returned
+        relevant_src = 0
 
         # throw error if no bytecode to parse
         # TODO: otherwise go straight to final report
@@ -185,17 +185,40 @@ class BoaWorker(sio.Namespace):
 
         # otherwise instantiate decompiler and start recovering source
         else:
-            decomp = decompile.BoaDecompiler(self.pyver, self.bytecode_paths)
-            decomp.decompile_all(self.workspace)
 
-        # delete workspace if decompilation failed at some point
+            # TODO: handle exception and set `self.error`
+            decomp = decompile.BoaDecompiler(self.pyver, self.bytecode_paths)
+            relevant_src = decomp.decompile_all(self.workspace)
+
+        # delete workspace if decompilation absolutely cannot be done
         cont = False if self.error else True
         if not cont:
             shutil.rmtree(self.workspace)
 
-        # wait a bit and send back response
+        # send back response with num of files decompiled
         self.emit("decompile_reply", {
+            "src_files": relevant_src,
             "continue": cont,
+            "error": self.error
+        })
+
+
+    def on_sast(self):
+        """
+        Runs a `SASTEngine` against all the recovered source files and parse out all potential security issues.
+        Issues support leaked secrets and python code quality assurance.
+
+        TODO: be configured not to run if we don't care.
+        """
+
+        # stores a mapping between a file-line id (as a tuple) and the issue thats being reported
+        self.sec_issues = {}
+
+        # instantiate an engine to conduct code scanning
+        engine = SASTEngine()
+
+        # send back response with number of potential bugs found
+        self.emit({
             "error": self.error
         })
 
