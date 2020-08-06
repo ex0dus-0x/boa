@@ -265,6 +265,8 @@ class BoaWorker(sio.Namespace):
 
         # commit entry to database
 
+        # zip up folder and commit zipped contents to S3
+
         # send the finalized report link back to the user once everything is committed
         self.emit("finalize_reply", {
             "link": "/report/" + str(self.uuid)
