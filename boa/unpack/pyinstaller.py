@@ -127,6 +127,9 @@ class PyInstaller:
         When finalized, return a list of all bytecode file paths for decompilation.
         """
 
+        # get curr_dir to revert to later
+        curr_dir = os.getcwd()
+
         # go to `workspace/unpacked`
         os.chdir(unpacked_dir)
         for entry in self.tocList:
@@ -159,6 +162,8 @@ class PyInstaller:
             if entry.typeCmprsData == b'z':
                 self._extract_pyz(entry_name)
 
+        # revert and return paths to bytecode
+        os.chdir(curr_dir)
         return self.bytecode_paths
 
 

@@ -3,12 +3,14 @@ decompiler.py
 
     Provides an interface object for decompilation, consuming a codebase of bytecode paths
     and recovering the source from only the ones that are relevant to the program execution.
-    Aggregates fallback decompiler APIs besides `uncompyle6` in order to fix potential bugs that
+
+    TODO: Aggregates fallback decompiler APIs besides `uncompyle6` in order to fix potential bugs that
     may arise from the decompiler.
 
 """
 import os
 import sys
+import json
 import ntpath
 import pkgutil
 import subprocess
@@ -16,7 +18,7 @@ import subprocess
 import requests
 import stdlib_list
 import uncompyle6
-import decompyle3
+#import decompyle3
 
 # other modules that we don't care about
 MOD_DONT_CARE = [
@@ -101,12 +103,11 @@ class BoaDecompiler(object):
         Helper function to obtain a dataset of top PyPI packages to check dependencies against. If present and known,
         we should NOT decompile it to save time.
         """
-        res = requests.get("https://hugovk.github.io/top-pypi-packages/top-pypi-packages-365-days.json")
-        if res.status_code != 200:
-            raise Exception("Cannot get packages")
+        with open(os.path.join("ext", "package-dataset.json"), "r") as fd:
+            contents = fd.read()
 
         # convert to dictionary and get all package names
-        pkgs_dict = dict(res.json())
+        pkgs_dict = dict(json.loads(contents))
         return [pkg["project"] for pkg in pkgs_dict["rows"]]
 
 
@@ -151,7 +152,7 @@ class BoaDecompiler(object):
         """
         Given all the stored paths of relevant bytecode files, decompile all of them into the workspace directory.
 
-        If a decompiler fails to
+        TODO: If a decompiler fails for some reason, swap over to the fallback one.
         """
 
         # create a flattened list of all relevant files to decompile
