@@ -204,7 +204,7 @@
             loadingBar(80);
 
             // append a row with number of Python source files recovered
-            if resp["error"] != null {
+            if (resp["error"]) {
                 msg = resp["sec_issues"] + " potential security issues found"
                 updateTable(header, true, msg);
 

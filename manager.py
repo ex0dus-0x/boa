@@ -59,6 +59,11 @@ def about():
     """ Informational route for more technical detail regarding boa """
     return render_template("about.html")
 
+@app.route("/pricing")
+def pricing():
+    """ Informational route for pricing information regarding boa """
+    return render_template("pricing.html")
+
 
 @app.route("/scan", methods=["GET", "POST"])
 def scan():
