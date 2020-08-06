@@ -12,7 +12,7 @@ def get_packer(filepath: str) -> t.Optional[t.Any]:
     Helper utility to help return the correct Unpacker based on the YARA rule that
     matches it.
     """
-    rules = yara.compile(filepath="unpacker.yara")
+    rules = yara.compile(filepath="ext/unpacker.yara")
     matches = rules.match(filepath=filepath)
 
     # if both are present, return None

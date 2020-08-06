@@ -12,6 +12,7 @@ import time
 import uuid
 import shutil
 import pefile
+import json
 import datetime
 import hashlib
 
@@ -175,20 +176,22 @@ class BoaWorker(sio.Namespace):
         """
 
         # number of relevant files returned
-        relevant_src = 0
+        self.relevant_src = 0
 
         # throw error if no bytecode to parse
         # TODO: otherwise go straight to final report
         if len(self.bytecode_paths) == 0:
             self.error = "No bytecode to decompile!"
-            cont = False
 
         # otherwise instantiate decompiler and start recovering source
         else:
+            try:
+                self.decompiler = decompile.BoaDecompiler(self.pyver, self.bytecode_paths)
+                self.relevant_src = self.decompiler.decompile_all(self.workspace)
 
-            # TODO: handle exception and set `self.error`
-            decomp = decompile.BoaDecompiler(self.pyver, self.bytecode_paths)
-            relevant_src = decomp.decompile_all(self.workspace)
+            # exception must be thrown if absolutely no decompilation can be done
+            except Exception as e:
+                self.error = str(e)
 
         # delete workspace if decompilation absolutely cannot be done
         cont = False if self.error else True
@@ -197,7 +200,7 @@ class BoaWorker(sio.Namespace):
 
         # send back response with num of files decompiled
         self.emit("decompile_reply", {
-            "src_files": relevant_src,
+            "src_files": self.relevant_src,
             "continue": cont,
             "error": self.error
         })
@@ -217,6 +220,8 @@ class BoaWorker(sio.Namespace):
         # instantiate an engine to conduct code scanning
         engine = SASTEngine()
 
+        # TODO: scan and store results
+
         # send back response with number of potential bugs found
         self.emit({
             "error": self.error
@@ -225,6 +230,40 @@ class BoaWorker(sio.Namespace):
 
     def on_finalize(self):
         """
-        Finalizes the analysis execution, write all results back into config.json, and use
+        Finalizes the execution of the analysis, commiting the parsed out information from each step
+        to a `metadata.json` file for the
         """
-        pass
+
+        # stores metadata content for later report generation
+        metadata = {
+            "basic": {
+                "name": self.name,
+                "uuid": self.uuid,
+                "checksum": self.checksum,
+                "timestamp": self.timestamp,
+            },
+            "py_info": {
+                "version": self.pyver,
+                "packer": str(self.packer),
+                "total_deps": len(self.total_deps),
+                "dependencies": self.total_deps,
+            },
+            "reversing": {
+                "pyz": self.unpacker.pyz_len,
+                "pyc": len(self.bytecode_paths),
+                "src": len(self.relevant_src),
+            },
+            "audit": self.sec_issues,
+        }
+
+        # finalize and write to path
+        metadata_content = json.dumps(metadata)
+        with open(os.path.join(self.workspace, "metadata.json"), "w") as fd:
+            fd.write(metadata_content)
+
+        # commit entry to database
+
+        # send the finalized report link back to the user once everything is committed
+        self.emit({
+            "link": "/" + str(self.uuid)
+        })
