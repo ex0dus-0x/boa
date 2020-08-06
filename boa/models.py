@@ -20,16 +20,38 @@ class Scan(db.Model):
     __table_args__ = {"sqlite_autoincrement": True}
 
     id = db.Column(db.Integer, primary_key=True)
+
+    # basic information
     name = db.Column(db.String(120), unique=False, nullable=False)
     uuid = db.Column(db.String(120), unique=True, nullable=False)
+    checksum = db.Column(db.String(120), unique=True, nullable=False)
+    timestamp = db.Column(db.String(120), unique=True, nullable=False)
 
-    # represents either a server-side path, or a cloud-based bucket
-    workspace = db.Column(db.String(240), unique=True, nullable=True)
+    """
+    # python-specific information
+    pyver = db.Column(db.Integer, unique=False)
+    packer = db.Column(db.String(120))
+    total_deps = db.Column(db.Integer)
 
-    def __init__(self, name, uuid, workspace):
+    # reversing
+    pyz_files = db.Column(db.Integer)
+    pyc_files = db.Column(db.Integer)
+    src_files = db.Column(db.Integer)
+    """
+
+    # represents path to local or S3 path for download link to zipped up workspace
+    workspace_metadata = db.Column(db.String(240), unique=True, nullable=True)
+    workspace_zip = db.Column(db.String(240), unique=True, nullable=True)
+
+    def __init__(self, name, uuid, workspace, timestamp):
         self.name = name
         self.uuid = uuid
         self.workspace = workspace
+        self.timespace = timespace
 
     def __repr__(self):
         return "<Name {0}>".format(self.name)
+
+
+if __name__ == "__main__":
+    db.create_all()

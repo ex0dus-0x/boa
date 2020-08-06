@@ -15,7 +15,7 @@ def allowed_file(filename: str) -> bool:
     Helper to check if an input file is an allowed extension to use.
     """
     _, ext = os.path.splitext(filename)
-    return ext.lower() in config.ALLOWED_EXTENSIONS
+    return ext.lower()[1:] in config.ALLOWED_EXTENSIONS
 
 
 def endpoint(name: str) -> str:

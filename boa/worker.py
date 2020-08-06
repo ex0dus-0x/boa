@@ -21,6 +21,8 @@ import flask_sqlalchemy as fsql
 
 import boa.unpack as unpack
 import boa.decompile as decompile
+import boa.sast as sast
+import boa.models as models
 
 class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
@@ -45,8 +47,8 @@ class BoaWorker(sio.Namespace):
 
         # if a valid executable, then start creating valid metadata for it
         self.name = name
-        self.timestamp = datetime.datetime.utcnow
-        self.uuid = uuid.uuid1()
+        self.timestamp = str(datetime.datetime.utcnow())
+        self.uuid = str(uuid.uuid4())
 
         # store file's checksum to check against for file uniquity
         hasher = hashlib.sha256()
@@ -218,12 +220,12 @@ class BoaWorker(sio.Namespace):
         self.sec_issues = {}
 
         # instantiate an engine to conduct code scanning
-        engine = SASTEngine()
+        engine = sast.SASTEngine(None)
 
         # TODO: scan and store results
 
         # send back response with number of potential bugs found
-        self.emit({
+        self.emit("sast_reply", {
             "error": self.error
         })
 
@@ -245,25 +247,25 @@ class BoaWorker(sio.Namespace):
             "py_info": {
                 "version": self.pyver,
                 "packer": str(self.packer),
-                "total_deps": len(self.total_deps),
-                "dependencies": self.total_deps,
+                "total_deps": len(self.decompiler.total_deps),
+                "dependencies": list(self.decompiler.total_deps),
             },
             "reversing": {
-                "pyz": self.unpacker.pyz_len,
+                "pyz": self.packer.pyz_len,
                 "pyc": len(self.bytecode_paths),
-                "src": len(self.relevant_src),
+                "src": self.relevant_src,
             },
             "audit": self.sec_issues,
         }
 
         # finalize and write to path
-        metadata_content = json.dumps(metadata)
+        metadata_content = json.dumps(dict(metadata))
         with open(os.path.join(self.workspace, "metadata.json"), "w") as fd:
             fd.write(metadata_content)
 
         # commit entry to database
 
         # send the finalized report link back to the user once everything is committed
-        self.emit({
-            "link": "/" + str(self.uuid)
+        self.emit("finalize_reply", {
+            "link": "/report/" + str(self.uuid)
         })

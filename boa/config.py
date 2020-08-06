@@ -13,8 +13,9 @@ TEMPLATES_AUTO_RELOAD = True
 API_VERSION = "v1"
 
 # Database configurations
+DB_FOLDER = os.path.join(os.getcwd(), "db")
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-SQLALCHEMY_DATABASE_URI = "sqlite://boa.db"
+SQLALCHEMY_DATABASE_URI = "sqlite:///db/boascans.db"
 
 # File upload configurations
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "artifacts")

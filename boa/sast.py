@@ -15,8 +15,11 @@ class SASTEngine(object):
     """
 
     def __init__(self, codebase, ignore_nosec=False):
+        """
         self.manager = manager.BanditManager(b_conf, args.agg_type, args.debug,
                                 profile=profile, ignore_nosec=ignore_nosec)
+        """
+        pass
 
     def scan_vulns(self) -> int:
         """
