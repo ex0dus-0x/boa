@@ -22,7 +22,7 @@ import boa.utils as utils
 from flask import redirect, render_template, request, flash
 
 from boa import worker
-from boa.models import db
+from boa.models import db, Scan
 
 # initialize the Flask application with proper configuration
 app = flask.Flask(__name__, template_folder="templates")
@@ -35,10 +35,13 @@ socketio = sio.SocketIO(app)
 # initialize database
 db.init_app(app)
 
-# create directory to store executable artifacts and workspaces
-# TODO: option to disable if configured to use S3
+# create directory to store executable artifacts and workspaces locally for analysis
 if not os.path.exists(config.UPLOAD_FOLDER):
-     os.mkdir(config.UPLOAD_FOLDER)
+    os.mkdir(config.UPLOAD_FOLDER)
+
+# create directory to store database
+if not os.path.exists(config.DB_FOLDER):
+    os.mkdir(config.DB_FOLDER)
 
 #======================
 # Static Content Routes
@@ -86,8 +89,7 @@ def scan():
             return flask.redirect(request.url)
 
         # save file to uploads directory/server
-        # TODO: remove `not` once set
-        if input_file and not utils.allowed_file(filename):
+        if input_file and utils.allowed_file(filename):
 
             # TODO: check against database to see if sample exists, and
             # redirect to report if found
@@ -129,7 +131,11 @@ def report(uuid):
     """
     Dynamically generates a presentable report for consumption by the user for the binary parsed out.
     """
+
     # TODO: given a uuid, find entry in database, and return dynamic content
+    if db.session.query(Scan.id).filter_by(uuid=uuid).scalar() is None:
+        return "nope!"
+
     return render_template("report.html")
 
 

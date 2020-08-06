@@ -2,12 +2,14 @@ env/
 venv/
 dist/
 build/
-artifacts/
 *.egg-info/
 __pycache__/
+
+# created by boa
+db/
+artifacts/
 
 .env
 *.pyc
 *.pyz
 *.db
-

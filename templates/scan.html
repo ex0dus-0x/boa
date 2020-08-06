@@ -126,7 +126,6 @@
             `);
         }
 
-
         // connect to the socket.io server
         var socket = io.connect("http://" + document.domain + ":" + location.port);
 
@@ -190,6 +189,7 @@
 
                 // TODO: add additional row for patching info
 
+                socket.emit("sast");
             } else {
                 updateTable(header, false, resp["error"]);
                 newAlert("Cannot continue execution, failed during decompilation.");
@@ -219,8 +219,13 @@
 
 
         socket.on("finalize_reply", function(resp) {
+            // update the loading bar to completion
             loadingBar(100);
-            newAlert("Done! Here's your link");
+
+            // return the link to the report back to the user
+            var link = "https://" + document.domain + resp["link"]
+            var link_href = "<a href='" + link + "'>" + link + "</a>"
+            newAlert("Done reverse engineering! View the report here: " + link_href);
         });
     });
 </script>
