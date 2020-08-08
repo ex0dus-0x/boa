@@ -6,6 +6,7 @@ utils.py
 
 import os
 import zipfile
+import boto3
 
 import boa.config as config
 
@@ -33,7 +34,7 @@ def upload_file(filename, acl="public-read"):
     )
 
     # once uploaded, construct url for return
-    dl_url =  f"http://{}.s3.amazonaws.com/{bucket}/{filename.filename}"
+    dl_url =  "http://{bucket}.s3.amazonaws.com/{bucket}/{}".format(filename.filename, bucket=bucket)
     return dl_url
 
 

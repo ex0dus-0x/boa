@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-manager.py
+__main__.py
 
     Main web application service for handling all routes and content delivery for the boa service.
     Built in Flask, it contains all the static and dynamic content routes, as well as API endpoints
@@ -14,26 +14,23 @@ import werkzeug
 
 import flask
 import flask_socketio as sio
-import flask_sqlalchemy as fsql
+from flask import redirect, render_template, request, flash
 
 import boa.config as config
 import boa.utils as utils
-
-from flask import redirect, render_template, request, flash
-
 from boa import worker
-from boa.models import db, Scan
 
 # initialize the Flask application with proper configuration
 app = flask.Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(12)
 app.config.from_object("boa.config")
 
+# import database and initialize AFTER app is instantiated
+from boa.models import db, Scan
+db.init_app(app)
+
 # initialize Socket.IO interface
 socketio = sio.SocketIO(app)
-
-# initialize database
-db.init_app(app)
 
 # create directory to store executable artifacts and workspaces locally for analysis
 if not os.path.exists(config.UPLOAD_FOLDER):
@@ -132,11 +129,12 @@ def report(uuid):
     Dynamically generates a presentable report for consumption by the user for the binary parsed out.
     """
 
-    # TODO: given a uuid, find entry in database, and return dynamic content
-    if db.session.query(Scan.id).filter_by(uuid=uuid).scalar() is None:
-        return "nope!"
+    # given a uuid, find entry in database, and return dynamic content
+    query = Scan.query.filter_by(uuid=uuid).first()
+    if query is None:
+        return "Not found!"
 
-    return render_template("report.html")
+    return render_template("report.html", info=query)
 
 
 #==================
