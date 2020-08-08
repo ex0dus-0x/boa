@@ -12,6 +12,7 @@ import os
 import sys
 import json
 import ntpath
+import shutil
 import pkgutil
 import subprocess
 
@@ -169,6 +170,13 @@ class BoaDecompiler(object):
 
         # TODO: at an exception, unless configured, call the fallback decompiler
         except Exception as e:
-            pass
+            raise e
+
+        # FIXME: uncompyle6 is not writing to output_dir. Manually do it for now until we figure out why
+        for filename in os.listdir(input_dir):
+            if filename.endswith(".py"):
+                inpath = os.path.join(input_dir, filename)
+                outpath = os.path.join(output_dir, filename)
+                shutil.copyfile(inpath, outpath)
 
         return len(decomp_files)

@@ -163,6 +163,9 @@ class BoaWorker(sio.Namespace):
         if not cont:
             shutil.rmtree(self.workspace)
 
+        # get rid of binary on server at this point, we don't want live malware or big files.
+        os.remove(self.path)
+
         # add a bit of latency since this is pretty quick
         time.sleep(1)
         self.emit("unpack_reply", {
@@ -259,17 +262,31 @@ class BoaWorker(sio.Namespace):
             "audit": self.sec_issues,
         }
 
-        # finalize and write to path
+        # finalize and write metadata.json to local path for storing in bucket
         metadata_path = os.path.join(self.workspace, "metadata.json")
         metadata_content = json.dumps(dict(metadata))
         with open(metadata_path, "w") as fd:
             fd.write(metadata_content)
 
-        # zip up folder and commit zipped contents to S3
-        zip_url = utils.upload_file(metadata_path)
+        # commit as "key file" to bucket
+        bucket_key = self.uuid + "/metadata.json"
+        with open(metadata_path, "rb") as fd:
+            _ = utils.upload_file(fd, bucket_key)
 
-        # commit entry to database
-        scan = models.Scan()
+        # zip up folder and commit zipped contents to S3
+        zip_path = utils.zipdir(self.workspace)
+        zip_key = self.uuid + "/analyzed.zip"
+        with open(zip_path, "rb") as fd:
+            zip_url = utils.upload_file(fd, zip_key)
+
+        # delete the path to the zipped file and entire workspace once it's uploaded
+        os.remove(zip_path)
+        shutil.rmtree(self.workspace)
+
+        # create and commit entry to database
+        scan = models.Scan(self.name, self.uuid, bucket_key, zip_url)
+        models.db.session.add(scan)
+        models.db.session.commit()
 
         # send the finalized report link back to the user once everything is committed
         self.emit("finalize_reply", {

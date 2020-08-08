@@ -41,18 +41,14 @@ class Scan(db.Model):
     """
 
     # represents path to local or S3 path for download link to zipped up workspace
-    meta_path = db.Column(db.String(240), unique=True, nullable=True)
-    zip_url = db.Column(db.String(240), unique=True, nullable=True)
+    conf = db.Column(db.String(240), nullable=True)
+    zipurl = db.Column(db.String(240), unique=True, nullable=True)
 
-    def __init__(self, name, uuid, timestamp, meta_path, zip_url):
+    def __init__(self, name, uuid, conf, zipurl):
         self.name = name
         self.uuid = uuid
-        self.meta_path = meta_path
-        self.zip_url = url
+        self.conf = conf
+        self.zipurl = zipurl
 
     def __repr__(self):
         return "<Name {0}>".format(self.name)
-
-
-if __name__ == "__main__":
-    db.create_all()

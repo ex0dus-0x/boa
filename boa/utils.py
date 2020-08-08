@@ -10,21 +10,22 @@ import boto3
 
 import boa.config as config
 
+# instantiates the client used to communicate with S3 bucket.
 s3_client = boto3.client(
     "s3",
     aws_access_key_id=config.AWS_S3_KEY,
     aws_secret_access_key=config.AWS_S3_SECRET,
 )
 
-def upload_file(filename, acl="public-read"):
+def upload_file(obj, filename, acl="public-read"):
     """
-    Upload a file to a S3 bucket, and return a URL that can be used to access it
-    publicly by a user.
+    Given a file object that can read and a corresponding filename for the object in S3,
+    authenticate with the bucket and store the file according to the filename path.
     """
 
     bucket = config.AWS_S3_BUCKET
     s3_client.upload_fileobj(
-        filename,
+        obj,
         bucket,
         filename,
         ExtraArgs={
@@ -33,20 +34,25 @@ def upload_file(filename, acl="public-read"):
     )
 
     # once uploaded, construct url for return
-    dl_url =  "http://{bucket}.s3.amazonaws.com/{bucket}/{}".format(filename, bucket=bucket)
+    dl_url =  "http://{}.s3.us-east-2.amazonaws.com/{}".format(bucket, filename)
     return dl_url
 
 
-def zipdir(input_path, zip_path):
+def zipdir(input_path):
     """
-    Given an input folder path and an output zip file path, create a zip file
-    with all the compressed contents.
+    Given an input folder path and an create a zip file in the same
+    relative directory with all the compressed contents.
     """
-    zipf = zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATEd)
-    for root, _, files in os.walk(path):
-        for f in files:
-            ziph.write(os.path.join(root, f))
+
+    zip_path = input_path + ".zip"
+    zipf = zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED)
+    for root, _, files in os.walk(input_path):
+        for filename in files:
+            absname = os.path.join(root, filename)
+            arcname = os.path.relpath(os.path.join(root, filename), os.path.join(input_path, '..'))
+            zipf.write(absname, arcname)
     zipf.close()
+    return zip_path
 
 
 def allowed_file(filename: str) -> bool:
