@@ -19,12 +19,12 @@ import subprocess
 import requests
 import stdlib_list
 import uncompyle6
-#import decompyle3
+
+# import decompyle3
 
 # other modules that we don't care about
 MOD_DONT_CARE = [
     "pkg_resources",
-
     # Windows-specific Python runtime libraries
     "commctr",
     "netbios",
@@ -47,6 +47,7 @@ class BoaDecompiler(object):
 
     TODO: check and deal with files that are encrypted
     """
+
     def __init__(self, pyver, paths, decomp_all=False):
 
         # instantiate list of all standard library modules
@@ -60,22 +61,18 @@ class BoaDecompiler(object):
         # However, in case uncompyle6 fails decompilation, we fallback:
         #   Python 3.x: decompyle3
         #   Python 2.7.x: uncompyle2
-        self.fallback_decompiler = "uncompyle2" if 20 <= int(pyver) < 30 else "decompyle3"
+        self.fallback_decompiler = (
+            "uncompyle2" if 20 <= int(pyver) < 30 else "decompyle3"
+        )
 
         # used to cache deps already tested to ignore
         self.cached_ignore_deps = set()
 
         # stores a set of all external and internal dependencies
-        self.total_deps = set([
-            ntpath.basename(path).split(".")[0]
-            for path in paths
-        ])
+        self.total_deps = set([ntpath.basename(path).split(".")[0] for path in paths])
 
         # create a mapping with all deps as keys with vals as empty list storing paths
-        self.dep_mapping = {
-            dep: list()
-            for dep in self.total_deps
-        }
+        self.dep_mapping = {dep: list() for dep in self.total_deps}
 
         # reiterate paths and populate self.dep_mapping
         for path in paths:
@@ -97,7 +94,6 @@ class BoaDecompiler(object):
                 else:
                     self.dep_mapping[base] += [path]
 
-
     @staticmethod
     def iter_packages():
         """
@@ -110,8 +106,6 @@ class BoaDecompiler(object):
         # convert to dictionary and get all package names
         pkgs_dict = dict(json.loads(contents))
         return [pkg["project"] for pkg in pkgs_dict["rows"]]
-
-
 
     def _check_if_decompile(self, dep) -> bool:
         """
@@ -148,7 +142,6 @@ class BoaDecompiler(object):
         # between those and the original source code of the application
         return True
 
-
     def decompile_all(self, workspace, no_fallback=False):
         """
         Given all the stored paths of relevant bytecode files, decompile all of them into the workspace directory.
@@ -158,7 +151,9 @@ class BoaDecompiler(object):
 
         # create a flattened list of all relevant files to decompile
         unpack_dir = os.path.join(workspace, "unpacked")
-        decomp_files = sorted({os.path.join(unpack_dir, x) for v in self.dep_mapping.values() for x in v})
+        decomp_files = sorted(
+            {os.path.join(unpack_dir, x) for v in self.dep_mapping.values() for x in v}
+        )
 
         # set directories to read and write to after decompilation
         input_dir = os.path.join(unpack_dir, os.path.commonprefix(decomp_files))

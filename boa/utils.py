@@ -17,6 +17,7 @@ s3_client = boto3.client(
     aws_secret_access_key=config.AWS_S3_SECRET,
 )
 
+
 def upload_file(obj, filename, acl="public-read"):
     """
     Given a file object that can read and a corresponding filename for the object in S3,
@@ -24,17 +25,10 @@ def upload_file(obj, filename, acl="public-read"):
     """
 
     bucket = config.AWS_S3_BUCKET
-    s3_client.upload_fileobj(
-        obj,
-        bucket,
-        filename,
-        ExtraArgs={
-            "ACL": acl,
-        }
-    )
+    s3_client.upload_fileobj(obj, bucket, filename, ExtraArgs={"ACL": acl,})
 
     # once uploaded, construct url for return
-    dl_url =  "http://{}.s3.us-east-2.amazonaws.com/{}".format(bucket, filename)
+    dl_url = "http://{}.s3.us-east-2.amazonaws.com/{}".format(bucket, filename)
     return dl_url
 
 
@@ -49,7 +43,9 @@ def zipdir(input_path):
     for root, _, files in os.walk(input_path):
         for filename in files:
             absname = os.path.join(root, filename)
-            arcname = os.path.relpath(os.path.join(root, filename), os.path.join(input_path, '..'))
+            arcname = os.path.relpath(
+                os.path.join(root, filename), os.path.join(input_path, "..")
+            )
             zipf.write(absname, arcname)
     zipf.close()
     return zip_path

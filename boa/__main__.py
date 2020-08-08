@@ -27,6 +27,7 @@ app.config.from_object("boa.config")
 
 # import database and initialize AFTER app is instantiated
 from boa.models import db, Scan
+
 db.init_app(app)
 
 # initialize Socket.IO interface
@@ -40,9 +41,10 @@ if not os.path.exists(config.UPLOAD_FOLDER):
 if not os.path.exists(config.DB_FOLDER):
     os.mkdir(config.DB_FOLDER)
 
-#======================
+# ======================
 # Static Content Routes
-#======================
+# ======================
+
 
 @app.route("/index")
 def home_redirect():
@@ -58,6 +60,7 @@ def home():
 def about():
     """ Informational route for more technical detail regarding boa """
     return render_template("about.html")
+
 
 @app.route("/pricing")
 def pricing():
@@ -114,14 +117,17 @@ def scan():
 
     files_scanned = 0
     source_files_recovered = 0
-    return render_template("scan.html",
-            files_scanned=files_scanned,
-            source_files_recovered=source_files_recovered)
+    return render_template(
+        "scan.html",
+        files_scanned=files_scanned,
+        source_files_recovered=source_files_recovered,
+    )
 
 
-#=======================
+# =======================
 # Dynamic Content Routes
-#=======================
+# =======================
+
 
 @app.route("/report/<uuid>")
 def report(uuid):
@@ -137,11 +143,12 @@ def report(uuid):
     return render_template("report.html", info=query)
 
 
-#==================
+# ==================
 # API Functionality
-#==================
+# ==================
 
 pyre = flask.Blueprint("api", __name__)
+
 
 @app.route(utils.endpoint("stats"))
 def api_stats():
@@ -157,6 +164,7 @@ def api_scan():
     Main endpoint used to consume a file upload through a POST request.
     """
     pass
+
 
 if __name__ == "__main__":
     socketio.run(app, use_reloader=True, host="0.0.0.0")

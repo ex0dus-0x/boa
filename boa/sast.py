@@ -7,6 +7,7 @@ sast.py
 
 from bandit.core import manager
 
+
 class SASTEngine(object):
     """
     A SASTEngine defines the necessary functionality needed in order to
@@ -33,7 +34,6 @@ class SASTEngine(object):
 
         # run tests using bandit and internally store results
         self.manager.run_tests()
-
 
     def dump_results(self, high_sev_only=False):
         """

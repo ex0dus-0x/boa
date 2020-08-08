@@ -21,7 +21,9 @@ import boa.unpack
 
 
 class CTOCEntry:
-    def __init__(self, position, cmprsdDataSize, uncmprsdDataSize, cmprsFlag, typeCmprsData, name):
+    def __init__(
+        self, position, cmprsdDataSize, uncmprsdDataSize, cmprsFlag, typeCmprsData, name
+    ):
         self.position = position
         self.cmprsdDataSize = cmprsdDataSize
         self.uncmprsdDataSize = uncmprsdDataSize
@@ -31,19 +33,17 @@ class CTOCEntry:
 
 
 class PyInstaller:
-    PYINST20_COOKIE_SIZE = 24           # For pyinstaller 2.0
-    PYINST21_COOKIE_SIZE = 24 + 64      # For pyinstaller 2.1+
-    MAGIC = b'MEI\014\013\012\013\016'  # Magic number which identifies pyinstaller
-
+    PYINST20_COOKIE_SIZE = 24  # For pyinstaller 2.0
+    PYINST21_COOKIE_SIZE = 24 + 64  # For pyinstaller 2.1+
+    MAGIC = b"MEI\014\013\012\013\016"  # Magic number which identifies pyinstaller
 
     def __str__(self):
         return "PyInstaller"
 
-
     def __init__(self, path):
 
         # get file pointer and size for further interaction
-        self.file = open(path, 'rb')
+        self.file = open(path, "rb")
         self.fileSize = os.stat(path).st_size
 
         # try to figure out the version of Pyinstaller used
@@ -56,9 +56,9 @@ class PyInstaller:
             self.version = 20
             self.file.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
 
-            (magic, lengthofPackage, toc, tocLen, self.pyver) = \
-            struct.unpack('!8siiii', self.file.read(self.PYINST20_COOKIE_SIZE))
-
+            (magic, lengthofPackage, toc, tocLen, self.pyver) = struct.unpack(
+                "!8siiii", self.file.read(self.PYINST20_COOKIE_SIZE)
+            )
 
         # Check for pyinstaller 2.1+ before bailing out
         self.file.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
@@ -67,13 +67,20 @@ class PyInstaller:
             self.version = 21
             self.file.seek(self.fileSize - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
 
-            (magic, lengthofPackage, toc, tocLen, self.pyver, pylibname) = \
-            struct.unpack('!8siiii64s', self.file.read(self.PYINST21_COOKIE_SIZE))
+            (
+                magic,
+                lengthofPackage,
+                toc,
+                tocLen,
+                self.pyver,
+                pylibname,
+            ) = struct.unpack("!8siiii64s", self.file.read(self.PYINST21_COOKIE_SIZE))
 
         # if no version parsed out, return an exception
         if self.version == 0:
-            raise Exception("Cannot determine PyInstaller version. Works with 2.0/2.1+.")
-
+            raise Exception(
+                "Cannot determine PyInstaller version. Works with 2.0/2.1+."
+            )
 
         # Overlay is the data appended at the end of the PE
         overlayPos = self.fileSize - lengthofPackage
@@ -87,16 +94,22 @@ class PyInstaller:
         self.tocList = []
         parsedLen = 0
         while parsedLen < tocSize:
-            (entrySize, ) = struct.unpack('!i', self.file.read(4))
-            nameLen = struct.calcsize('!iiiiBc')
+            (entrySize,) = struct.unpack("!i", self.file.read(4))
+            nameLen = struct.calcsize("!iiiiBc")
 
-            (entryPos, cmprsdDataSize, uncmprsdDataSize, cmprsFlag, typeCmprsData, name) = \
-            struct.unpack( \
-                '!iiiBc{0}s'.format(entrySize - nameLen), \
-                self.file.read(entrySize - 4))
+            (
+                entryPos,
+                cmprsdDataSize,
+                uncmprsdDataSize,
+                cmprsFlag,
+                typeCmprsData,
+                name,
+            ) = struct.unpack(
+                "!iiiBc{0}s".format(entrySize - nameLen), self.file.read(entrySize - 4)
+            )
 
             # give arbitrary name to file if unamed
-            name = name.decode('utf-8').rstrip('\0')
+            name = name.decode("utf-8").rstrip("\0")
             if len(name) == 0:
                 name = str(uuid.uuid4())
 
@@ -108,15 +121,14 @@ class PyInstaller:
                     uncmprsdDataSize,
                     cmprsFlag,
                     typeCmprsData,
-                    name
-            ))
+                    name,
+                )
+            )
             parsedLen += entrySize
-
 
         # other attributes to instantiate for unpacking
         self.pyz_len = 0
         self.bytecode_paths = []
-
 
     def unpack(self, unpacked_dir):
         """
@@ -139,7 +151,7 @@ class PyInstaller:
 
             # check and instantiate if doesn't exist
             basePath = os.path.dirname(entry_name)
-            if basePath != '':
+            if basePath != "":
                 # Check if path exists, create if not
                 if not os.path.exists(basePath):
                     os.makedirs(basePath)
@@ -152,21 +164,19 @@ class PyInstaller:
                 data = zlib.decompress(data)
                 # Malware may tamper with the uncompressed size
                 # Comment out the assertion in such a case
-                assert len(data) == entry.uncmprsdDataSize # Sanity Check
+                assert len(data) == entry.uncmprsdDataSize  # Sanity Check
 
             # write to directory
-            with open(entry_name, 'wb') as f:
+            with open(entry_name, "wb") as f:
                 f.write(data)
 
             # check if PYZ file to be extracted
-            if entry.typeCmprsData == b'z':
+            if entry.typeCmprsData == b"z":
                 self._extract_pyz(entry_name)
 
         # revert and return paths to bytecode
         os.chdir(curr_dir)
         return self.bytecode_paths
-
-
 
     def _extract_pyz(self, name):
         """
@@ -174,23 +184,23 @@ class PyInstaller:
         """
 
         # Create a directory for the contents of the pyz
-        dirName =  name + '_extracted'
+        dirName = name + "_extracted"
         if not os.path.exists(dirName):
             os.mkdir(dirName)
 
         # parse out all the bytecode, and store paths for return
-        with open(name, 'rb') as f:
+        with open(name, "rb") as f:
 
             # sanity check the magic number
             pyzMagic = f.read(4)
-            if pyzMagic != b'PYZ\0':
+            if pyzMagic != b"PYZ\0":
                 raise Exception("Found an invalid PYZ file.")
 
             # TODO: differing versions, but should be ok
             pycHeader = f.read(4)
 
             # read out and marshal bytecode files
-            (tocPosition, ) = struct.unpack('!i', f.read(4))
+            (tocPosition,) = struct.unpack("!i", f.read(4))
             f.seek(tocPosition, os.SEEK_SET)
             toc = marshal.load(f)
 
@@ -208,7 +218,7 @@ class PyInstaller:
                 fileName = key
                 try:
                     # for Python > 3.3 some keys are bytes object some are str object
-                    fileName = key.decode('utf-8')
+                    fileName = key.decode("utf-8")
                 except:
                     pass
 
@@ -223,16 +233,16 @@ class PyInstaller:
                     data = f.read(length)
                     data = zlib.decompress(data)
                 except:
-                    with open(destName + '.pyc.encrypted', 'wb') as fd:
+                    with open(destName + ".pyc.encrypted", "wb") as fd:
                         fd.write(data)
                     continue
 
                 # finalize the pyc file if valid
                 dest = destName + ".pyc"
-                with open(dest, 'wb') as pycFile:
-                    pycFile.write(pycHeader)      # Write pyc magic
-                    pycFile.write(b'\0' * 12)      # Write timestamp
-                    #if self.pyver >= 33:
+                with open(dest, "wb") as pycFile:
+                    pycFile.write(pycHeader)  # Write pyc magic
+                    pycFile.write(b"\0" * 12)  # Write timestamp
+                    # if self.pyver >= 33:
                     #    pycFile.write(b'\0' * 4)  # Size parameter added in Python 3.3
                     pycFile.write(data)
 

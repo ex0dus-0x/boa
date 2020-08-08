@@ -25,8 +25,10 @@ import boa.sast as sast
 import boa.models as models
 import boa.utils as utils
 
+
 class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
+
     pass
 
 
@@ -73,7 +75,6 @@ class BoaWorker(sio.Namespace):
         # initialize base object with no namespace identifier
         super().__init__()
 
-
     @staticmethod
     def init_workspace(root: str, name: str) -> str:
         """
@@ -106,10 +107,9 @@ class BoaWorker(sio.Namespace):
         # return the name of the workspace plus binary for user to interact with
         return workspace
 
-
-    #============================
+    # ============================
     # Socket.io Channel Callbacks
-    #============================
+    # ============================
 
     def on_identify(self):
         """
@@ -135,12 +135,10 @@ class BoaWorker(sio.Namespace):
             shutil.rmtree(self.workspace)
 
         # send back payload to UI with appropriate response
-        self.emit("identify_reply", {
-            "packer": str(self.packer),
-            "continue": cont,
-            "error": self.error
-        })
-
+        self.emit(
+            "identify_reply",
+            {"packer": str(self.packer), "continue": cont, "error": self.error},
+        )
 
     def on_unpack(self):
         """
@@ -168,12 +166,14 @@ class BoaWorker(sio.Namespace):
 
         # add a bit of latency since this is pretty quick
         time.sleep(1)
-        self.emit("unpack_reply", {
-            "extracted": len(self.bytecode_paths),
-            "continue": cont,
-            "error": self.error
-        })
-
+        self.emit(
+            "unpack_reply",
+            {
+                "extracted": len(self.bytecode_paths),
+                "continue": cont,
+                "error": self.error,
+            },
+        )
 
     def on_decompile(self):
         """
@@ -192,7 +192,9 @@ class BoaWorker(sio.Namespace):
         # otherwise instantiate decompiler and start recovering source
         else:
             try:
-                self.decompiler = decompile.BoaDecompiler(self.pyver, self.bytecode_paths)
+                self.decompiler = decompile.BoaDecompiler(
+                    self.pyver, self.bytecode_paths
+                )
                 self.relevant_src = self.decompiler.decompile_all(self.workspace)
 
             # exception must be thrown if absolutely no decompilation can be done
@@ -205,12 +207,10 @@ class BoaWorker(sio.Namespace):
             shutil.rmtree(self.workspace)
 
         # send back response with num of files decompiled
-        self.emit("decompile_reply", {
-            "src_files": self.relevant_src,
-            "continue": cont,
-            "error": self.error
-        })
-
+        self.emit(
+            "decompile_reply",
+            {"src_files": self.relevant_src, "continue": cont, "error": self.error},
+        )
 
     def on_sast(self):
         """
@@ -229,10 +229,7 @@ class BoaWorker(sio.Namespace):
         # TODO: scan and store results
 
         # send back response with number of potential bugs found
-        self.emit("sast_reply", {
-            "error": self.error
-        })
-
+        self.emit("sast_reply", {"error": self.error})
 
     def on_finalize(self):
         """
@@ -289,6 +286,4 @@ class BoaWorker(sio.Namespace):
         models.db.session.commit()
 
         # send the finalized report link back to the user once everything is committed
-        self.emit("finalize_reply", {
-            "link": "/report/" + str(self.uuid)
-        })
+        self.emit("finalize_reply", {"link": "/report/" + str(self.uuid)})

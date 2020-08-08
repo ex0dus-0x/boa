@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class Scan(db.Model):
     """
     Stores information for a successful boa scan on an executable for
