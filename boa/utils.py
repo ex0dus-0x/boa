@@ -26,15 +26,14 @@ def upload_file(filename, acl="public-read"):
     s3_client.upload_fileobj(
         filename,
         bucket,
-        filename.filename,
+        filename,
         ExtraArgs={
             "ACL": acl,
-            "ContentType": filename.content_type
         }
     )
 
     # once uploaded, construct url for return
-    dl_url =  "http://{bucket}.s3.amazonaws.com/{bucket}/{}".format(filename.filename, bucket=bucket)
+    dl_url =  "http://{bucket}.s3.amazonaws.com/{bucket}/{}".format(filename, bucket=bucket)
     return dl_url
 
 

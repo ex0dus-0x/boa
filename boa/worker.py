@@ -23,6 +23,7 @@ import boa.unpack as unpack
 import boa.decompile as decompile
 import boa.sast as sast
 import boa.models as models
+import boa.utils as utils
 
 class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
@@ -259,13 +260,16 @@ class BoaWorker(sio.Namespace):
         }
 
         # finalize and write to path
+        metadata_path = os.path.join(self.workspace, "metadata.json")
         metadata_content = json.dumps(dict(metadata))
-        with open(os.path.join(self.workspace, "metadata.json"), "w") as fd:
+        with open(metadata_path, "w") as fd:
             fd.write(metadata_content)
 
-        # commit entry to database
-
         # zip up folder and commit zipped contents to S3
+        zip_url = utils.upload_file(metadata_path)
+
+        # commit entry to database
+        scan = models.Scan()
 
         # send the finalized report link back to the user once everything is committed
         self.emit("finalize_reply", {

@@ -24,10 +24,11 @@ class Scan(db.Model):
     # basic information
     name = db.Column(db.String(120), unique=False, nullable=False)
     uuid = db.Column(db.String(120), unique=True, nullable=False)
+
+    """
     checksum = db.Column(db.String(120), unique=True, nullable=False)
     timestamp = db.Column(db.String(120), unique=True, nullable=False)
 
-    """
     # python-specific information
     pyver = db.Column(db.Integer, unique=False)
     packer = db.Column(db.String(120))
@@ -40,14 +41,14 @@ class Scan(db.Model):
     """
 
     # represents path to local or S3 path for download link to zipped up workspace
-    workspace_metadata = db.Column(db.String(240), unique=True, nullable=True)
-    workspace_zip = db.Column(db.String(240), unique=True, nullable=True)
+    meta_path = db.Column(db.String(240), unique=True, nullable=True)
+    zip_url = db.Column(db.String(240), unique=True, nullable=True)
 
-    def __init__(self, name, uuid, workspace, timestamp):
+    def __init__(self, name, uuid, timestamp, meta_path, zip_url):
         self.name = name
         self.uuid = uuid
-        self.workspace = workspace
-        self.timespace = timespace
+        self.meta_path = meta_path
+        self.zip_url = url
 
     def __repr__(self):
         return "<Name {0}>".format(self.name)
