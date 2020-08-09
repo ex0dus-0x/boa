@@ -142,7 +142,7 @@ class BoaDecompiler(object):
         # between those and the original source code of the application
         return True
 
-    def decompile_all(self, workspace, no_fallback=False):
+    def decompile_all(self, workspace: str, no_fallback=False):
         """
         Given all the stored paths of relevant bytecode files, decompile all of them into the workspace directory.
 
@@ -168,10 +168,12 @@ class BoaDecompiler(object):
             raise e
 
         # FIXME: uncompyle6 is not writing to output_dir. Manually do it for now until we figure out why
+        recovered = []
         for filename in os.listdir(input_dir):
             if filename.endswith(".py"):
                 inpath = os.path.join(input_dir, filename)
                 outpath = os.path.join(output_dir, filename)
                 shutil.copyfile(inpath, outpath)
+                recovered += [filename]
 
-        return len(decomp_files)
+        return recovered

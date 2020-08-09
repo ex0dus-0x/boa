@@ -15,7 +15,7 @@ API_VERSION = "v1"
 # Database configurations
 DB_FOLDER = os.path.join(os.getcwd(), "db")
 SQLALCHEMY_TRACK_MODIFICATIONS = True
-SQLALCHEMY_DATABASE_URI = "sqlite:///db/boascans.db"
+SQLALCHEMY_DATABASE_URI = "sqlite:///{}/boascans.db".format(DB_FOLDER)
 
 # File upload configurations
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "artifacts")

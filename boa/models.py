@@ -4,9 +4,7 @@ models.py
     Database models that are used by Boa for storing persistent information.
 
 """
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from boa.app import db
 
 
 class Scan(db.Model):
@@ -26,30 +24,21 @@ class Scan(db.Model):
     name = db.Column(db.String(120), unique=False, nullable=False)
     uuid = db.Column(db.String(120), unique=True, nullable=False)
 
-    """
-    checksum = db.Column(db.String(120), unique=True, nullable=False)
+    # TODO: make unique once we incorporate checking checksums
+    checksum = db.Column(db.String(120), nullable=False)
     timestamp = db.Column(db.String(120), unique=True, nullable=False)
-
-    # python-specific information
-    pyver = db.Column(db.Integer, unique=False)
-    packer = db.Column(db.String(120))
-    total_deps = db.Column(db.Integer)
-
-    # reversing
-    pyz_files = db.Column(db.Integer)
-    pyc_files = db.Column(db.Integer)
-    src_files = db.Column(db.Integer)
-    """
 
     # represents path to local or S3 path for download link to zipped up workspace
     conf = db.Column(db.String(240), nullable=True)
     zipurl = db.Column(db.String(240), unique=True, nullable=True)
 
-    def __init__(self, name, uuid, conf, zipurl):
+    def __init__(self, name, uuid, checksum, timestamp, conf, zipurl):
         self.name = name
         self.uuid = uuid
+        self.checksum = checksum
+        self.timestamp = timestamp
         self.conf = conf
         self.zipurl = zipurl
 
     def __repr__(self):
-        return "<Name {0}>".format(self.name)
+        return "<Scan {0}>".format(self.name)

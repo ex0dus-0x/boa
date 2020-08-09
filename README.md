@@ -36,7 +36,7 @@ $ export AWS_S3_KEY=<KEY_HERE>
 $ export AWS_S3_SECRET=<SECRET_FOR_KEY>
 
 # set envvar to application entry point, or set `.env`
-$ export FLASK_APP=boa/__main__.py
+$ export FLASK_APP=boa/app.py
 
 # now we can run!
 $ flask run

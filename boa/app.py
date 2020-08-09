@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-__main__.py
+app.py
 
     Main web application service for handling all routes and content delivery for the boa service.
     Built in Flask, it contains all the static and dynamic content routes, as well as API endpoints
@@ -14,24 +14,12 @@ import werkzeug
 
 import flask
 import flask_socketio as sio
+
 from flask import redirect, render_template, request, flash
+from flask_sqlalchemy import SQLAlchemy
 
 import boa.config as config
 import boa.utils as utils
-from boa import worker
-
-# initialize the Flask application with proper configuration
-app = flask.Flask(__name__, template_folder="templates")
-app.secret_key = os.urandom(12)
-app.config.from_object("boa.config")
-
-# import database and initialize AFTER app is instantiated
-from boa.models import db, Scan
-
-db.init_app(app)
-
-# initialize Socket.IO interface
-socketio = sio.SocketIO(app)
 
 # create directory to store executable artifacts and workspaces locally for analysis
 if not os.path.exists(config.UPLOAD_FOLDER):
@@ -40,6 +28,27 @@ if not os.path.exists(config.UPLOAD_FOLDER):
 # create directory to store database
 if not os.path.exists(config.DB_FOLDER):
     os.mkdir(config.DB_FOLDER)
+
+
+# initialize the Flask application with proper configuration
+app = flask.Flask(__name__, template_folder="templates")
+app.secret_key = os.urandom(12)
+app.config.from_object("boa.config")
+
+# instantiate database
+db = SQLAlchemy(app)
+db.init_app(app)
+
+# .. and then import dependencies that require an instantiated db in order to
+# prevent circular dependencies.
+from boa import worker
+from boa.models import Scan
+
+# .. and finally create any models we need
+db.create_all()
+
+# initialize Socket.IO interface
+socketio = sio.SocketIO(app)
 
 # ======================
 # Static Content Routes
@@ -91,9 +100,6 @@ def scan():
         # save file to uploads directory/server
         if input_file and utils.allowed_file(filename):
 
-            # TODO: check against database to see if sample exists, and
-            # redirect to report if found
-
             # retrieve a secure version of the file's name
             path = werkzeug.utils.secure_filename(filename)
 
@@ -140,31 +146,31 @@ def report(uuid):
     if query is None:
         return "Not found!"
 
-    return render_template("report.html", info=query)
+    # once a query is found, ping the S3 key that is stored for all the metadata information
+    report = utils.get_metadata_file(str(query.conf))
+    if report is None:
+        return "Not found!"
+
+    return render_template("report.html", query=query, report=report)
 
 
+"""
+TODO
 # ==================
 # API Functionality
 # ==================
 
 pyre = flask.Blueprint("api", __name__)
 
-
 @app.route(utils.endpoint("stats"))
 def api_stats():
-    """
-    Informational API endpoint that displays stats about the boa service.
-    """
     pass
 
 
 @app.route(utils.endpoint("scan"), methods=["POST"])
 def api_scan():
-    """
-    Main endpoint used to consume a file upload through a POST request.
-    """
     pass
-
+"""
 
 if __name__ == "__main__":
     socketio.run(app, use_reloader=True, host="0.0.0.0")

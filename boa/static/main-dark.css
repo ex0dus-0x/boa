@@ -82,6 +82,19 @@ input[type=submit]:hover { color: var(--background-color); background-color: var
   display: inline-block;
 }
 
+.upload-btn-wrapper input[type=file] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+}
+
+.upload-btn-wrapper input[type=file]:hover {
+  color: var(--background-color) !important;
+  background-color: var(--base-color) !important;
+}
+
+
 .btn-custom {
   border: 1px dotted white;
   border-radius: 4px;
@@ -95,19 +108,28 @@ input[type=submit]:hover { color: var(--background-color); background-color: var
   background-color: var(--base-color);
 }
 
-
-.upload-btn-wrapper input[type=file] {
-  position: absolute;
-  left: 0;
-  top: 0;
-  opacity: 0;
+.btn-accordion {
+    border: none;
+    color: var(--base-color);
+    background-color: transparent
 }
 
-.upload-btn-wrapper input[type=file]:hover {
+.btn-accordion:hover {
   color: var(--background-color) !important;
-  background-color: var(--base-color) !important;
+  background-color: var(--base-color);
 }
 
+.card-dark {
+    background-color: var(--background-color);
+}
+
+.card-header-dark {
+    background-color: var(--background-color);
+}
+
+.card-header, .card-body {
+    background-color: #040403;
+}
 
 *:focus { outline: none; }
 

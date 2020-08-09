@@ -2,54 +2,47 @@
 {% block content %}
 
 <div class="col-md-12">
-    <h1 style="font-size: 22px;">Boa Scan Report</h1>
-    <hr><br>
-    <p><b>Name:</b></p>
-    <p><b>Scan UUID:</b> <code>123-456-789</code></p>
-    <p><b>SHA-2 Checksum:</b></p>
-    <p><b>Time Uploaded:</b></p>
+    <h1 style="font-size: 22px;">Scan Report for {{ query.name }}</h1>
+    <hr>
+    <p><b>Executable Type:</b> Windows PE/EXE</p>
+    <p><b>Checksum:</b> <code>{{ query.checksum }}</code></p>
+    <p><b>Time Uploaded:</b> {{ query.timestamp }}</p>
 
+    <br>
+    <p><a href="{{ query.zipurl }}"><b>Download Results</b></a></p>
     <br>
 
     <!-- Shows relevant informational results -->
     <h2 style="font-size: 18px;">Informational Results</h2>
-    <hr><br>
+    <hr>
+    <p>The information listed below represents results from the analysis pipeline.</p>
+    <br>
 
     <h3 style="font-size: 14px;">Python</h3>
     <br>
     <table class="table">
 	  <tbody>
+        {% for head, item in report["py_info"].items() %}
 		<tr>
-          <td>Python Version</td>
-		  <td>3.6</td>
+            <td><b>{{ head }}</b></td>
+            <td>{{ item }}</td>
 		</tr>
-		<tr>
-          <td>Packer/Installer</td>
-		  <td>PyInstaller</td>
-		</tr>
-		<tr>
-          <td>Dependencies</td>
-		  <td>100</td>
-		</tr>
+        {% endfor %}
 	  </tbody>
 	</table>
+
+    <br>
 
     <h3 style="font-size: 14px;">Reverse Engineering</h3>
     <br>
 	<table class="table">
 	  <tbody>
+        {% for head, item in report["reversing"].items() %}
 		<tr>
-          <td>Archive Files (<code>.pyz</code>) Recovered</td>
-		  <td>100</td>
+            <td><b>{{ head }}</b></td>
+            <td>{{ item }}</td>
 		</tr>
-		<tr>
-          <td>Bytecode Files (<code>.pyc</code>) Recovered</td>
-		  <td>20</td>
-		</tr>
-		<tr>
-		  <td>Relevant Bytecode Files Decompiled</td>
-		  <td>12</td>
-		</tr>
+        {% endfor %}
 	  </tbody>
 	</table>
 
@@ -57,53 +50,21 @@
     <h2>Security Audit</h2>
     <hr>
 
-    <!-- Dropdowns with issue name, severity, and shows patch when clicked -->
-	<div id="accordion">
+	<div class="accordion" id="auditAccordion">
 	  <div class="card">
-		<div class="card-header" id="headingOne">
-		  <p class="mb-0">
-			<button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-			  Collapsible Group Item #1
+		<div class="card-header" id="auditHeading1">
+			<button class="btn-accordion btn-link" type="button" data-toggle="collapse" data-target="#auditCollapse1" aria-expanded="true" aria-controls="auditCollapse1">
+				File: Line:
 			</button>
-		  </p>
 		</div>
 
-		<div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+		<div id="auditCollapse1" class="collapse" aria-labelledby="auditHeading1" data-parent="#auditAccordion">
 		  <div class="card-body">
-			Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-		  </div>
-		</div>
-	  </div>
-	  <div class="card">
-		<div class="card-header" id="headingTwo">
-		  <h5 class="mb-0">
-			<button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-			  Collapsible Group Item #2
-			</button>
-		  </h5>
-		</div>
-		<div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
-		  <div class="card-body">
-			Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-		  </div>
-		</div>
-	  </div>
-	  <div class="card">
-		<div class="card-header" id="headingThree">
-		  <h5 class="mb-0">
-			<button class="btn btn-link collapsed" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-			  Collapsible Group Item #3
-			</button>
-		  </h5>
-		</div>
-		<div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
-		  <div class="card-body">
-			Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
 		  </div>
 		</div>
 	  </div>
 	</div>
-
+	<br><br>
 </div>
 
 {% endblock %}

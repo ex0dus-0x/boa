@@ -51,7 +51,7 @@ class BoaWorker(sio.Namespace):
         # if a valid executable, then start creating valid metadata for it
         self.name = name
         self.timestamp = str(datetime.datetime.utcnow())
-        self.uuid = str(uuid.uuid4())
+        self.uuid = str(uuid.uuid4()).replace("-", "")
 
         # store file's checksum to check against for file uniquity
         hasher = hashlib.sha256()
@@ -182,7 +182,7 @@ class BoaWorker(sio.Namespace):
         """
 
         # number of relevant files returned
-        self.relevant_src = 0
+        self.relevant_src = []
 
         # throw error if no bytecode to parse
         # TODO: otherwise go straight to final report
@@ -209,7 +209,7 @@ class BoaWorker(sio.Namespace):
         # send back response with num of files decompiled
         self.emit(
             "decompile_reply",
-            {"src_files": self.relevant_src, "continue": cont, "error": self.error},
+            {"src_files": len(self.relevant_src), "continue": cont, "error": self.error},
         )
 
     def on_sast(self):
@@ -239,23 +239,18 @@ class BoaWorker(sio.Namespace):
 
         # stores metadata content for later report generation
         metadata = {
-            "basic": {
-                "name": self.name,
-                "uuid": self.uuid,
-                "checksum": self.checksum,
-                "timestamp": self.timestamp,
-            },
             "py_info": {
-                "version": self.pyver,
-                "packer": str(self.packer),
-                "total_deps": len(self.decompiler.total_deps),
-                "dependencies": list(self.decompiler.total_deps),
+                "Python Version": self.pyver,
+                "Packer / Installer": str(self.packer),
+                "Estimated # of Dependencies": len(self.decompiler.total_deps),
             },
+            "Dependencies": list(self.decompiler.total_deps),
             "reversing": {
-                "pyz": self.packer.pyz_len,
-                "pyc": len(self.bytecode_paths),
-                "src": self.relevant_src,
+                "Archive (.pyz) Files": self.packer.pyz_len,
+                "Bytecode (.pyc) Files": len(self.bytecode_paths),
+                "Relevant Source Files Decompiled": len(self.relevant_src),
             },
+            "Source Files": self.relevant_src,
             "audit": self.sec_issues,
         }
 
@@ -281,7 +276,9 @@ class BoaWorker(sio.Namespace):
         shutil.rmtree(self.workspace)
 
         # create and commit entry to database
-        scan = models.Scan(self.name, self.uuid, bucket_key, zip_url)
+        scan = models.Scan(
+            self.name, self.uuid, self.checksum, self.timestamp, bucket_key, zip_url
+        )
         models.db.session.add(scan)
         models.db.session.commit()
 
