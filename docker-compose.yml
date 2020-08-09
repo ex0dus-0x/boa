@@ -1,7 +1,6 @@
 version: "3.7"
 
 services:
-
   boa:
     build: .
     image: boa
@@ -11,3 +10,5 @@ services:
     command: gunicorn app:app
     volumes:
       - .:/usr/src/boa
+
+  # TODO: setup database container
