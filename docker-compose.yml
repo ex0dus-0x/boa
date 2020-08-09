@@ -4,9 +4,16 @@ services:
   boa:
     build: .
     image: boa
-    container_name: boa
     ports:
-      - 8000:5000
+      - 443:443
+      - 80:80
+      - 8080:8080
+    environment:
+      - FLASK_APP
+      - AWS_S3_BUCKET
+      - AWS_S3_KEY
+      - AWS_S3_SECRET
+    container_name: boa
     command: gunicorn app:app
     volumes:
       - .:/usr/src/boa

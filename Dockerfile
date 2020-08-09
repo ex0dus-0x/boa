@@ -9,5 +9,6 @@ ADD ./requirements.txt /usr/src/boa/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY . /usr/src/boa
+EXPOSE 8080
 ENV FLASK_APP=/usr/src/boa/boa/__main__.py
 CMD ["flask", "run"]
