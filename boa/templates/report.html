@@ -84,20 +84,26 @@
 
     <h1>Security Audit Results</h1>
     <hr>
-    <p>Once source is recovered, <b>boa</b> runs audits the code for security issues with static analysis tooling. Here is what it found from your recovered source files.</p>
+    <p>Once source is recovered, <b>boa</b> audits the code for security issues with static analysis tooling. Here is what it found for your recovered source files.</p>
+    <br>
+    <p><b>NOTE</b> that this is currently still a work-in-progress feature.</p>
     <br>
 	<div class="accordion" id="auditAccordion">
       {% for result in report["audit"]["results"] %}
 	  <div class="card">
 		<div class="card-header" id="auditHeading1">
 			<button class="btn-accordion btn-link" type="button" data-toggle="collapse" data-target="#auditCollapse1" aria-expanded="true" aria-controls="auditCollapse1">
-                <b>File:</b> {{ result["filename"] }}
+                <b>File:</b> <code>{{ result["filename"] | basename }}</code>
                 <b>Line:</b> {{ result["line_number"] }}
 			</button>
 		</div>
 		<div id="auditCollapse1" class="collapse" aria-labelledby="auditHeading1" data-parent="#auditAccordion">
 		  <div class="card-body">
-              <code>{{ result["code"] }}</code>
+              <p><b>Severity:</b> {{ result["issue_severity"] | upper }}</p>
+              <p><b>Confidence:</b> {{ result["issue_confidence"] | upper }}</p>
+              <p><b>Issue:</b> {{ result["issue_text"] }}</p>
+              <br>
+              <pre><code>{{ result["code"] | strip }}</code></pre>
 		  </div>
 		</div>
 	  </div>
@@ -108,5 +114,6 @@
 {% endblock %}
 
 {% block scripts %}
-
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 {% endblock %}
