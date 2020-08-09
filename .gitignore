@@ -6,6 +6,7 @@ build/
 __pycache__/
 
 # created by boa
+temp
 db/
 artifacts/
 

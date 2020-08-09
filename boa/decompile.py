@@ -107,6 +107,7 @@ class BoaDecompiler(object):
         pkgs_dict = dict(json.loads(contents))
         return [pkg["project"] for pkg in pkgs_dict["rows"]]
 
+
     def _check_if_decompile(self, dep) -> bool:
         """
         To save time and space, ignore decompiling known dependencies and add them to a set.
@@ -174,6 +175,6 @@ class BoaDecompiler(object):
                 inpath = os.path.join(input_dir, filename)
                 outpath = os.path.join(output_dir, filename)
                 shutil.copyfile(inpath, outpath)
-                recovered += [filename]
+                recovered += [os.path.join(workspace, "recovered", filename)]
 
         return recovered

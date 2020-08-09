@@ -224,16 +224,16 @@ class BoaWorker(sio.Namespace):
         TODO: be configured not to run if we don't care.
         """
 
-        # stores a mapping between a file-line id (as a tuple) and the issue thats being reported
-        self.sec_issues = {}
-
         # instantiate an engine to conduct code scanning
-        engine = sast.SASTEngine(None)
+        engine = sast.SASTEngine()
+        engine.scan_vulns(self.relevant_src)
 
-        # TODO: scan and store results
+        # stores a mapping between a file-line id (as a tuple) and the issue thats being reported
+        self.sec_issues = engine.dump_results()
 
         # send back response with number of potential bugs found
-        self.emit("sast_reply", {"error": self.error})
+        self.emit("sast_reply", {"issues_found": len(self.sec_issues["results"]), "error": self.error})
+
 
     def on_finalize(self):
         """
@@ -254,7 +254,7 @@ class BoaWorker(sio.Namespace):
                 "Bytecode (.pyc) Files": len(self.bytecode_paths),
                 "Relevant Source Files Decompiled": len(self.relevant_src),
             },
-            "srcfiles": self.relevant_src,
+            "srcfiles": [os.path.basename(srcfile) for srcfile in self.relevant_src],
             "audit": self.sec_issues,
         }
 
