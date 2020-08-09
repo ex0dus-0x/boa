@@ -209,7 +209,11 @@ class BoaWorker(sio.Namespace):
         # send back response with num of files decompiled
         self.emit(
             "decompile_reply",
-            {"src_files": len(self.relevant_src), "continue": cont, "error": self.error},
+            {
+                "src_files": len(self.relevant_src),
+                "continue": cont,
+                "error": self.error,
+            },
         )
 
     def on_sast(self):
@@ -244,13 +248,13 @@ class BoaWorker(sio.Namespace):
                 "Packer / Installer": str(self.packer),
                 "Estimated # of Dependencies": len(self.decompiler.total_deps),
             },
-            "Dependencies": list(self.decompiler.total_deps),
+            "dependencies": list(self.decompiler.total_deps),
             "reversing": {
                 "Archive (.pyz) Files": self.packer.pyz_len,
                 "Bytecode (.pyc) Files": len(self.bytecode_paths),
                 "Relevant Source Files Decompiled": len(self.relevant_src),
             },
-            "Source Files": self.relevant_src,
+            "srcfiles": self.relevant_src,
             "audit": self.sec_issues,
         }
 
