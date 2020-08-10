@@ -76,7 +76,8 @@ $(document).ready(function() {
      }
 
      // connect to the socket.io server
-     var socket = io.connect("http://" + document.domain + ":" + location.port);
+     const url = document.location.protocol + "//" + document.domain + ":" + location.port;
+     var socket = io.connect(url);
 
      // once file is uploaded and page reloaded, check if message has changed, and if so,
      // create a loading bar and start the analysis workflow!
