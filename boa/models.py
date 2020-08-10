@@ -32,6 +32,10 @@ class Scan(db.Model):
     conf = db.Column(db.String(240), nullable=True)
     zipurl = db.Column(db.String(240), unique=True, nullable=True)
 
+    # metadata for stats
+    src_count = db.Column(db.Integer)
+    issue_count = db.Column(db.Integer)
+
     def __init__(self, name, uuid, checksum, timestamp, conf, zipurl):
         self.name = name
         self.uuid = uuid
@@ -39,6 +43,13 @@ class Scan(db.Model):
         self.timestamp = timestamp
         self.conf = conf
         self.zipurl = zipurl
+
+    def with_stats(self, src, issue):
+        """
+        Instantiates stats that can be queried for the scan page.
+        """
+        self.src_count = src
+        self.issue_count = issue
 
     def __repr__(self):
         return "<Scan {0}>".format(self.name)

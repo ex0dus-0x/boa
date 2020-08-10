@@ -125,12 +125,22 @@ def scan():
         flash("Filetype not allowed!")
         return redirect(request.url)
 
-    files_scanned = 0
-    source_files_recovered = 0
+    queries = Scan.query.all()
+
+    # number of executables that have been scanned
+    files_scanned = len(queries)
+
+    # parse out stats for total number of source files recovered
+    source_files_recovered = sum([query.src_count for query in queries])
+
+    # total number of security issues found
+    security_issues = sum([query.issue_count for query in queries])
+
     return render_template(
         "scan.html",
         files_scanned=files_scanned,
         source_files_recovered=source_files_recovered,
+        security_issues=security_issues,
     )
 
 

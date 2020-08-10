@@ -51,7 +51,7 @@ class BoaWorker(sio.Namespace):
         # if a valid executable, then start creating valid metadata for it
         self.name = name
         self.timestamp = str(datetime.datetime.utcnow())
-        self.uuid = str(uuid.uuid4()).replace("-", "")
+        self.uuid = str(uuid.uuid4())
 
         # store file's checksum to check against for file uniquity
         hasher = hashlib.sha256()
@@ -74,6 +74,13 @@ class BoaWorker(sio.Namespace):
 
         # initialize base object with no namespace identifier
         super().__init__()
+
+    @staticmethod
+    def check_existence(checksum: str):
+        """
+        Given a file's checksum, check if it has already been analyzed before, and return the
+        report UUID if found
+        """
 
     @staticmethod
     def init_workspace(root: str, name: str) -> str:
@@ -232,8 +239,10 @@ class BoaWorker(sio.Namespace):
         self.sec_issues = engine.dump_results()
 
         # send back response with number of potential bugs found
-        self.emit("sast_reply", {"issues_found": len(self.sec_issues["results"]), "error": self.error})
-
+        self.emit(
+            "sast_reply",
+            {"issues_found": len(self.sec_issues["results"]), "error": self.error},
+        )
 
     def on_finalize(self):
         """
@@ -279,10 +288,13 @@ class BoaWorker(sio.Namespace):
         os.remove(zip_path)
         shutil.rmtree(self.workspace)
 
-        # create and commit entry to database
+        # create scan entry
         scan = models.Scan(
-            self.name, self.uuid, self.checksum, self.timestamp, bucket_key, zip_url
+            self.name, self.uuid, self.checksum, self.timestamp, bucket_key, zip_url,
         )
+        scan.with_stats(len(self.relevant_src), len(metadata["audit"]["results"]))
+
+        # commit to database
         models.db.session.add(scan)
         models.db.session.commit()
 

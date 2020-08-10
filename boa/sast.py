@@ -22,7 +22,6 @@ class SASTEngine(object):
         conf = config.BanditConfig()
         self.manager = manager.BanditManager(conf, None, ignore_nosec=ignore_nosec)
 
-
     def scan_vulns(self, codebase):
         """
         Runs the bandit manager, and store generated metrics for parsing and return.
@@ -35,7 +34,6 @@ class SASTEngine(object):
 
         # run tests using bandit and internally store results
         self.manager.run_tests()
-
 
     def dump_results(self, high_sev_only=False):
         """
