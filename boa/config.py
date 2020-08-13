@@ -1,13 +1,16 @@
 """
 config.py
 
-    Defines constants to be used and configured for the web-based service.
+    Defines constants to be used and configured for the web-based service. The default values of
+    these constants are used to help provision a local build, but changes should all be done through
+    envvars in their name, preferably set in `.env`.
 """
 
 import os
 
 # Flask-specific configurations
 TEMPLATES_AUTO_RELOAD = True
+CORS_HEADERS = "Content-Type"
 
 # API configurations
 API_VERSION = "v1"

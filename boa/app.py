@@ -16,6 +16,7 @@ import flask
 import flask_socketio as sio
 
 from flask import redirect, render_template, request, flash
+from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 
 import boa.config as config
@@ -51,8 +52,13 @@ from boa.models import Scan
 # .. and finally create any models we need
 db.create_all()
 
+# instantiate CORS policy for app
+cors = CORS(app, resources={r"/socket.io": {"origins": "http://0.0.0.0:5000"}})
+
 # initialize Socket.IO interface
-socketio = sio.SocketIO(app)
+socketio = sio.SocketIO(
+    app, cors_allowed_origins="0.0.0.0:5000/socket.io", async_mode="eventlet"
+)
 
 # ======================
 # Static Content Routes
@@ -82,6 +88,7 @@ def pricing():
 
 
 @app.route("/scan", methods=["GET", "POST"])
+@cross_origin(origin="*")
 def scan():
     """
     Represents endpoint used to conduct a scan against an executable, which does so

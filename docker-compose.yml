@@ -4,18 +4,30 @@ services:
   boa:
     build: .
     image: boa
+    depends_on:
+      - db
     ports:
-      - 443:443
-      - 80:80
-      - 8080:8080
+      - 5000:5000
     environment:
       - FLASK_APP
+      - SQLALCHEMY_DATABASE_URI
       - AWS_S3_BUCKET
       - AWS_S3_KEY
       - AWS_S3_SECRET
-    container_name: boa
-    command: gunicorn app:app
+    networks:
+      - default
     volumes:
       - .:/usr/src/boa
 
-  # TODO: setup database container
+  db:
+    image: postgres:latest
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PWD
+      - POSTGRES_DB
+    networks:
+      - default
+    ports:
+      - 5405:5432
+    volumes:
+      - ./db:/var/lib/postgresql/db

@@ -1,5 +1,4 @@
 $(document).ready(function() {
-
     // automatically submit after uploading a form
     $("#file").change(function() {
         $("#form").submit();
@@ -41,7 +40,7 @@ $(document).ready(function() {
     }
 
 
- 	/ convenient helper to create or update a loading bar during the scan
+    // convenient helper to create or update a loading bar during the scan
     function loadingBar(value) {
 
         // if the loading bar exists, update its values
@@ -181,5 +180,3 @@ $(document).ready(function() {
         var link_href = "<a href='" + link + "'>" + link + "</a>"
         newAlert("Done reverse engineering! View the report here: " + link_href);
     });
- });
-
