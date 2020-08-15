@@ -53,12 +53,10 @@ from boa.models import Scan
 db.create_all()
 
 # instantiate CORS policy for app
-cors = CORS(app, resources={r"/socket.io": {"origins": "http://0.0.0.0:5000"}})
+cors = CORS(app, resources={r"/socket.io": {"origins": "*"}})
 
 # initialize Socket.IO interface
-socketio = sio.SocketIO(
-    app, cors_allowed_origins="0.0.0.0:5000/socket.io", async_mode="eventlet"
-)
+socketio = sio.SocketIO(app)
 
 # ======================
 # Static Content Routes
@@ -194,4 +192,4 @@ def api_scan():
 """
 
 if __name__ == "__main__":
-    socketio.run(app, use_reloader=True, host="0.0.0.0")
+    socketio.run(app, host="0.0.0.0")

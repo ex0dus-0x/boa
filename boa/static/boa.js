@@ -75,9 +75,9 @@ $(document).ready(function() {
     }
 
     // connect to the socket.io server
-    const url = document.location.protocol + "//" + document.domain
+    var url = document.location.protocol + "//" + document.domain
     if (location.port != "") {
-        url.concat(":" + location.port);
+        url = url.concat(":" + location.port);
     }
 
     var socket = io.connect(url);
@@ -180,3 +180,4 @@ $(document).ready(function() {
         var link_href = "<a href='" + link + "'>" + link + "</a>"
         newAlert("Done reverse engineering! View the report here: " + link_href);
     });
+});

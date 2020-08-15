@@ -31,9 +31,9 @@ To build and start a local development instance:
 $ pip install -r requirements.txt
 
 # set envvars for S3 integration
-$ export AWS_S3_BUCKET=<BUCKET_NAME>
-$ export AWS_S3_KEY=<KEY_HERE>
-$ export AWS_S3_SECRET=<SECRET_FOR_KEY>
+$ export S3_BUCKET=<BUCKET_NAME>
+$ export AWS_ACCESS_KEY_ID=<KEY_HERE>
+$ export AWS_SECRET_ACCESS_KEY=<SECRET_FOR_KEY>
 
 # set envvar to application entry point, or set `.env`
 $ export FLASK_APP=boa/app.py
