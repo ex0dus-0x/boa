@@ -75,7 +75,15 @@ $(document).ready(function() {
     }
 
     // connect to the socket.io server
-    var url = document.location.protocol + "//" + document.domain
+    /*
+    if (window.location.protocol == "https:") {
+      var ws_scheme = "wss://";
+    } else {
+      var ws_scheme = "ws://"
+    };
+    */
+    var ws_scheme = window.location.protocol
+    var url = ws_scheme + "//" + document.domain;
     if (location.port != "") {
         url = url.concat(":" + location.port);
     }

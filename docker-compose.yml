@@ -1,15 +1,14 @@
 version: "3.7"
 
 services:
-  boa:
+  app:
     build: .
     image: boa
     depends_on:
       - db
     ports:
-      - 5000:5000
+      - 5000:80
     environment:
-      - FLASK_APP
       - SQLALCHEMY_DATABASE_URI
       - S3_BUCKET
       - AWS_ACCESS_KEY_ID
@@ -22,9 +21,9 @@ services:
   db:
     image: postgres:latest
     environment:
-      - POSTGRES_USER
-      - POSTGRES_PWD
       - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
     networks:
       - default
     ports:
