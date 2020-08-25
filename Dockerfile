@@ -6,7 +6,7 @@ WORKDIR /usr/src/boa
 
 # set envvars for use
 ENV FLASK_RUN_HOST 0.0.0.0
-ENV FLASK_APP /usr/src/boa/boa/app.py
+ENV FLASK_APP /usr/src/boa
 
 # install requirements
 RUN apt-get update -y && apt-get install gcc -y
@@ -19,4 +19,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /usr/src/boa
 
 EXPOSE 80
-CMD ["flask", "run", "/usr/src/boa"]
+CMD ["flask", "run"]
