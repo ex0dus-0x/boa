@@ -8,6 +8,7 @@ __boa__ is a web-based reverse engineering platform dedicated to extrapolating s
 
 ### Features
 
+* Simple & Intuitive User Interface
 * Supports 2 installer unpackers
 * Static analysis on decompiled source with `bandit`
 * Report generation after analysis
@@ -17,10 +18,10 @@ __boa__ is a web-based reverse engineering platform dedicated to extrapolating s
 
 ### Docker
 
-WIP: Setting up `docker-compose`
+Use `docker-compose up` to run a local development boa setup:
 
 ```
-$ docker build .
+$ docker-compose up
 ```
 
 ### Manual

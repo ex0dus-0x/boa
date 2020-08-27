@@ -6,10 +6,10 @@ WORKDIR /usr/src/boa
 
 # set envvars for use
 ENV FLASK_RUN_HOST 0.0.0.0
-ENV FLASK_APP /usr/src/boa
+ENV FLASK_APP /usr/src/boa/boa/app.py
 
 # install requirements
-RUN apt-get update -y && apt-get install gcc -y
+RUN apt-get update -y && apt-get install gcc libpq-dev -y
 
 # add and install requirements to directory
 ADD ./requirements.txt /usr/src/boa/requirements.txt

@@ -14,3 +14,5 @@ artifacts/
 *.pyc
 *.pyz
 *.db
+
+docker-compose.override.yml
