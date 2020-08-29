@@ -9,11 +9,9 @@ config.py
 import os
 
 # Flask-specific configurations
+DEBUG_MODE = os.environ.get("DEBUG_MODE", False)
 TEMPLATES_AUTO_RELOAD = True
 CORS_HEADERS = "Content-Type"
-
-# API configurations
-API_VERSION = "v1"
 
 # Database configurations
 DB_FOLDER = os.path.join(os.getcwd(), "db")
@@ -29,6 +27,3 @@ MAX_CONTENT_LENGTH = 1024 ** 3
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET = os.environ.get("S3_BUCKET")
-
-# this var is unset if no S3 info given, specifically the bucket name
-LOCAL_ONLY = True if not S3_BUCKET else False

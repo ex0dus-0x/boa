@@ -173,23 +173,5 @@ def report(uuid):
     return render_template("report.html", query=query, report=report)
 
 
-"""
-TODO
-# ==================
-# API Functionality
-# ==================
-
-pyre = flask.Blueprint("api", __name__)
-
-@app.route(utils.endpoint("stats"))
-def api_stats():
-    pass
-
-
-@app.route(utils.endpoint("scan"), methods=["POST"])
-def api_scan():
-    pass
-"""
-
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0")
