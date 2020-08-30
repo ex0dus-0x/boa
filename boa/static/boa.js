@@ -184,7 +184,7 @@ $(document).ready(function() {
         loadingBar(100);
 
         // return the link to the report back to the user
-        var link = "https://" + document.domain + resp["link"]
+        var link = url+ resp["link"]
         var link_href = "<a href='" + link + "'>" + link + "</a>"
         newAlert("Done reverse engineering! View the report here: " + link_href);
     });

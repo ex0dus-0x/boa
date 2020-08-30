@@ -8,7 +8,6 @@ app.py
 """
 
 import os
-import shutil
 import json
 import werkzeug
 
@@ -107,12 +106,10 @@ def scan():
             return flask.redirect(request.url)
 
         # save file to uploads directory/server
-        if input_file and utils.allowed_file(filename):
+        if input_file:
 
             # retrieve a secure version of the file's name
             path = werkzeug.utils.secure_filename(filename)
-
-            # TODO: rudimentary malware check with Virustotal
 
             # instantiate the workspace, and register namespace with socketio
             try:
@@ -159,7 +156,6 @@ def report(uuid):
     """
     Dynamically generates a presentable report for consumption by the user for the binary parsed out.
     """
-
     # given a uuid, find entry in database, and return dynamic content
     query = Scan.query.filter_by(uuid=uuid).first()
     if query is None:

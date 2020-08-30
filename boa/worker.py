@@ -41,12 +41,12 @@ class BoaWorker(sio.Namespace):
 
     def __init__(self, name, root, input_file) -> None:
 
-        # sanity-check: do not instantiate if PE is malformed
+        # sanity-check: do not instantiate if PE is malforme
         filecontent = input_file.read()
         try:
             _ = pefile.PE(data=filecontent)
         except pefile.PEFormatError:
-            raise WorkerException("Malformed PE file! Cannot parse.")
+            raise WorkerException("Is not a valid PE/EXE file! Cannot parse.")
 
         # if a valid executable, then start creating valid metadata for it
         self.name = name
@@ -79,8 +79,9 @@ class BoaWorker(sio.Namespace):
     def check_existence(checksum: str):
         """
         Given a file's checksum, check if it has already been analyzed before, and return the
-        report UUID if found
+        report UUID if found (TODO)
         """
+        pass
 
     @staticmethod
     def init_workspace(root: str, name: str) -> str:
@@ -135,6 +136,8 @@ class BoaWorker(sio.Namespace):
         except Exception as e:
             self.packer = None
             self.error = str(e)
+
+        # TODO: identify if the sample is malware from Virustotal API scan
 
         # delete workspace created if the packer is unknown
         cont = self.packer != None
@@ -210,8 +213,8 @@ class BoaWorker(sio.Namespace):
 
         # delete workspace if decompilation absolutely cannot be done
         cont = False if self.error else True
-        if not cont:
-            shutil.rmtree(self.workspace)
+        # if not cont:
+        #    shutil.rmtree(self.workspace)
 
         # send back response with num of files decompiled
         self.emit(

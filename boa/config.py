@@ -16,14 +16,17 @@ CORS_HEADERS = "Content-Type"
 # Database configurations
 DB_FOLDER = os.path.join(os.getcwd(), "db")
 SQLALCHEMY_TRACK_MODIFICATIONS = True
-SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI", "sqlite:///{}/boascans.db".format(DB_FOLDER))
+SQLALCHEMY_DATABASE_URI = os.environ.get(
+    "SQLALCHEMY_DATABASE_URI", "sqlite:///{}/boascans.db".format(DB_FOLDER)
+)
 
 # File upload configurations
 UPLOAD_FOLDER = os.path.join(os.getcwd(), "artifacts")
-ALLOWED_EXTENSIONS = ["exe", "pe"]
+ALLOWED_EXTENSIONS = ["exe", "pe", "bin"]
 MAX_CONTENT_LENGTH = 1024 ** 3
 
 # Amazon S3 settings - get IAM user key and secret with permission to bucket
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 S3_BUCKET = os.environ.get("S3_BUCKET")
+AWS_REGION = os.environ.get("AWS_REGION", "us-east-2")

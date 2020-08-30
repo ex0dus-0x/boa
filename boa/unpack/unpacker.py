@@ -12,7 +12,7 @@ import yara
 from boa.unpack import pyinstaller, py2exe
 
 
-class BaseUnpacker(object):
+class BaseUnpacker:
     """
     Defines a base unpacker class to inherit from for all variants of
     packers used for the Python executable distribution ecosystem.

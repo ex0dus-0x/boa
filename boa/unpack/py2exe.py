@@ -8,7 +8,12 @@ py2exe.py
 import pefile
 import unpy2exe
 
+
 class Py2Exe(object):
+    """
+    Cheating with unpy2exe >:)
+    """
+
     def __init__(self, filepath):
         self.filepath = filepath
         self.pyz_len = 0

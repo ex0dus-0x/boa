@@ -28,13 +28,11 @@ def upload_file(obj, filename: str, acl="public-read") -> str:
     """
 
     # upload the file with as the given filename
-    s3_client.upload_fileobj(
-        obj, config.S3_BUCKET, filename, ExtraArgs={"ACL": acl,}
-    )
+    s3_client.upload_fileobj(obj, config.S3_BUCKET, filename, ExtraArgs={"ACL": acl,})
 
     # once uploaded, construct url for return
-    dl_url = "http://{}.s3.us-east-2.amazonaws.com/{}".format(
-        config.S3_BUCKET, filename
+    dl_url = "http://{}.s3.{}.amazonaws.com/{}".format(
+        config.S3_BUCKET, config.AWS_REGION, filename
     )
     return dl_url
 
@@ -47,9 +45,7 @@ def get_metadata_file(filekey: str):
 
     # we want to store file contents in-memory rather than write to disk
     byte_buf = io.BytesIO()
-    s3_client.download_fileobj(
-        Bucket=config.S3_BUCKET, Key=filekey, Fileobj=byte_buf
-    )
+    s3_client.download_fileobj(Bucket=config.S3_BUCKET, Key=filekey, Fileobj=byte_buf)
 
     # parse out the data as a UTF-8 string, and deserialize it
     data = byte_buf.getvalue().decode()
@@ -73,18 +69,3 @@ def zipdir(input_path: str) -> str:
             zipf.write(absname, arcname)
     zipf.close()
     return zip_path
-
-
-def allowed_file(filename: str) -> bool:
-    """
-    Helper to check if an input file is an allowed extension to use.
-    """
-    _, ext = os.path.splitext(filename)
-    return ext.lower()[1:] in config.ALLOWED_EXTENSIONS
-
-
-def endpoint(name: str) -> str:
-    """
-    Helper routine that constructs an appropriate API endpoint URL
-    """
-    return "/api/" + config.API_VERSION + "/" + name
