@@ -10,6 +10,7 @@ import os
 
 # Flask-specific configurations
 DEBUG_MODE = os.environ.get("DEBUG_MODE", False)
+SECRET_KEY = os.urandom(16)
 TEMPLATES_AUTO_RELOAD = True
 CORS_HEADERS = "Content-Type"
 

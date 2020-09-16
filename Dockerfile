@@ -18,5 +18,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # copy over rest of source
 COPY . /usr/src/boa
 
-EXPOSE 80
-CMD ["flask", "run"]
+EXPOSE 8000
+CMD ["gunicorn", "--worker-class", "eventlet", "--log-file=-", "boa.app:app"]
