@@ -39,13 +39,23 @@ class SASTEngine(object):
         """
         Parse out the results, and return something that can be consumed into a report.
         """
-        tmp = tempfile.NamedTemporaryFile(mode="w", delete=False)
-        self.manager.output_results(1, "HIGH", "HIGH", tmp, "json")
+        htmp = tempfile.NamedTemporaryFile(mode="w", delete=False)
+        self.manager.output_results(1, "HIGH", "HIGH", htmp, "json")
+
+        # TODO: use singular temporary file
+        mtmp = tempfile.NamedTemporaryFile(mode="w", delete=False)
+        self.manager.output_results(1, "MEDIUM", "HIGH", mtmp, "json")
 
         # reopen file, since bandit closes it, and load as dict for return
-        with open(tmp.name, "r") as fd:
+        with open(htmp.name, "r") as fd:
             data = dict(json.loads(fd.read()))
 
+        with open(mtmp.name, "r") as fd:
+            data.update(dict(json.loads(fd.read())))
+
+        print(data)
+
         # delete the temporary file manually now
-        os.remove(tmp.name)
+        os.remove(htmp.name)
+        os.remove(mtmp.name)
         return data

@@ -92,12 +92,12 @@
       {% for result in report["audit"]["results"] %}
 	  <div class="card">
 		<div class="card-header" id="auditHeading1">
-			<button class="btn-accordion btn-link" type="button" data-toggle="collapse" data-target="#auditCollapse1" aria-expanded="true" aria-controls="auditCollapse1">
+            <button class="btn-accordion btn-link" type="button" data-toggle="collapse" data-target="#auditCollapse{{loop.index}}" aria-expanded="true" aria-controls="auditCollapse{{loop.index}}">
                 <b>File:</b> <code>{{ result["filename"] | basename }}</code>
                 <b>Line:</b> {{ result["line_number"] }}
 			</button>
 		</div>
-		<div id="auditCollapse1" class="collapse" aria-labelledby="auditHeading1" data-parent="#auditAccordion">
+        <div id="auditCollapse{{loop.index}}" class="collapse" aria-labelledby="auditHeading{{loop.index}}" data-parent="#auditAccordion">
 		  <div class="card-body">
               <p><b>Severity:</b> {{ result["issue_severity"] | upper }}</p>
               <p><b>Confidence:</b> {{ result["issue_confidence"] | upper }}</p>

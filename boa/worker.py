@@ -24,6 +24,7 @@ import boa.decompile as decompile
 import boa.sast as sast
 import boa.models as models
 import boa.utils as utils
+import boa.config as config
 
 
 class WorkerException(Exception):
@@ -102,9 +103,9 @@ class BoaWorker(sio.Namespace):
         # construct the path to the workspace directory, ie `artifacts/File.exe_analyzed`
         workspace = os.path.join(root, name + "_analyzed")
 
-        # return if previously created
+        # return if previously created. Anything that persists on disk has failed.
         if os.path.exists(workspace):
-            return workspace
+            shutil.rmtree(workspace)
 
         # create the directory if it doesn't exist
         os.mkdir(workspace)
@@ -130,9 +131,11 @@ class BoaWorker(sio.Namespace):
         """
 
         # first, check if the file already exists in our database
-        uuid = BoaWorker.check_existence(self.checksum)
-        if uuid is not None:
-            self.emit("identify_reply", {"link": "/report/" + uuid})
+        if not config.DEBUG_MODE:
+            uuid = BoaWorker.check_existence(self.checksum)
+            if uuid is not None:
+                self.emit("identify_reply", {"link": "/report/" + uuid})
+                return
 
         # info parsed out: version
         self.pyver = None

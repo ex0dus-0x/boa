@@ -109,6 +109,7 @@ $(document).ready(function() {
         // if an existing entry is found, exit early
         if (resp["link"]) {
             success("Found existing artifact!", resp["link"])
+            return
         }
 
         var header = "Packer Detection";
