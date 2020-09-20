@@ -74,15 +74,19 @@ $(document).ready(function() {
         `);
     }
 
+    // helper to trigger success alert
+    function success(msg, link) {
+        // update the loading bar to completion
+        loadingBar(100);
+
+        // return the link to the report back to the user
+        var link = url + link;
+        var link_href = "<a href='" + link + "'>" + link + "</a>";
+        newAlert(msg + " View the report here: " + link_href);
+    }
+
     // connect to the socket.io server
-    /*
-    if (window.location.protocol == "https:") {
-      var ws_scheme = "wss://";
-    } else {
-      var ws_scheme = "ws://"
-    };
-    */
-    var ws_scheme = window.location.protocol
+    var ws_scheme = window.location.protocol;
     var url = ws_scheme + "//" + document.domain;
     if (location.port != "") {
         url = url.concat(":" + location.port);
@@ -94,13 +98,19 @@ $(document).ready(function() {
     // create a loading bar and start the analysis workflow!
     // TODO: maybe kinda hacky, is there a better way?
     if ($("#message").text().indexOf("Successfully uploaded!") > -1) {
- 	   loadingBar(0);
+ 	    loadingBar(0);
         initTable();
         socket.emit("identify");
     }
 
 
     socket.on("identify_reply", function(resp) {
+
+        // if an existing entry is found, exit early
+        if (resp["link"]) {
+            success("Found existing artifact!", resp["link"])
+        }
+
         var header = "Packer Detection";
         if (resp["continue"] != false) {
             // update the loading bar
@@ -180,12 +190,6 @@ $(document).ready(function() {
 
 
     socket.on("finalize_reply", function(resp) {
-        // update the loading bar to completion
-        loadingBar(100);
-
-        // return the link to the report back to the user
-        var link = url+ resp["link"]
-        var link_href = "<a href='" + link + "'>" + link + "</a>"
-        newAlert("Done reverse engineering! View the report here: " + link_href);
+        success("Done reverse engineering!", resp["link"])
     });
 });

@@ -35,6 +35,8 @@ app = flask.Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(12)
 app.config.from_object("boa.config")
 
+app.jinja_env.lstrip_blocks = True
+
 # register custom filters to use
 app.jinja_env.filters["basename"] = os.path.basename
 app.jinja_env.filters["strip"] = str.strip

@@ -76,12 +76,17 @@ class BoaWorker(sio.Namespace):
         super().__init__()
 
     @staticmethod
-    def check_existence(checksum: str):
+    def check_existence(checksum: str) -> str:
         """
         Given a file's checksum, check if it has already been analyzed before, and return the
-        report UUID if found (TODO)
+        report UUID if found
         """
-        pass
+        queries = models.Scan.query.all()
+        for query in queries:
+            if query.checksum == checksum:
+                return query.uuid
+
+        return None
 
     @staticmethod
     def init_workspace(root: str, name: str) -> str:
@@ -97,8 +102,7 @@ class BoaWorker(sio.Namespace):
         # construct the path to the workspace directory, ie `artifacts/File.exe_analyzed`
         workspace = os.path.join(root, name + "_analyzed")
 
-        # if already analyzed before, return path without recreating workspace
-        # TODO: useful for testing, remove after
+        # return if previously created
         if os.path.exists(workspace):
             return workspace
 
@@ -124,6 +128,11 @@ class BoaWorker(sio.Namespace):
         Server-side message handler used to identify and instantiate the packer for the specific exeutable
         in context. If parsing and instantiating failed, return error to stop analysis flow.
         """
+
+        # first, check if the file already exists in our database
+        uuid = BoaWorker.check_existence(self.checksum)
+        if uuid is not None:
+            self.emit("identify_reply", {"link": "/report/" + uuid})
 
         # info parsed out: version
         self.pyver = None
@@ -293,7 +302,12 @@ class BoaWorker(sio.Namespace):
 
         # create scan entry
         scan = models.Scan(
-            self.name, self.uuid, self.checksum, self.timestamp, bucket_key, zip_url,
+            self.name,
+            self.uuid,
+            self.checksum,
+            self.timestamp,
+            bucket_key,
+            zip_url,
         )
         scan.with_stats(len(self.relevant_src), len(metadata["audit"]["results"]))
 
