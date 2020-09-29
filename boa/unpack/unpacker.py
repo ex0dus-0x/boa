@@ -53,9 +53,10 @@ def get_packer(filepath: str) -> t.Optional[t.Any]:
         return None
 
     # determine which packer was used
+    packer = None
     if matches[0].rule == "pyinstaller":
-        return pyinstaller.PyInstaller(filepath)
+        packer = pyinstaller.PyInstaller(filepath)
     elif matches[0].rule == "py2exe":
-        return py2exe.Py2exe(filepath)
-    else:
-        return None
+        packer = py2exe.Py2exe(filepath)
+
+    return packer

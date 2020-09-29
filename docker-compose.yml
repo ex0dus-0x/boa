@@ -9,7 +9,6 @@ services:
     ports:
       - 8000:8000
     environment:
-      - DEBUG_MODE=true
       - SQLALCHEMY_DATABASE_URI
       - S3_BUCKET
       - AWS_ACCESS_KEY_ID

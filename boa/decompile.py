@@ -4,8 +4,8 @@ decompiler.py
     Provides an interface object for decompilation, consuming a codebase of bytecode paths
     and recovering the source from only the ones that are relevant to the program execution.
 
-    TODO: Aggregates fallback decompiler APIs besides `uncompyle6` in order to fix potential bugs that
-    may arise from the decompiler.
+    TODO: Aggregates fallback decompiler APIs besides `uncompyle6` in order to fix
+    potential bugs that may arise from the decompiler.
 
 """
 import os
@@ -13,10 +13,7 @@ import sys
 import json
 import ntpath
 import shutil
-import pkgutil
-import subprocess
 
-import requests
 import stdlib_list
 import uncompyle6
 
@@ -39,7 +36,7 @@ MOD_DONT_CARE = [
 ]
 
 
-class BoaDecompiler(object):
+class BoaDecompiler:
     """
     Defines the decompiler interface used that aggregates different decompiler
     modules for source recovery when given bytecode. Implements rudimentary
@@ -69,7 +66,7 @@ class BoaDecompiler(object):
         self.cached_ignore_deps = set()
 
         # stores a set of all external and internal dependencies
-        self.total_deps = set([ntpath.basename(path).split(".")[0] for path in paths])
+        self.total_deps = set(ntpath.basename(path).split(".")[0] for path in paths)
 
         # create a mapping with all deps as keys with vals as empty list storing paths
         self.dep_mapping = {dep: list() for dep in self.total_deps}
@@ -97,11 +94,11 @@ class BoaDecompiler(object):
     @staticmethod
     def iter_packages():
         """
-        Helper function to obtain a dataset of top PyPI packages to check dependencies against. If present and known,
-        we should NOT decompile it to save time.
+        Helper function to obtain a dataset of top PyPI packages to check dependencies against.
+        If present and known, we should NOT decompile it to save time.
         """
-        with open(os.path.join("ext", "package-dataset.json"), "r") as fd:
-            contents = fd.read()
+        with open(os.path.join("ext", "package-dataset.json"), "r") as dataset:
+            contents = dataset.read()
 
         # convert to dictionary and get all package names
         pkgs_dict = dict(json.loads(contents))
@@ -138,13 +135,14 @@ class BoaDecompiler(object):
             self.cached_ignore_deps.update(dep)
             return False
 
-        # there may be smaller deps that end up as false positives, since we can't make a distinction
-        # between those and the original source code of the application
+        # there may be smaller deps that end up as false positives, since we can't make
+        # a distinction between those and the original source code of the application
         return True
 
-    def decompile_all(self, workspace: str, no_fallback=False):
+    def decompile_all(self, workspace: str):
         """
-        Given all the stored paths of relevant bytecode files, decompile all of them into the workspace directory.
+        Given all the stored paths of relevant bytecode files, decompile all of them into the
+        workspace directory.
 
         TODO: If a decompiler fails for some reason, swap over to the fallback one.
         """
@@ -164,10 +162,10 @@ class BoaDecompiler(object):
             uncompyle6.main.main(input_dir, output_dir, decomp_files, [])
 
         # TODO: at an exception, unless configured, call the fallback decompiler
-        except Exception as e:
-            raise e
+        except Exception as err:
+            raise err
 
-        # FIXME: uncompyle6 is not writing to output_dir. Manually do it for now until we figure out why
+        # FIXME: uncompyle6 is not writing to output_dir. Manually do it for now
         recovered = []
         for filename in os.listdir(input_dir):
             if filename.endswith(".py"):

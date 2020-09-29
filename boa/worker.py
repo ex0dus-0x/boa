@@ -30,8 +30,6 @@ import boa.config as config
 class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
 
-    pass
-
 
 class BoaWorker(sio.Namespace):
     """
@@ -126,15 +124,16 @@ class BoaWorker(sio.Namespace):
 
     def on_identify(self):
         """
-        Server-side message handler used to identify and instantiate the packer for the specific exeutable
-        in context. If parsing and instantiating failed, return error to stop analysis flow.
+        Server-side message handler used to identify and instantiate the packer for
+        the executable in context. If parsing and instantiating failed, return error
+        to stop analysis flow.
         """
 
         # first, check if the file already exists in our database
         if not config.DEBUG_MODE:
-            uuid = BoaWorker.check_existence(self.checksum)
-            if uuid is not None:
-                self.emit("identify_reply", {"link": "/report/" + uuid})
+            uid = BoaWorker.check_existence(self.checksum)
+            if uid is not None:
+                self.emit("identify_reply", {"link": "/report/" + uid})
                 return
 
         # info parsed out: version
@@ -145,9 +144,9 @@ class BoaWorker(sio.Namespace):
         try:
             self.packer = unpack.get_packer(self.path)
             self.pyver = self.packer.pyver
-        except Exception as e:
+        except Exception as err:
             self.packer = None
-            self.error = str(e)
+            self.error = str(err)
 
         # TODO: identify if the sample is malware from Virustotal API scan
 
@@ -240,8 +239,8 @@ class BoaWorker(sio.Namespace):
 
     def on_sast(self):
         """
-        Runs a `SASTEngine` against all the recovered source files and parse out all potential security issues.
-        Issues support leaked secrets and python code quality assurance.
+        Runs a `SASTEngine` against all the recovered source files and parse out all potential
+        security issues. Issues support leaked secrets and python code quality assurance.
 
         TODO: be configured not to run if we don't care.
         """

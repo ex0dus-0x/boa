@@ -10,14 +10,9 @@ pyinstaller.py
 
 import os
 import zlib
-import sys
-import types
 import uuid
 import struct
 import marshal
-import pathlib
-
-import boa.unpack
 
 
 class CTOCEntry:
@@ -56,7 +51,7 @@ class PyInstaller:
             self.version = 20
             self.file.seek(self.fileSize - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
 
-            (magic, lengthofPackage, toc, tocLen, self.pyver) = struct.unpack(
+            (_, lengthofPackage, toc, tocLen, self.pyver) = struct.unpack(
                 "!8siiii", self.file.read(self.PYINST20_COOKIE_SIZE)
             )
 
@@ -212,39 +207,39 @@ class PyInstaller:
                 toc = dict(toc)
 
             for key in toc.keys():
-                (ispkg, pos, length) = toc[key]
+                (_, pos, length) = toc[key]
                 f.seek(pos, os.SEEK_SET)
 
-                fileName = key
+                filename = key
                 try:
                     # for Python > 3.3 some keys are bytes object some are str object
-                    fileName = key.decode("utf-8")
-                except:
+                    filename = key.decode("utf-8")
+                except Exception:
                     pass
 
                 # Make sure destination directory exists, ensuring we keep inside dirName
-                destName = os.path.join(dirName, fileName.replace("..", "__"))
-                destDirName = os.path.dirname(destName)
-                if not os.path.exists(destDirName):
-                    os.makedirs(destDirName)
+                destname = os.path.join(dirName, filename.replace("..", "__"))
+                destdirname = os.path.dirname(destname)
+                if not os.path.exists(destdirname):
+                    os.makedirs(destdirname)
 
                 # if anything errors when attempting to read, assume its encrypted and write as is
                 try:
                     data = f.read(length)
                     data = zlib.decompress(data)
-                except:
-                    with open(destName + ".pyc.encrypted", "wb") as fd:
-                        fd.write(data)
+                except Exception:
+                    with open(destname + ".pyc.encrypted", "wb") as encfile:
+                        encfile.write(data)
                     continue
 
                 # finalize the pyc file if valid
-                dest = destName + ".pyc"
-                with open(dest, "wb") as pycFile:
-                    pycFile.write(pycHeader)  # Write pyc magic
-                    pycFile.write(b"\0" * 12)  # Write timestamp
+                dest = destname + ".pyc"
+                with open(dest, "wb") as pycfile:
+                    pycfile.write(pycHeader)  # Write pyc magic
+                    pycfile.write(b"\0" * 12)  # Write timestamp
                     # if self.pyver >= 33:
-                    #    pycFile.write(b'\0' * 4)  # Size parameter added in Python 3.3
-                    pycFile.write(data)
+                    #    pycfile.write(b'\0' * 4)  # Size parameter added in Python 3.3
+                    pycfile.write(data)
 
                 # add valid pyc path
                 self.bytecode_paths += [dest]

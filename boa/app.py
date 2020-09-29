@@ -8,9 +8,6 @@ app.py
 """
 
 import os
-import json
-import werkzeug
-
 import flask
 import flask_socketio as sio
 
@@ -66,11 +63,13 @@ socketio = sio.SocketIO(app)
 
 @app.route("/index")
 def home_redirect():
+    """ Redirects to static home page """
     return redirect(flask.url_for("home"))
 
 
 @app.route("/")
 def home():
+    """ Renders static home page """
     return render_template("index.html")
 
 
@@ -111,17 +110,17 @@ def scan():
         if input_file:
 
             # retrieve a secure version of the file's name
-            path = werkzeug.utils.secure_filename(filename)
+            #path = werkzeug.utils.secure_filename(filename)
 
             # instantiate the workspace, and register namespace with socketio
             try:
-                w = worker.BoaWorker(filename, app.config["UPLOAD_FOLDER"], input_file)
-            except worker.WorkerException as e:
-                flash(str(e))
+                wker = worker.BoaWorker(filename, app.config["UPLOAD_FOLDER"], input_file)
+            except worker.WorkerException as err:
+                flash(str(err))
                 return redirect(request.url)
 
             # register the namespace for socket communication once instantiated
-            socketio.on_namespace(w)
+            socketio.on_namespace(wker)
 
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
@@ -154,9 +153,10 @@ def scan():
 
 
 @app.route("/report/<uuid>")
-def report(uuid):
+def reporter(uuid):
     """
-    Dynamically generates a presentable report for consumption by the user for the binary parsed out.
+    Dynamically generates a presentable report for consumption by the user
+    for the binary parsed out, and returns it JSONified for the frontend.
     """
     # given a uuid, find entry in database, and return dynamic content
     query = Scan.query.filter_by(uuid=uuid).first()

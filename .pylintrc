@@ -2,3 +2,9 @@
 
 disable=import-error,
         todo,
+        fixme,
+        no-member,
+        too-many-instance-attributes,
+        too-many-arguments,
+        c-extension-no-member,
+        wrong-import-position

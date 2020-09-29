@@ -9,7 +9,7 @@ import pefile
 import unpy2exe
 
 
-class Py2Exe(object):
+class Py2Exe:
     """
     Cheating with unpy2exe >:)
     """
@@ -26,7 +26,7 @@ class Py2Exe(object):
         """
         TODO: make everything baked in and remove dep
         """
-        pe = pefile.PE(self.filepath)
-        code_objects = unpy2exe.extract_code_objects(pe)
-        for co in code_objects:
-            unpy2exe.dump_to_pyc(co, None, unpacked_dir)
+        binary = pefile.PE(self.filepath)
+        code_objects = unpy2exe.extract_code_objects(binary)
+        for obj in code_objects:
+            unpy2exe.dump_to_pyc(obj, None, unpacked_dir)
