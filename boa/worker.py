@@ -6,18 +6,16 @@ worker.py
     storage medium. The executable is then unpacked, decompiled and patched.
 
 """
-import io
 import os
 import time
 import uuid
 import shutil
-import pefile
 import json
 import datetime
 import hashlib
 
+import pefile
 import flask_socketio as sio
-import flask_sqlalchemy as fsql
 
 import boa.unpack as unpack
 import boa.decompile as decompile
@@ -67,6 +65,26 @@ class BoaWorker(sio.Namespace):
         # move file pointer back to beginning, and save
         input_file.stream.seek(0)
         input_file.save(self.path)
+
+        # parsed out information regarding the executable
+
+        # python version
+        self.pyver = 0
+
+        # packer object used to generate final executable
+        self.packer = None
+
+        # stores parsed paths to bytecode files
+        self.bytecode_paths = []
+
+        # decompiler object used to recover source code
+        self.decompiler = None
+
+        # stores recovered source files that are relevant for analyze
+        self.relevant_src = []
+
+        # parsed out security issues from bandit
+        self.sec_issues = {}
 
         # stores any errors parsed out during execution
         self.error = None
@@ -151,7 +169,7 @@ class BoaWorker(sio.Namespace):
         # TODO: identify if the sample is malware from Virustotal API scan
 
         # delete workspace created if the packer is unknown
-        cont = self.packer != None
+        cont = self.packer is not None
         if not cont:
             shutil.rmtree(self.workspace)
 
@@ -167,18 +185,15 @@ class BoaWorker(sio.Namespace):
         in the workspace.
         """
 
-        # stores bytecode paths parsed out
-        self.bytecode_paths = []
-
         # start unpacking into the workspace directory
         unpacked_dir = os.path.join(self.workspace, "unpacked")
         try:
             self.bytecode_paths = self.packer.unpack(unpacked_dir)
-        except Exception as e:
-            self.error = str(e)
+        except Exception as err:
+            self.error = str(err)
 
         # delete workspace if unpacking failed at some point
-        cont = False if self.error else True
+        cont = not self.error
         if not cont:
             shutil.rmtree(self.workspace)
 
@@ -202,9 +217,6 @@ class BoaWorker(sio.Namespace):
         decompile the bytecode source that has been recovered from unpacking.
         """
 
-        # number of relevant files returned
-        self.relevant_src = []
-
         # throw error if no bytecode to parse
         # TODO: otherwise go straight to final report
         if len(self.bytecode_paths) == 0:
@@ -219,11 +231,11 @@ class BoaWorker(sio.Namespace):
                 self.relevant_src = self.decompiler.decompile_all(self.workspace)
 
             # exception must be thrown if absolutely no decompilation can be done
-            except Exception as e:
-                self.error = str(e)
+            except Exception as err:
+                self.error = str(err)
 
         # delete workspace if decompilation absolutely cannot be done
-        cont = False if self.error else True
+        cont = not self.error
         # if not cont:
         #    shutil.rmtree(self.workspace)
 
@@ -284,19 +296,19 @@ class BoaWorker(sio.Namespace):
         # finalize and write metadata.json to local path for storing in bucket
         metadata_path = os.path.join(self.workspace, "metadata.json")
         metadata_content = json.dumps(dict(metadata))
-        with open(metadata_path, "w") as fd:
-            fd.write(metadata_content)
+        with open(metadata_path, "w") as metadata:
+            metadata.write(metadata_content)
 
         # commit as "key file" to bucket
         bucket_key = self.uuid + "/metadata.json"
-        with open(metadata_path, "rb") as fd:
-            _ = utils.upload_file(fd, bucket_key)
+        with open(metadata_path, "rb") as metadata:
+            _ = utils.upload_file(metadata, bucket_key)
 
         # zip up folder and commit zipped contents to S3
         zip_path = utils.zipdir(self.workspace)
         zip_key = self.uuid + "/analyzed.zip"
-        with open(zip_path, "rb") as fd:
-            zip_url = utils.upload_file(fd, zip_key)
+        with open(zip_path, "rb") as zipf:
+            zip_url = utils.upload_file(zipf, zip_key)
 
         # delete the path to the zipped file and entire workspace once it's uploaded
         os.remove(zip_path)

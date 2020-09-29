@@ -11,7 +11,7 @@ import tempfile
 from bandit.core import manager, config
 
 
-class SASTEngine(object):
+class SASTEngine:
     """
     A SASTEngine defines the necessary functionality needed in order to
     run static analysis checks upon parsed out Python code in order to identify bugs
@@ -35,7 +35,7 @@ class SASTEngine(object):
         # run tests using bandit and internally store results
         self.manager.run_tests()
 
-    def dump_results(self, high_sev_only=False):
+    def dump_results(self):
         """
         Parse out the results, and return something that can be consumed into a report.
         """
@@ -47,11 +47,11 @@ class SASTEngine(object):
         self.manager.output_results(1, "MEDIUM", "HIGH", mtmp, "json")
 
         # reopen file, since bandit closes it, and load as dict for return
-        with open(htmp.name, "r") as fd:
-            data = dict(json.loads(fd.read()))
+        with open(htmp.name, "r") as tmp:
+            data = dict(json.loads(tmp.read()))
 
-        with open(mtmp.name, "r") as fd:
-            data.update(dict(json.loads(fd.read())))
+        with open(mtmp.name, "r") as tmp:
+            data.update(dict(json.loads(tmp.read())))
 
         print(data)
 

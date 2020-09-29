@@ -110,11 +110,13 @@ def scan():
         if input_file:
 
             # retrieve a secure version of the file's name
-            #path = werkzeug.utils.secure_filename(filename)
+            # path = werkzeug.utils.secure_filename(filename)
 
             # instantiate the workspace, and register namespace with socketio
             try:
-                wker = worker.BoaWorker(filename, app.config["UPLOAD_FOLDER"], input_file)
+                wker = worker.BoaWorker(
+                    filename, app.config["UPLOAD_FOLDER"], input_file
+                )
             except worker.WorkerException as err:
                 flash(str(err))
                 return redirect(request.url)
