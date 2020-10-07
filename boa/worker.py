@@ -296,13 +296,13 @@ class BoaWorker(sio.Namespace):
         # finalize and write metadata.json to local path for storing in bucket
         metadata_path = os.path.join(self.workspace, "metadata.json")
         metadata_content = json.dumps(dict(metadata))
-        with open(metadata_path, "w") as metadata:
-            metadata.write(metadata_content)
+        with open(metadata_path, "w") as mdata:
+            mdata.write(metadata_content)
 
         # commit as "key file" to bucket
         bucket_key = self.uuid + "/metadata.json"
-        with open(metadata_path, "rb") as metadata:
-            _ = utils.upload_file(metadata, bucket_key)
+        with open(metadata_path, "rb") as mdata:
+            _ = utils.upload_file(mdata, bucket_key)
 
         # zip up folder and commit zipped contents to S3
         zip_path = utils.zipdir(self.workspace)
