@@ -53,8 +53,6 @@ class SASTEngine:
         with open(mtmp.name, "r") as tmp:
             data.update(dict(json.loads(tmp.read())))
 
-        print(data)
-
         # delete the temporary file manually now
         os.remove(htmp.name)
         os.remove(mtmp.name)

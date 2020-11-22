@@ -13,6 +13,7 @@ import shutil
 import json
 import datetime
 import hashlib
+import typing as t
 
 import pefile
 import flask_socketio as sio
@@ -69,16 +70,16 @@ class BoaWorker(sio.Namespace):
         # parsed out information regarding the executable
 
         # python version
-        self.pyver = 0
+        self.pyver: int = 0
 
         # packer object used to generate final executable
-        self.packer = None
+        self.packer: t.Optional[unpack.BaseUnpacker] = None
 
         # stores parsed paths to bytecode files
-        self.bytecode_paths = []
+        self.bytecode_paths: t.List[str] = []
 
         # decompiler object used to recover source code
-        self.decompiler = None
+        self.decompiler: t.Optional[decompile.BoaDecompiler] = None
 
         # stores recovered source files that are relevant for analyze
         self.relevant_src = []
@@ -93,7 +94,7 @@ class BoaWorker(sio.Namespace):
         super().__init__()
 
     @staticmethod
-    def check_existence(checksum: str) -> str:
+    def check_existence(checksum: str) -> t.Optional[str]:
         """
         Given a file's checksum, check if it has already been analyzed before, and return the
         report UUID if found

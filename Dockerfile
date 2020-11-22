@@ -17,5 +17,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV FLASK_RUN_HOST 0.0.0.0
 ENV FLASK_APP /usr/src/boa/boa/app.py
 
-EXPOSE 8000
-CMD ["gunicorn", "--worker-class", "eventlet", "--log-file=-", "boa.app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--worker-class", "eventlet", "--timeout", "120", "--threads", "3", "--log-level=debug", "--log-file=-", "boa.app:app"]

@@ -52,11 +52,18 @@ def get_packer(filepath: str) -> t.Optional[t.Any]:
     if len(matches) > 1:
         return None
 
+    # parse response from rule
+    res = matches[0].rule
+
     # determine which packer was used
     packer = None
-    if matches[0].rule == "pyinstaller":
+    if res == "pyinstaller":
         packer = pyinstaller.PyInstaller(filepath)
-    elif matches[0].rule == "py2exe":
+    elif res == "py2exe":
         packer = py2exe.Py2exe(filepath)
+    elif res == "bbfreeze":
+        raise NotImplementedError()
+    elif res == "cx_freeze":
+        raise NotImplementedError()
 
     return packer

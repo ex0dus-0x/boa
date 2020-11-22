@@ -18,6 +18,7 @@ from flask_sqlalchemy import SQLAlchemy
 import boa.config as config
 import boa.utils as utils
 
+
 # create directory to store executable artifacts and workspaces locally for analysis
 if not os.path.exists(config.UPLOAD_FOLDER):
     os.mkdir(config.UPLOAD_FOLDER)
