@@ -4,6 +4,8 @@ models.py
     Database models that are used by Boa for storing persistent information.
 
 """
+from sqlalchemy.ext.declarative import declarative_base
+
 from boa.app import db
 
 
@@ -16,7 +18,7 @@ class Scan(db.Model):
     """
 
     __tablename__ = "scan"
-    __table_args__ = {"sqlite_autoincrement": True}
+   __table_args__ = {"sqlite_autoincrement": True}
 
     id = db.Column(db.Integer, primary_key=True)
 
