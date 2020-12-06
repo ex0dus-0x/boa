@@ -1,92 +1,51 @@
 #!/usr/bin/env python3
 """
-app.py
-
-    Main web application service for handling all routes and content delivery for the boa service.
-    Built in Flask, it contains all the static and dynamic content routes, as well as API endpoints
-    that perform a bulk of the reverse engineering functionality.
+routes.py
 """
 
-import os
 import flask
-import flask_socketio as sio
 
-from flask import redirect, render_template, request, flash
-from flask_cors import CORS, cross_origin
-from flask_sqlalchemy import SQLAlchemy
+from flask import redirect, render_template, request, flash, current_app
+from flask_cors import cross_origin
 
-import boa.config as config
 import boa.utils as utils
+import boa.config as config
 
-
-# create directory to store executable artifacts and workspaces locally for analysis
-if not os.path.exists(config.UPLOAD_FOLDER):
-    os.mkdir(config.UPLOAD_FOLDER)
-
-# create directory to store database
-if not os.path.exists(config.DB_FOLDER):
-    os.mkdir(config.DB_FOLDER)
-
-
-# initialize the Flask application with proper configuration
-app = flask.Flask(__name__, template_folder="templates")
-app.secret_key = os.urandom(12)
-app.config.from_object("boa.config")
-
-app.jinja_env.lstrip_blocks = True
-
-# register custom filters to use
-app.jinja_env.filters["basename"] = os.path.basename
-app.jinja_env.filters["strip"] = str.strip
-
-# instantiate database
-db = SQLAlchemy(app)
-db.init_app(app)
-
-# .. and then import dependencies that require an instantiated db in order to
-# prevent circular dependencies.
-from boa import worker
+from . import web
+from boa import worker, socketio
 from boa.models import Scan
 
-# .. and finally create any models we need
-db.create_all()
-
-# instantiate CORS policy for app
-cors = CORS(app, resources={r"/socket.io": {"origins": "*"}})
-
-# initialize Socket.IO interface
-socketio = sio.SocketIO(app)
 
 # ======================
 # Static Content Routes
 # ======================
 
 
-@app.route("/index")
+@web.route("/index")
 def home_redirect():
     """ Redirects to static home page """
-    return redirect(flask.url_for("home"))
+    return redirect(flask.url_for("web.home"))
 
 
-@app.route("/")
+@web.route("/")
 def home():
     """ Renders static home page """
     return render_template("index.html")
 
 
-@app.route("/about")
+@web.route("/about")
 def about():
     """ Informational route for more technical detail regarding boa """
     return render_template("about.html")
 
 
-@app.route("/pricing")
+@web.route("/pricing")
 def pricing():
     """ Informational route for pricing information regarding boa """
     return render_template("pricing.html")
 
 
-@app.route("/scan", methods=["GET", "POST"])
+@web.route("/scan", methods=["GET", "POST"])
 @cross_origin(origin="*")
 def scan():
     """
@@ -116,7 +75,7 @@ def scan():
             # instantiate the workspace, and register namespace with socketio
             try:
                 wker = worker.BoaWorker(
-                    filename, app.config["UPLOAD_FOLDER"], input_file
+                    filename, current_app.config["UPLOAD_FOLDER"], input_file
                 )
             except worker.WorkerException as err:
                 flash(str(err))
@@ -155,7 +114,7 @@ def scan():
 # =======================
 
 
-@app.route("/report/<uuid>")
+@web.route("/report/<uuid>")
 def reporter(uuid):
     """
     Dynamically generates a presentable report for consumption by the user
@@ -172,7 +131,3 @@ def reporter(uuid):
         return "Not found!"
 
     return render_template("report.html", query=query, report=report)
-
-
-if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0")

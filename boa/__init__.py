@@ -1,3 +1,9 @@
+"""
+__init__.py
+
+    Implements factory method to instantiate Flask application instance
+"""
+
 import os
 import flask
 import flask_socketio as sio
@@ -8,6 +14,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 # initilaize Flask app
 app = flask.Flask(__name__, template_folder="templates")
+app.secret_key = os.urandom(12)
 
 # instantiate database
 db = SQLAlchemy(app)
@@ -17,6 +24,7 @@ cors = CORS(app, resources={r"/socket.io": {"origins": "*"}})
 
 # create Socket.IO interface
 socketio = sio.SocketIO(app)
+
 
 def create_local_dirs(app):
     """ Given a configuration, initialize local workspace paths """
@@ -28,7 +36,6 @@ def create_local_dirs(app):
     # create directory to store database
     if not os.path.exists(app.config["DB_FOLDER"]):
         os.mkdir(app.config["DB_FOLDER"])
-
 
 
 def configure_database(app):
@@ -43,10 +50,13 @@ def configure_database(app):
         db.session.remove()
 
 
-
 def create_app(config):
-    app.secret_key = os.urandom(12)
+
+    # initialize app from configuration
     app.config.from_object(config)
+
+    # create directories to store  files produced by boa
+    create_local_dirs(app)
 
     db.init_app(app)
 
@@ -58,6 +68,9 @@ def create_app(config):
     app.jinja_env.filters["basename"] = os.path.basename
     app.jinja_env.filters["strip"] = str.strip
 
-    create_local_dirs(app)
+    # register blueprints
+    from boa.web import web
+    app.register_blueprint(web)
+
     configure_database(app)
     return app

@@ -5,4 +5,4 @@ __init__.py
     all the supported unpackers implemented for various Python-based installers/packers.
 """
 
-from boa.unpack.unpacker import *
+from .unpacker import *
