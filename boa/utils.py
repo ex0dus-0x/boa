@@ -30,7 +30,7 @@ def upload_file(obj, filename: str, acl="public-read") -> str:
     # upload the file with as the given filename
     s3_client.upload_fileobj(
         obj,
-        config.S3_BUCKET,
+        config.BaseConfig.S3_BUCKET,
         filename,
         ExtraArgs={
             "ACL": acl,
@@ -39,7 +39,7 @@ def upload_file(obj, filename: str, acl="public-read") -> str:
 
     # once uploaded, construct url for return
     dl_url = "http://{}.s3.{}.amazonaws.com/{}".format(
-        config.S3_BUCKET, config.AWS_REGION, filename
+        config.BaseConfig.S3_BUCKET, config.BaseConfig.AWS_REGION, filename
     )
     return dl_url
 
@@ -52,7 +52,7 @@ def get_metadata_file(filekey: str):
 
     # we want to store file contents in-memory rather than write to disk
     byte_buf = io.BytesIO()
-    s3_client.download_fileobj(Bucket=config.S3_BUCKET, Key=filekey, Fileobj=byte_buf)
+    s3_client.download_fileobj(Bucket=config.BaseConfig.S3_BUCKET, Key=filekey, Fileobj=byte_buf)
 
     # parse out the data as a UTF-8 string, and deserialize it
     data = byte_buf.getvalue().decode()

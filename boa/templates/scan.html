@@ -2,16 +2,6 @@
 {% block content %}
 
 <div class="col-md-12 text-center">
-    <pre>
- ______   _______  _______
-(  ___ \ (  ___  )(  ___  )
-| (   ) )| (   ) || (   ) |
-| (__/ / | |   | || (___) |
-|  __ (  | |   | ||  ___  |
-| (  \ \ | |   | || (   ) |
-| )___) )| (___) || )   ( |
-|/ \___/ (_______)|/     \|
-    </pre>
     <p><b>File Scanned:</b> {{ files_scanned }} <b>Source Files Recovered:</b> {{ source_files_recovered }} <b>Security Issues Found:<b> {{ security_issues }} </p>
 	<hr>
     <span id="progress">
@@ -46,6 +36,6 @@
 
 
 {% block scripts %}
-<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
-<script src="{{ url_for('static', filename='boa.js') }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ url_for('static', filename='js/socket.io.js') }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ url_for('static', filename='js/boa.js') }}" type="text/javascript" charset="utf-8"></script>
 {% endblock %}
