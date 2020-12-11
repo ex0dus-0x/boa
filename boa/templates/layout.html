@@ -5,27 +5,29 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-	<title>boa - ssssssssssssssss</title>
+	<title>boa - reverse engineering platform</title>
 
 	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/main.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
   </head>
   <body>
-    <div class="container">
-      <header>
-        <div class="menu">
-          <ul>
-            <li><a href="{{ url_for("web.home") }}">Home</a></li>
-            <li><a href="{{ url_for("web.about") }}">About</a></li>
-            <li><a href="{{ url_for("web.scan") }}">Scan</a></li>
-            <li><a href="https://github.com/ex0dus-0x/boa">Github</a></li>
-          </ul>
-        </div>
-      </header>
-      <div class="row">
-        {% block content %}{% endblock %}
+    <nav class="navbar navbar-expand navbar-dark bg-dark">
+      <a class="navbar-brand" href="{{ url_for("web.home") }}">boa</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample02" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbar">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item active"><a class="nav-link" href="#">API</a></li>
+            <li class="nav-item active"><a class="nav-link" href="#">Settings</a></li>
+        </ul>
       </div>
-    </div>
+    </nav>
+
+    <main class="container">
+      <br><br>
+      {% block content %}{% endblock %}
+    </main>
   </body>
 
   <script src="{{ url_for('static', filename='js/jquery-3.5.1.slim.min.js') }}"></script>

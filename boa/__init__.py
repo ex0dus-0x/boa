@@ -13,18 +13,14 @@ import flask_socketio as sio
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 
+db = SQLAlchemy()
 
 # initilaize Flask app
 app = flask.Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(12)
 
-# instantiate database
-db = SQLAlchemy(app)
-
-# instantiate CORS policy for app
+# create Socket.IO interface with CORS policy for endpoint
 cors = CORS(app, resources={r"/socket.io": {"origins": "*"}})
-
-# create Socket.IO interface
 socketio = sio.SocketIO(app)
 
 
@@ -43,19 +39,20 @@ def create_local_dirs(app):
 def configure_database(app):
     """ Initializes and configure database models """
 
-    @app.before_first_request
-    def init_db():
+    @app.before_request
+    def startup():
         db_url = app.config["SQLALCHEMY_DATABASE_URI"]
         try:
             engine = sqlalchemy.create_engine(db_url)
             if not sqlutils.database_exists(db_url):
                 sqlutils.create_database(db_url)
 
-        except sqlalchemy.exc.OperationalError as err:
-            pass
+            from boa import models
+            models.create_tables(engine)
 
-        from boa import models
-        models.create_tables(engine)
+        except sqlalchemy.exc.OperationalError as err:
+            print("Failed to connect to database")
+            exit(1)
 
     @app.teardown_request
     def shutdown(exception=None):

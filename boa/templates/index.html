@@ -1,6 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
 
+<!--
 <div class="col-md-7">
     <pre>
        ---_ ......._-_--.
@@ -20,15 +21,84 @@
      '  `             \ _ _ \
                        \_
     </pre>
+    <br>
+    <p>Looking for a place to unpack, deobfuscate and dissect your python-compiled executables? <b>boa</b> will <s>automatically</s> automagically reverse them all for you, whether its an innocent desktop app,
+    or a scary piece of Python-based malware.</p>
+    <p><b>boa</b> is a (first of its kind) web-based automated reverse engineering platform that helps extrapolate original and readable Python source from compiled and packed executables.
+    It is useful for hackers and reverse engineers attempt to better understand the functionality of Python-built apps and/or malware.
+    It undergoes the following when an executable sample is processed through its pipeline:</p>
+    <ul>
+        <li><b>Executable Unpacking</b> - parse out resources and code from binaries created with various packers.</li>
+        <li><b>Bytecode Decompilation/Patching</b> - decompile and patch (if necessary) Python source from unpacked bytecode.</li>
+        <li><b>Static Analysis</b> - scan relevant source files for detrimental security issues.</li>
+        <li><b>Report Generation</b> - generate a user-friendly report on executable.</li>
+    </ul>
+    <br>
+</div>
+-->
+<div class="alert alert-secondary alert-dismissible fade show" role="alert">
+    Welcome to the <b>boa reverse engineering platform</b> - enjoy the new look!
+    Read more about the product <a href="#">here</a>.
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+<div class="card-deck">
+  <div class="card dark-card text-center">
+    <div class="card-body welcome-msg">
+      <h4 class="card-title">Samples Analyzed</h4>
+      <i class="fa fa-viruses"></i>
+      <h3 id="sub-count">0</h3>
+    </div>
+  </div>
+  <div class="card dark-card welcome-msg cpointer">
+    <div class="card-body text-center">
+      <h4 class="card-title">Source Files Decompiled</h4>
+      <i class="fa fa-cogs"></i>
+      <h3 id="sub-count">0</h3>
+    </div>
+  </div>
+  <div class="card dark-card welcome-msg cpointer">
+    <div class="card-body text-center">
+      <h4 class="card-title">Security Issues Found</h4>
+      <i class="fa fa-server"></i>
+      <h3 id="sub-count">0</h3>
+    </div>
+  </div>
 </div>
 
-<div class="col-md-5">
-    <h2>boa: a black-box python reverse engineering platform.</h2>
-    <br>
-    <p>looking for a place to unpack, deobfuscate and dissect your python-compiled executables? have no despair!</p>
-	<br>
-    <p><b>boa</b> will <s>automatically</s> automagically reverse them all for you, whether its an innocent desktop app, or the narliest of Python-based malware.</p>
-	<br>
+<br>
+
+<div class="card">
+  <div class="card-body">
+	<h3 class="text-center">Similarity Network</h3>
+	<hr>
+  </div>
 </div>
+
+<br>
+
+<div class="card">
+  <div class="card-body">
+	<h3 class="text-center">Available Reports</h3>
+	<hr>
+	<table class="table table-borderless custom-table table-hover table-responsive-lg">
+	  <thead>
+       <tr>
+         <th>Checksum</th>
+         <th>Timestamp</th>
+         <th>Name</th>
+         <th>Download</th>
+       </tr>
+ 	  </thead>
+	  <tbody>
+	  </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.min.js" type="text/javascript"></script>
 
 {% endblock %}

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
 routes.py
+
+    Defines all standard static and dynamic routes that can be interfaced by users.
 """
 
 import flask
@@ -22,7 +24,7 @@ from boa.models import Scan
 
 
 @web.route("/index")
-def home_redirect():
+def redirect():
     """ Redirects to static home page """
     return redirect(flask.url_for("web.home"))
 
@@ -33,16 +35,9 @@ def home():
     return render_template("index.html")
 
 
-@web.route("/about")
-def about():
-    """ Informational route for more technical detail regarding boa """
-    return render_template("about.html")
-
-
-@web.route("/pricing")
-def pricing():
-    """ Informational route for pricing information regarding boa """
-    return render_template("pricing.html")
+# =======================
+# Dynamic Content Routes
+# =======================
 
 
 @web.route("/scan", methods=["GET", "POST"])
@@ -107,11 +102,6 @@ def scan():
         source_files_recovered=source_files_recovered,
         security_issues=security_issues,
     )
-
-
-# =======================
-# Dynamic Content Routes
-# =======================
 
 
 @web.route("/report/<uuid>")

@@ -16,9 +16,9 @@ class BaseConfig:
     SECRET_KEY = os.urandom(16)
     CORS_HEADERS = "Content-Type"
 
-    # File restrictions
     # Database configurations
     DB_FOLDER = os.path.join(os.getcwd(), "db")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = os.environ.get(
         "SQLALCHEMY_DATABASE_URI", "sqlite:///{}/boascans.db".format(DB_FOLDER)
     )
