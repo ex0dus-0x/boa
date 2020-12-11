@@ -52,7 +52,9 @@ def get_metadata_file(filekey: str):
 
     # we want to store file contents in-memory rather than write to disk
     byte_buf = io.BytesIO()
-    s3_client.download_fileobj(Bucket=config.BaseConfig.S3_BUCKET, Key=filekey, Fileobj=byte_buf)
+    s3_client.download_fileobj(
+        Bucket=config.BaseConfig.S3_BUCKET, Key=filekey, Fileobj=byte_buf
+    )
 
     # parse out the data as a UTF-8 string, and deserialize it
     data = byte_buf.getvalue().decode()

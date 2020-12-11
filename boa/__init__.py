@@ -48,10 +48,11 @@ def configure_database(app):
                 sqlutils.create_database(db_url)
 
             from boa import models
+
             models.create_tables(engine)
 
         except sqlalchemy.exc.OperationalError as err:
-            print("Failed to connect to database")
+            print("Failed to connect to database. Reason: ", err)
             exit(1)
 
     @app.teardown_request

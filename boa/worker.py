@@ -145,7 +145,7 @@ class BoaWorker(sio.Namespace):
         """
 
         # first, check if the file already exists in our database
-        #if not config.BaseConfig.DEBUG_MODE:
+        # if not config.BaseConfig.DEBUG_MODE:
         uid = BoaWorker.check_existence(self.checksum)
         if uid is not None:
             self.emit("identify_reply", {"link": "/report/" + uid})

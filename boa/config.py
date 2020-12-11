@@ -7,9 +7,12 @@ config.py
 """
 
 import os
+import dotenv
+
+dotenv.load_dotenv()
 
 
-class BaseConfig:
+class BaseConfig(object):
     """ Defines globally set variables and configurations """
 
     TEMPLATES_AUTO_RELOAD = True
@@ -33,3 +36,13 @@ class BaseConfig:
     AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
     S3_BUCKET = os.environ.get("S3_BUCKET")
     AWS_REGION = os.environ.get("AWS_REGION", "us-east-2")
+
+
+def ProdConfig(BaseConfig):
+    """ TODO: AWS and VT """
+
+
+class DevConfig(BaseConfig):
+    """ TODO: mock AWS """
+
+    pass

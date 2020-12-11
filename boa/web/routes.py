@@ -24,7 +24,7 @@ from boa.models import Scan
 
 
 @web.route("/index")
-def redirect():
+def home_redirect():
     """ Redirects to static home page """
     return redirect(flask.url_for("web.home"))
 
@@ -32,7 +32,30 @@ def redirect():
 @web.route("/")
 def home():
     """ Renders static home page """
-    return render_template("index.html")
+    queries = Scan.query.all()
+
+    # number of executables that have been scanned
+    files_scanned: int = len(queries)
+
+    # parse out stats for total number of source files recovered
+    source_files_recovered: int = sum([query.src_count for query in queries])
+
+    # total number of security issues found
+    security_issues: int = sum([query.issue_count for query in queries])
+
+    return render_template(
+        "index.html",
+        queries=queries,
+        files_scanned=files_scanned,
+        source_files_recovered=source_files_recovered,
+        security_issues=security_issues,
+    )
+
+
+@web.route("/about")
+def about():
+    """ Renders informational page """
+    return render_template("about.html")
 
 
 # =======================
@@ -85,23 +108,7 @@ def scan():
         flash("Filetype not allowed!")
         return redirect(request.url)
 
-    queries = Scan.query.all()
-
-    # number of executables that have been scanned
-    files_scanned = len(queries)
-
-    # parse out stats for total number of source files recovered
-    source_files_recovered = sum([query.src_count for query in queries])
-
-    # total number of security issues found
-    security_issues = sum([query.issue_count for query in queries])
-
-    return render_template(
-        "scan.html",
-        files_scanned=files_scanned,
-        source_files_recovered=source_files_recovered,
-        security_issues=security_issues,
-    )
+    return render_template("scan.html")
 
 
 @web.route("/report/<uuid>")
