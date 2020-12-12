@@ -9,7 +9,7 @@ unpacker.py
 import typing as t
 import yara
 
-from boa.unpack import pyinstaller, py2exe
+from . import pyinstaller, py2exe
 
 
 class BaseUnpacker:

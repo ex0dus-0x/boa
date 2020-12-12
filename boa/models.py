@@ -4,10 +4,32 @@ models.py
     Database models that are used by Boa for storing persistent information.
 
 """
-from boa.app import db
+from sqlalchemy.ext.declarative import declarative_base
+
+from . import db
+
+# initialize declarative base to inherit for database models
+Base = declarative_base()
 
 
-class Scan(db.Model):
+def create_tables(engine):
+    """ Initialize database with structure """
+    Base.metadata.create_all(engine)
+
+
+class User(db.Model):
+    """ TODO """
+
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    username = db.Column(db.String(25), unique=True, nullable=False)
+    password = db.Column(db.String(255), unique=True, nullable=False)
+
+
+
+class Scan(Base, db.Model):
     """
     Stores information for a successful boa scan on an executable for
     output consumption as a report. Each entry that is stored doesn't actually
@@ -24,8 +46,7 @@ class Scan(db.Model):
     name = db.Column(db.String(120), unique=False, nullable=False)
     uuid = db.Column(db.String(120), unique=True, nullable=False)
 
-    # TODO: make unique once we incorporate checking checksums
-    checksum = db.Column(db.String(120), nullable=False)
+    checksum = db.Column(db.String(120), unique=True, nullable=False)
     timestamp = db.Column(db.String(120), unique=True, nullable=False)
 
     # represents path to local or S3 path for download link to zipped up workspace

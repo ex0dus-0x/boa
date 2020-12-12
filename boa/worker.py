@@ -18,12 +18,8 @@ import typing as t
 import pefile
 import flask_socketio as sio
 
-import boa.unpack as unpack
-import boa.decompile as decompile
-import boa.sast as sast
-import boa.models as models
-import boa.utils as utils
-import boa.config as config
+from boa import models, config, utils
+from boa.core import unpack, decompile, sast
 
 
 class WorkerException(Exception):
@@ -149,11 +145,11 @@ class BoaWorker(sio.Namespace):
         """
 
         # first, check if the file already exists in our database
-        if not config.DEBUG_MODE:
-            uid = BoaWorker.check_existence(self.checksum)
-            if uid is not None:
-                self.emit("identify_reply", {"link": "/report/" + uid})
-                return
+        # if not config.BaseConfig.DEBUG_MODE:
+        uid = BoaWorker.check_existence(self.checksum)
+        if uid is not None:
+            self.emit("identify_reply", {"link": "/report/" + uid})
+            return
 
         # info parsed out: version
         self.pyver = None

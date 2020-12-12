@@ -2,38 +2,31 @@
 {% block content %}
 
 <div class="col-md-12 text-center">
-    <pre>
- ______   _______  _______
-(  ___ \ (  ___  )(  ___  )
-| (   ) )| (   ) || (   ) |
-| (__/ / | |   | || (___) |
-|  __ (  | |   | ||  ___  |
-| (  \ \ | |   | || (   ) |
-| )___) )| (___) || )   ( |
-|/ \___/ (_______)|/     \|
-    </pre>
-    <p><b>File Scanned:</b> {{ files_scanned }} <b>Source Files Recovered:</b> {{ source_files_recovered }} <b>Security Issues Found:<b> {{ security_issues }} </p>
-	<hr>
     <span id="progress">
         <!-- Any changes in progress will be represented by an animated loading bar -->
     </span>
+
     <br>
-    <form class="text-center" action="/scan" method="POST" enctype="multipart/form-data" id="form">
-		{% with messages = get_flashed_messages() %}
-		  {% if messages %}
-			{% for message in messages %}
-            <p id="message"><b>{{ message }}</b></p>
-			{% endfor %}
-		  {% endif %}
-		{% endwith %}
-		<br>
-        <div class="upload-btn-wrapper text-center">
-            <button class="btn-custom">Select File</button>
-            <input type="file" name="file" id="file">
+
+	{% with messages = get_flashed_messages() %}
+	  {% if messages %}
+		{% for message in messages %}
+        <div class="alert alert-danger" row="alert">
+            {{ message }}
         </div>
+		{% endfor %}
+	  {% endif %}
+	{% endwith %}
+
+    <form class="text-center" action="/scan" method="POST" enctype="multipart/form-data" id="form">
+		<br>
+        <label class="btn btn-dark">
+            Upload Sample <i class="fa fa-upload"></i>
+            <input type="file" name="file" id="file" hidden>
+        </label>
     </form>
     <br>
-    <p style="font-size: 8px; opacity: 0.6;"><i>Only .exe files are supported for reversing at the moment.</i></p>
+    <p style="opacity: 0.6;"><i>Only .exe files are supported for reversing at the moment.</i></p>
     <br>
     <div id="statustable">
         <!-- As analysis occurs, the status table will dynamically be updated here -->
@@ -42,10 +35,46 @@
         <!-- Any results from execution are dynamically appended to this specific div -->
     </div>
 </div>
+
+<div class="card">
+  <div class="card-body">
+	<h4>Your Recent Activity</h4>
+	<hr>
+    <table class="table table-borderless custom-table table-hover table-responsive-lg">
+      <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>UID</th>
+        <th>Delete?</th>
+      </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+  </div>
+</div>
+<br>
+<div class="card">
+  <div class="card-body">
+	<h4>Current Jobs</h4>
+	<hr>
+    <table class="table table-borderless custom-table table-hover table-responsive-lg">
+      <thead>
+      <tr>
+        <th>Timestamp</th>
+        <th>UID</th>
+        <th>Stop?</th>
+      </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+  </div>
+</div>
 {% endblock %}
 
-
 {% block scripts %}
-<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
-<script src="{{ url_for('static', filename='boa.js') }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ url_for('static', filename='js/socket.io.js') }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ url_for('static', filename='js/boa.js') }}" type="text/javascript" charset="utf-8"></script>
 {% endblock %}

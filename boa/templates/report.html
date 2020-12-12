@@ -2,23 +2,22 @@
 {% block content %}
 
 <div class="col-md-12">
-    <h1 style="font-size: 22px;">Scan Report for {{ query.name }}</h1>
+    <h1>Scan Report for {{ query.name }}</h1>
     <hr>
     <p><b>Executable Type:</b> Windows PE/EXE</p>
     <p><b>Checksum:</b> <code>{{ query.checksum }}</code></p>
     <p><b>Time Uploaded:</b> {{ query.timestamp }}</p>
-
     <br>
     <p><a href="{{ query.zipurl }}"><b>Download Results</b></a></p>
     <br>
 
     <!-- Shows relevant informational results -->
-    <h2 style="font-size: 18px;">Informational Results</h2>
+    <h2>Informational Results</h2>
     <hr>
     <p>Throughout <b>boa</b>'s analysis of your executable, it parses out various informational data from its runtime, which may be useful for the hacker.</p>
     <br>
 
-    <h3 style="font-size: 14px;">Python Information</h3>
+    <h4>Python Information</h4>
     <br>
     <table class="table">
 	  <tbody>
@@ -32,25 +31,26 @@
 	</table>
 
     <div class="accordion" id="depsAccordion">
-	  <div class="card-dark">
-		<div class="card-header-dark" id="depsHeading">
-			<button class="btn-accordion btn-link" type="button" data-toggle="collapse" data-target="#depsCollapse1" aria-expanded="true" aria-controls="depsCollapse1">
-                <p style="font-size: 14px;">> Dependencies Found</p>
+	  <div class="card">
+		<div class="card-header" id="depsHeading">
+			<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#depsCollapse1" aria-expanded="true" aria-controls="depsCollapse1">
+                Dependencies Found
 			</button>
 		</div>
 		<div id="depsCollapse1" class="collapse" aria-labelledby="depsHeading1" data-parent="#depsAccordion">
-		  <div class="card-body-dark">
-            <br>
+		  <div class="card-body">
+            <ul style="list-style-type:none;">
             {% for dep in report["dependencies"] %}
-              <p>{{ dep }}</p>
+              <li>{{ dep }}</li>
             {% endfor %}
+            </ul>
 		  </div>
 		</div>
 	  </div>
 	</div>
     <br><br>
 
-    <h3 style="font-size: 14px;">Reverse Engineering Information</h3>
+    <h4>Reverse Engineering Information</h4>
     <br>
 	<table class="table">
 	  <tbody>
@@ -63,20 +63,22 @@
 	  </tbody>
 	</table>
 
+
     <div class="accordion" id="srcAccordion">
-	  <div class="card-dark">
-		<div class="card-header-dark" id="srcHeading">
-			<button class="btn-accordion btn-link" type="button" data-toggle="collapse" data-target="#srcCollapse1" aria-expanded="true" aria-controls="srcCollapse1">
-                <p style="font-size: 14px;">> Source Files Recovered</p>
+	  <div class="card">
+		<div class="card-header" id="srcHeading">
+			<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#srcCollapse1" aria-expanded="true" aria-controls="srcCollapse1">
+                Source Files Recovered
 			</button>
 		</div>
 		<div id="srcCollapse1" class="collapse" aria-labelledby="srcHeading1" data-parent="#srcAccordion">
-		  <div class="card-body-dark">
-            <br>
+		  <div class="card-body">
+            <ul style="list-style-type:none;">
             {% for file in report["srcfiles"] %}
-              <p>{{ file }}</p>
+              <li>{{ file }}</li>
             {% endfor %}
-		  </div>
+            </ul>
+          </div>
 		</div>
 	  </div>
 	</div>
@@ -85,14 +87,13 @@
     <h1>Security Audit Results</h1>
     <hr>
     <p>Once source is recovered, <b>boa</b> audits the code for security issues with static analysis tooling. Here is what it found for your recovered source files.</p>
-    <br>
     <p><b>NOTE</b> that this is currently still a work-in-progress feature.</p>
     <br>
 	<div class="accordion" id="auditAccordion">
       {% for result in report["audit"]["results"] %}
 	  <div class="card">
 		<div class="card-header" id="auditHeading1">
-            <button class="btn-accordion btn-link" type="button" data-toggle="collapse" data-target="#auditCollapse{{loop.index}}" aria-expanded="true" aria-controls="auditCollapse{{loop.index}}">
+            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#auditCollapse{{loop.index}}" aria-expanded="true" aria-controls="auditCollapse{{loop.index}}">
                 <b>File:</b> <code>{{ result["filename"] | basename }}</code>
                 <b>Line:</b> {{ result["line_number"] }}
 			</button>

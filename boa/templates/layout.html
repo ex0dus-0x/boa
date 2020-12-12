@@ -3,33 +3,37 @@
   <head>
     <meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <!--<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-	<title>boa - ssssssssssssssss</title>
+	<title>boa - reverse engineering platform</title>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/darkly/bootstrap.min.css">
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.2/styles/monokai.min.css">
-	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main-dark.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
   </head>
   <body>
-    <div class="container">
-      <header>
-        <div class="menu">
-          <ul>
-            <li><a href="{{ url_for("home") }}">Home</a></li>
-            <li><a href="{{ url_for("about") }}">About</a></li>
-            <li><a href="{{ url_for("scan") }}">Scan</a></li>
-            <li><a href="https://github.com/ex0dus-0x/boa">Github</a></li>
-          </ul>
-        </div>
-      </header>
-      <div class="row">
-        {% block content %}{% endblock %}
+    <nav class="navbar navbar-expand navbar-dark bg-dark">
+      <a class="navbar-brand" href="{{ url_for("web.home") }}">boa</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbar">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item active"><a class="nav-link" href="{{ url_for("web.about") }}">About</a></li>
+            <li class="nav-item active"><a class="nav-link" href="{{ url_for("web.scan") }}">Scan</a></li>
+            <li class="nav-item active"><a class="nav-link" href="#">API</a></li>
+            <li class="nav-item active"><a class="nav-link" href="#">Settings</a></li>
+        </ul>
       </div>
-    </div>
+    </nav>
+
+    <main class="container">
+      <br><br>
+      {% block content %}{% endblock %}
+    </main>
   </body>
-  <script src="//code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-  <script src="//cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-  <script src="//stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+  <script src="{{ url_for('static', filename='js/jquery-3.5.1.slim.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   {% block scripts %}{% endblock %}
 </html>
