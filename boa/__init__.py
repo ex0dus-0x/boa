@@ -11,6 +11,7 @@ import sqlalchemy_utils as sqlutils
 import flask_socketio as sio
 
 from flask_cors import CORS
+from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -61,6 +62,7 @@ def configure_database(app):
 
 
 def create_app(config):
+    """ Main factory method that consumes a configuration and instantiates state for boa """
 
     # initialize app from configuration
     app.config.from_object(config)
@@ -68,8 +70,17 @@ def create_app(config):
     create_local_dirs(app)
     configure_database(app)
 
+    # configure authentication
+    login_manager = LoginManager()
+    login_manager.login_view = "web.login"
+    login_manager.init_app(app)
+
     from boa import worker
-    from boa.models import Scan
+    from boa.models import Scan, User
+
+    @login_manager.user_loader
+    def load_user(user):
+        return User.query.get(int(user))
 
     # Jinja configuration, including filters to pass to templates
     app.jinja_env.lstrip_blocks = True
@@ -88,8 +99,11 @@ def create_app(config):
 
     # register blueprints
     from boa.web import web
-
     app.register_blueprint(web)
+
+    # TODO: api blueprint
+    #from boa.web import api
+    #app.register_blueprint(api)
 
     db.init_app(app)
     return app

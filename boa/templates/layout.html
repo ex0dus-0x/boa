@@ -19,9 +19,15 @@
       <div class="collapse navbar-collapse" id="navbar">
         <ul class="navbar-nav ml-auto">
             <li class="nav-item active"><a class="nav-link" href="{{ url_for("web.about") }}">About</a></li>
+            {% if not current_user.is_authenticated %}
+            <li class="nav-item active"><a class="nav-link" href="{{ url_for("web.login") }}">Login</a></li>
+            <li class="nav-item active"><a class="nav-link" href="{{ url_for("web.register") }}">Register</a></li>
+            {% else %}
             <li class="nav-item active"><a class="nav-link" href="{{ url_for("web.scan") }}">Scan</a></li>
             <li class="nav-item active"><a class="nav-link" href="#">API</a></li>
             <li class="nav-item active"><a class="nav-link" href="#">Settings</a></li>
+            <li class="nav-item active"><a class="nav-link" href="#">Logout</a></li>
+            {% endif %}
         </ul>
       </div>
     </nav>

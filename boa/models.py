@@ -17,8 +17,8 @@ def create_tables(engine):
     Base.metadata.create_all(engine)
 
 
-class User(db.Model):
-    """ TODO """
+class User(Base, db.Model):
+    """ Represents a model for an authenticated user """
 
     __tablename__ = "users"
 
@@ -26,15 +26,13 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True, nullable=False)
     username = db.Column(db.String(25), unique=True, nullable=False)
     password = db.Column(db.String(255), unique=True, nullable=False)
-
+    api_key = db.Column(db.String(255), unique=True, nullable=False)
 
 
 class Scan(Base, db.Model):
     """
     Stores information for a successful boa scan on an executable for
-    output consumption as a report. Each entry that is stored doesn't actually
-    store all of the information, but acts like a pointer to the workspace
-    directory that contains a `metadata.json` configuration.
+    output consumption as a report.
     """
 
     __tablename__ = "scan"
