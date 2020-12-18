@@ -2,8 +2,9 @@
 models.py
 
     Database models that are used by Boa for storing persistent information.
-
 """
+
+from flask_login import UserMixin
 from sqlalchemy.ext.declarative import declarative_base
 
 from . import db
@@ -17,7 +18,7 @@ def create_tables(engine):
     Base.metadata.create_all(engine)
 
 
-class User(Base, db.Model):
+class User(Base, UserMixin, db.Model):
     """ Represents a model for an authenticated user """
 
     __tablename__ = "users"
@@ -27,6 +28,12 @@ class User(Base, db.Model):
     username = db.Column(db.String(25), unique=True, nullable=False)
     password = db.Column(db.String(255), unique=True, nullable=False)
     api_key = db.Column(db.String(255), unique=True, nullable=False)
+
+    def __init__(self, email, username, password, api_key):
+        self.email = email
+        self.username = username
+        self.password = password
+        self.api_key = api_key
 
 
 class Scan(Base, db.Model):

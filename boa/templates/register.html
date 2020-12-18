@@ -1,11 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
 
-<div class="col-md-12 text-center">
+<div class="col-md-12">
     <div class="card">
         <div class="card-body">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <div class="alert alert-info text-center" role="alert">
+                        {{ messages[0] }}
+                    </div>
+                {% endif %}
+            {% endwith %}
             <h4> Register </h4>
             <hr>
+            <p>To access boa's ability to scan executable samples, signup for an account!</p>
+            <form class="row-custom-form" method="POST">
+                {{ form.csrf_token }}
+                <div class="form-group">
+                {{ form.email.label }}<br>
+                {{ form.email(size=64) }}
+                </div>
+                <div class="form-group">
+                {{ form.username.label }}<br>
+                {{ form.username(size=64) }}
+                </div>
+                <div class="form-group">
+                {{ form.password.label }}<br>
+                {{ form.password(size=64) }}
+                </div>
+                <div class="form-group">
+                {{ form.confirm.label }}<br>
+                {{ form.confirm(size=64) }}
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
         </div>
     </div>
 </div>

@@ -4,6 +4,7 @@ routes.py
     Defines all standard static and dynamic routes that can be interfaced by users.
 """
 from flask import redirect, render_template, request, flash, current_app, url_for
+from flask_login import login_required
 from flask_cors import cross_origin
 
 import boa.utils as utils
@@ -60,6 +61,7 @@ def about():
 
 
 @web.route("/scan", methods=["GET", "POST"])
+@login_required
 @cross_origin(origin="*")
 def scan():
     """
