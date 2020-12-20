@@ -59,6 +59,12 @@ def about():
 # Dynamic Content Routes
 # =======================
 
+@web.route("/settings")
+@login_required
+def settings():
+    """ Page that enables users to view and change configurations """
+    return render_template("settings.html")
+
 
 @web.route("/scan", methods=["GET", "POST"])
 @login_required

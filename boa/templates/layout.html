@@ -29,7 +29,7 @@
             <li class="nav-item"><a class="nav-link" href="{{ url_for("web.login") }}">Login</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for("web.register") }}">Register</a></li>
             {% else %}
-            <li class="nav-item"><a class="nav-link" href="#">Settings</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ url_for("web.settings") }}">Settings</a></li>
             <li class="nav-item"><a class="nav-link" href="{{ url_for("web.signout") }}">Logout</a></li>
             {% endif %}
         </ul>

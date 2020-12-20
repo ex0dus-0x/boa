@@ -37,12 +37,9 @@ class User(Base, UserMixin, db.Model):
 
 
 class Scan(Base, db.Model):
-    """
-    Stores information for a successful boa scan on an executable for
-    output consumption as a report.
-    """
+    """ Stores scan results for a given target executable """
 
-    __tablename__ = "scan"
+    __tablename__ = "scans"
     __table_args__ = {"sqlite_autoincrement": True}
 
     id = db.Column(db.Integer, primary_key=True)
@@ -62,6 +59,10 @@ class Scan(Base, db.Model):
     src_count = db.Column(db.Integer)
     issue_count = db.Column(db.Integer)
 
+    # relationship with User
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    user = db.relationship("User", backref="scans")
+
     def __init__(self, name, uuid, checksum, timestamp, conf, zipurl):
         self.name = name
         self.uuid = uuid
@@ -76,6 +77,11 @@ class Scan(Base, db.Model):
         """
         self.src_count = src
         self.issue_count = issue
+
+    @classmethod
+    def get_scans_by_user(cls, username):
+        """ TODO: get scans by username relationship """
+        pass
 
     def __repr__(self):
         return "<Scan {0}>".format(self.name)

@@ -98,12 +98,13 @@ def create_app(config):
         return flask.redirect(flask.url_for("web.index"))
 
     # register blueprints
-    from boa.web import web
+    from boa.routes import web
+
     app.register_blueprint(web)
 
     # TODO: api blueprint
-    #from boa.web import api
-    #app.register_blueprint(api)
+    # from boa.routes import api
+    # app.register_blueprint(api)
 
     db.init_app(app)
     return app

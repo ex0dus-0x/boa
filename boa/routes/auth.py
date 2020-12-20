@@ -4,6 +4,8 @@ auth.py
     Defines all routes that are used specifically for authentication. Used to identify
     scans to a user.
 """
+import os
+import binascii
 import hashlib
 
 from flask import render_template, request, redirect, flash, url_for
@@ -15,11 +17,17 @@ from ..models import User
 from ..forms import RegistrationForm, LoginForm
 
 
-def password_hasher(cleartext):
-    """ Generates a SHA-256 hash of a given cleartext """
+def password_hasher(username, pwd):
+    """ Generates a unique SHA-256 hash of a given auth combo  """
     hasher = hashlib.sha256()
-    hasher.update(cleartext)
+    hasher.update(username)
+    hasher.update(pwd)
     return hasher.hexdigest()
+
+
+def generate_api_key():
+    """ Generates a pseudorandom API key for a given registered account """
+    return binascii.b2a_hex(os.urandom(16))
 
 
 @web.route("/login", methods=["GET", "POST"])
@@ -35,7 +43,7 @@ def login():
 
         # get username and hashed password
         username = form.username.data
-        password = password_hasher(form.password.data.encode())
+        password = password_hasher(username.encode(), form.password.data.encode())
 
         # check to see if user can be queried
         user = User.query.filter_by(username=username, password=password).first()
@@ -64,7 +72,7 @@ def register():
 
         username = form.username.data
         email = form.email.data
-        password = password_hasher(form.password.data.encode())
+        password = password_hasher(username.encode(), form.password.data.encode())
 
         # check if user already exists
         user = User.query.filter_by(username=username, email=email).first()
@@ -72,11 +80,11 @@ def register():
             flash("Username/email already exists.")
             return redirect(url_for("web.register"))
 
-        # TODO generate API token
-        api_key = b"testingkey"
-        new_user = User(email, username, password, api_key)
+        # generate API token
+        api_key = generate_api_key()
 
         # add and commit to user database
+        new_user = User(email, username, password, api_key)
         try:
             db.session.add(new_user)
             db.session.commit()
@@ -97,8 +105,3 @@ def signout():
     logout_user()
     flash("Successfully logged out of account!")
     return redirect(url_for("web.login"))
-
-
-@web.route("/settings")
-def settings():
-    return redirect(url_for("settings.html"))
