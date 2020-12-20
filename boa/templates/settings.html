@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="card">
+  <div class="card-body">
+	<h3>Settings</h3>
+	<hr>
+    <p><b>Username:</b> {{ current_user.username }}</p>
+    <p><b>Master API Key:</b> <pre>{{ current_user.api_key.decode() }}</pre></p>
+  </div>
+</div>
+{% endblock %}

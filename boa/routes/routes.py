@@ -1,13 +1,10 @@
-#!/usr/bin/env python3
 """
 routes.py
 
     Defines all standard static and dynamic routes that can be interfaced by users.
 """
-
-import flask
-
-from flask import redirect, render_template, request, flash, current_app
+from flask import redirect, render_template, request, flash, current_app, url_for
+from flask_login import login_required
 from flask_cors import cross_origin
 
 import boa.utils as utils
@@ -26,7 +23,7 @@ from boa.models import Scan
 @web.route("/index")
 def home_redirect():
     """ Redirects to static home page """
-    return redirect(flask.url_for("web.home"))
+    return redirect(url_for("web.home"))
 
 
 @web.route("/")
@@ -62,8 +59,15 @@ def about():
 # Dynamic Content Routes
 # =======================
 
+@web.route("/settings")
+@login_required
+def settings():
+    """ Page that enables users to view and change configurations """
+    return render_template("settings.html")
+
 
 @web.route("/scan", methods=["GET", "POST"])
+@login_required
 @cross_origin(origin="*")
 def scan():
     """
@@ -73,7 +77,7 @@ def scan():
     if request.method == "POST":
         if "file" not in request.files:
             flash("Cannot load file")
-            return flask.redirect(request.url)
+            return redirect(request.url)
 
         # retrieve file information
         input_file = request.files["file"]
@@ -82,7 +86,7 @@ def scan():
         # if file somehow ends up being nothing
         if filename == "":
             flash("No file selected!")
-            return flask.redirect(request.url)
+            return redirect(request.url)
 
         # save file to uploads directory/server
         if input_file:

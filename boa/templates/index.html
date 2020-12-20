@@ -49,8 +49,8 @@
 	<table class="table table-borderless table-responsive">
 	  <thead>
        <tr>
-         <th>Checksum</th>
          <th>Timestamp</th>
+         <th>Checksum</th>
          <th>Name</th>
          <th>Download</th>
        </tr>
@@ -58,8 +58,8 @@
 	  <tbody>
           {% for query in queries %}
           <tr>
-              <td><a href="/report/{{ query.uuid }}">{{ query.checksum[0:32] }}</a></td>
               <td>{{ query.timestamp.split()[0] }}</td>
+              <td><a href="/report/{{ query.uuid }}">{{ query.checksum[0:32] }}</a></td>
               <td>{{ query.name }}</td>
               <td><a href="{{ query.zipurl }}"><i class="fa fa-download"></i> Download</a></td>
           </tr>

@@ -2,7 +2,7 @@
 
 Black-Box Python Reverse Engineering Platform
 
-[Demo Version](http://boa.codemuch.tech)
+[Old Demo Version](http://boa.codemuch.tech)
 
 ## Introduction
 
@@ -46,11 +46,8 @@ $ export S3_BUCKET=<BUCKET_NAME>
 $ export AWS_ACCESS_KEY_ID=<KEY_HERE>
 $ export AWS_SECRET_ACCESS_KEY=<SECRET_FOR_KEY>
 
-# set envvar to application entry point, or set `.env`
-$ export FLASK_APP=boa/app.py
-
 # now we can run!
-$ flask run
+$ python run.py
 ```
 
 With a manually-built version of __boa__, artifacts during scanning are loaded into the `artifacts/` folder in the project workspace, with a local PostgreSQL database
