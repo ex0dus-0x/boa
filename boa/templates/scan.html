@@ -11,7 +11,7 @@
 	{% with messages = get_flashed_messages() %}
 	  {% if messages %}
 		{% for message in messages %}
-        <div class="alert alert-primary" row="alert">
+        <div class="alert alert-primary" row="alert" id="message">
             {{ message }}
         </div>
 		{% endfor %}
@@ -60,6 +60,7 @@
       <tr>
         <th>Timestamp</th>
         <th>UID</th>
+        <th>Progress</th>
         <th>Stop?</th>
       </tr>
       </thead>
@@ -72,6 +73,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/socket.io.js') }}" type="text/javascript" charset="utf-8"></script>
 <script src="{{ url_for('static', filename='js/boa.js') }}" type="text/javascript" charset="utf-8"></script>
 {% endblock %}

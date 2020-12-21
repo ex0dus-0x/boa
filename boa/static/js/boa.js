@@ -10,8 +10,8 @@ $(document).ready(function() {
 
         // if the loading bar exists, update its values
  	   if ($("#bar").length) {
- 	   	$("#bar").css("width", value + "%");
- 	   	$("#bar").attr("aria-valuenow", value);
+           $("#bar").css("width", value + "%");
+           $("#bar").attr("aria-valuenow", value);
 
         // otherwise create the bar
  	   } else {
@@ -49,71 +49,9 @@ $(document).ready(function() {
         newAlert(msg + " View the report here: " + link_href);
     }
 
-    // connect to the socket.io server
-    var ws_scheme = window.location.protocol;
-    var url = ws_scheme + "//" + document.domain;
-    if (location.port != "") {
-        url = url.concat(":" + location.port);
-    }
-
-    var socket = io.connect(url);
-
-    // once file is uploaded and page reloaded, check if message has changed, and if so,
-    // create a loading bar and start the analysis workflow!
-    // TODO: maybe kinda hacky, is there a better way?
+    // once file is uploaded and page reloaded, create hte loadingBar
     if ($("#message").text().indexOf("Successfully uploaded!") > -1) {
+        console.log("Test");
  	    loadingBar(0);
-        socket.emit("identify");
     }
-
-
-    socket.on("identify_reply", function(resp) {
-
-        // if an existing entry is found, exit early
-        if (resp["link"]) {
-            success("Found existing artifact!", resp["link"])
-            return
-        }
-
-        var header = "Packer Detection";
-        if (resp["continue"] != false) {
- 	        loadingBar(20);
-            socket.emit("unpack");
-        } else {
-            newAlert("Cannot continue execution, unable to identify packer.");
-        }
-    });
-
-
-    socket.on("unpack_reply", function(resp) {
-        var header = "Executable Unpacking";
-        if (resp["continue"]) {
-            loadingBar(40);
-            socket.emit("decompile");
-        } else {
-            newAlert("Cannot continue execution, error during unpacking.");
-        }
-    });
-
-
-    socket.on("decompile_reply", function(resp) {
-        var header = "Bytecode Decompilation";
-        if (resp["continue"]) {
-            loadingBar(60);
-            socket.emit("sast");
-        } else {
-            newAlert("Cannot continue execution, failed during decompilation.");
-        }
-    });
-
-
-    socket.on("sast_reply", function(resp) {
-        loadingBar(80);
-        socket.emit("finalize");
-    });
-
-
-    socket.on("finalize_reply", function(resp) {
-        success("Done reverse engineering!", resp["link"])
-    });
 });

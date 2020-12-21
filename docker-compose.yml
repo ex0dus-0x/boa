@@ -29,3 +29,16 @@ services:
       - POSTGRES_PASSWORD=password
     ports:
       - 5432:5432
+
+  redis:
+    image: redis:latest
+
+  dashboard:
+    build: ./dashboard
+    image: dashboard
+    container_name: dashboard
+    depends_on:
+      - redis
+    ports:
+      - 9181:9181
+    command: rq-dashboard -H redis

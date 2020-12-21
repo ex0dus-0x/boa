@@ -6,7 +6,7 @@ manager.py
 
     WIP: creates parallel workers
 """
-from boa import create_app, socketio
+from boa import create_app
 from boa.config import BaseConfig
 
 # initialize Flask app with factory pattern
@@ -14,4 +14,4 @@ config = BaseConfig()
 app = create_app(config)
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0")
+    app.run(host="0.0.0.0")

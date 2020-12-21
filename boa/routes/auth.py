@@ -11,10 +11,10 @@ import hashlib
 from flask import render_template, request, redirect, flash, url_for
 from flask_login import login_user, logout_user
 
-from . import web
-from .. import db
-from ..models import User
-from ..forms import RegistrationForm, LoginForm
+from boa import db
+from boa.routes import web
+from boa.models import User
+from boa.forms import RegistrationForm, LoginForm
 
 
 def password_hasher(username, pwd):
