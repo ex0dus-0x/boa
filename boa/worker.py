@@ -16,7 +16,6 @@ import hashlib
 import typing as t
 
 import pefile
-import flask_socketio as sio
 
 from boa import models, config, utils
 from boa.core import unpack, decompile, sast
@@ -26,7 +25,7 @@ class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
 
 
-class BoaWorker(sio.Namespace):
+class BoaWorker:
     """
     Represents a stateful worker that consumes a checked Python-compiled executable path,
     instantiates a workspace, performs the necessary analysis workflow and implements handlers

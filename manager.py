@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-run.py
+manager.py
 
+    Entry point to web service, for now runs the boa app.
+
+    WIP: creates parallel workers
 """
 from boa import create_app, socketio
 from boa.config import BaseConfig

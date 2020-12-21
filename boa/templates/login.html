@@ -6,9 +6,11 @@
         <div class="card-body">
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
+                    {% for message in messages %}
                     <div class="alert alert-info text-center" role="alert">
-                        {{ messages[0] }}
+                        {{ message }}
                     </div>
+                    {% endfor %}
                 {% endif %}
             {% endwith %}
             <h4> Login </h4>

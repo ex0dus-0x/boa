@@ -1,7 +1,8 @@
 version: "3"
 
 services:
-  app:
+
+  boa:
     build: .
     container_name: boa
     restart: always

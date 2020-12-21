@@ -11,7 +11,7 @@
 	{% with messages = get_flashed_messages() %}
 	  {% if messages %}
 		{% for message in messages %}
-        <div class="alert alert-danger" row="alert">
+        <div class="alert alert-primary" row="alert">
             {{ message }}
         </div>
 		{% endfor %}
@@ -28,9 +28,6 @@
     <br>
     <p style="opacity: 0.6;"><i>Only .exe files are supported for reversing at the moment.</i></p>
     <br>
-    <div id="statustable">
-        <!-- As analysis occurs, the status table will dynamically be updated here -->
-	</div>
     <div id="alerts">
         <!-- Any results from execution are dynamically appended to this specific div -->
     </div>

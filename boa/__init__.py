@@ -8,7 +8,6 @@ import os
 import flask
 import sqlalchemy
 import sqlalchemy_utils as sqlutils
-import flask_socketio as sio
 
 from flask_cors import CORS
 from flask_login import LoginManager
@@ -22,7 +21,6 @@ app.secret_key = os.urandom(12)
 
 # create Socket.IO interface with CORS policy for endpoint
 cors = CORS(app, resources={r"/socket.io": {"origins": "*"}})
-socketio = sio.SocketIO(app)
 
 
 def create_local_dirs(app):

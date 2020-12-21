@@ -11,7 +11,7 @@ import boa.utils as utils
 import boa.config as config
 
 from . import web
-from boa import worker, socketio
+from boa import worker
 from boa.models import Scan
 
 
@@ -94,7 +94,7 @@ def scan():
             # retrieve a secure version of the file's name
             # path = werkzeug.utils.secure_filename(filename)
 
-            # instantiate the workspace, and register namespace with socketio
+            # instantiate the workspace
             try:
                 wker = worker.BoaWorker(
                     filename, current_app.config["UPLOAD_FOLDER"], input_file
@@ -104,7 +104,6 @@ def scan():
                 return redirect(request.url)
 
             # register the namespace for socket communication once instantiated
-            socketio.on_namespace(wker)
 
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
