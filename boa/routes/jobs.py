@@ -9,20 +9,24 @@ from flask import jsonify, request
 from rq import Queue
 
 from boa.routes import web
-from boa.worker import Worker
+from boa.worker import BoaWorker
 
 
-@web.route("/new_job", methods=["POST"])
-def run_task():
-    """ """
-
-    return jsonify({"result" : "test"})
+@web.route("/new", methods=["POST"])
+def run_job():
+    """ Instantiates a new background job conducting a scan """
+    return jsonify({"result": "test"})
 
 
 @web.route("/status/<job_id>")
 def job_status(job_id):
-    """ """
+    """ Endpoint used to return status for a running job """
 
     response = {}
     queue = Queue()
     return jsonify(response)
+
+
+@web.route("/stop/<job_id>")
+def stop_job(job_id):
+    return

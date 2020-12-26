@@ -14,11 +14,7 @@ import boto3
 import boa.config as config
 
 # instantiates the client used to communicate with S3 bucket.
-s3_client = boto3.client(
-    "s3",
-    aws_access_key_id=config.BaseConfig.AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=config.BaseConfig.AWS_SECRET_ACCESS_KEY,
-)
+s3_client = boto3.client("s3")
 
 
 def upload_file(obj, filename: str, acl="public-read") -> str:

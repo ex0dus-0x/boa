@@ -30,9 +30,10 @@ def create_local_dirs(app):
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.mkdir(app.config["UPLOAD_FOLDER"])
 
-    # create directory to store database
-    if not os.path.exists(app.config["DB_FOLDER"]):
-        os.mkdir(app.config["DB_FOLDER"])
+    # if specified, create directory to store database
+    if "DB_FOLDER" in app.config:
+        if not os.path.exists(app.config["DB_FOLDER"]):
+            os.mkdir(app.config["DB_FOLDER"])
 
 
 def configure_database(app):

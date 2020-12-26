@@ -34,7 +34,7 @@ class BoaWorker:
 
     def __init__(self, name, root, input_file) -> None:
 
-        # sanity-check: do not instantiate if PE is malforme
+        # sanity-check: do not instantiate if PE is malformed
         filecontent = input_file.read()
         try:
             _ = pefile.PE(data=filecontent)

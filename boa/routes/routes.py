@@ -59,6 +59,7 @@ def about():
 # Dynamic Content Routes
 # =======================
 
+
 @web.route("/settings")
 @login_required
 def settings():
