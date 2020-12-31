@@ -13,18 +13,22 @@ dotenv.load_dotenv()
 
 
 class BaseConfig(object):
-    """Defines globally set variables and configurations, and should also be used
-    as the default development configuration"""
+    """ Basic configuration for every boa instance """
 
+    DEBUG = False
+
+    # Basic settings
     SECRET_KEY = os.urandom(16)
     CORS_HEADERS = "Content-Type"
     SSL_CONTEXT = "adhoc"
     TEMPLATES_AUTO_RELOAD = True
 
     # Database configurations
-    DB_FOLDER = os.path.join(os.getcwd(), "db")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_DATABASE_URI = "sqlite:///{}/boa.db".format(DB_FOLDER)
+    SQLALCHEMY_DATABASE_URI = None
+
+    # Points to redis URL instance for redis-queue
+    REDIS_URL = os.environ.get("REDISTOGO_URL")
 
     # File upload configurations
     ALLOWED_EXTENSIONS = ["exe", "pe", "bin"]
@@ -32,16 +36,34 @@ class BaseConfig(object):
     UPLOAD_FOLDER = os.path.join(os.getcwd(), "artifacts")
 
 
+class DevelopmentConfig(BaseConfig):
+    """ Retains most of BaseConfig configurations """
+
+    DEBUG = True
+
+    # initializes local path to store database instead of a connection to service
+    DB_FOLDER = os.path.join(os.getcwd(), "db")
+    SQLALCHEMY_DATABASE_URI = "postgresql:///{}/boa.db".format(DB_FOLDER)
+
+
 def ProductionConfig(BaseConfig):
     """ Production swaps out local directories for cloud provisioned services  """
 
+    # overrides from BaseConfig
+    DEBUG = False
     TEMPLATES_AUTO_RELOAD = False
 
-    # Points to relational database instance
+    # Points to PostgreSQL database instance
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
 
     # Amazon S3 settings - get IAM user key and secret with permission to bucket
-    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
     S3_BUCKET = os.environ.get("S3_BUCKET")
     AWS_REGION = os.environ.get("AWS_REGION", "us-east-2")
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+
+config = {
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+}

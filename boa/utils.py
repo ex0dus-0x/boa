@@ -16,6 +16,21 @@ import boa.config as config
 # instantiates the client used to communicate with S3 bucket.
 s3_client = boto3.client("s3")
 
+class UploadClient:
+    """
+    Object that consumes AWS S3 credentials and interacts with a bucket to store sample info,
+    is used only during a production build
+    """
+
+    def __init__(self, config):
+        self.config = config
+
+    def upload(self, obj, filename: str, acl: str = "public-read") -> str:
+        pass
+
+    def get_metadata_file(self, filename: str):
+        pass
+
 
 def upload_file(obj, filename: str, acl="public-read") -> str:
     """

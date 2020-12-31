@@ -8,14 +8,16 @@ services:
     restart: always
     depends_on:
       - db
+      - redis
     ports:
       - 5000:5000
     environment:
+      - CONFIG=development
+      - REDISTOGO_URL
       - SQLALCHEMY_DATABASE_URI
       - S3_BUCKET
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
-      - DEBUG_MODE=false
     volumes:
       - /tmp:/mnt/boa
 
