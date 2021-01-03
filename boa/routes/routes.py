@@ -5,7 +5,6 @@ routes.py
 """
 from flask import redirect, render_template, request, flash, current_app, url_for
 from flask_login import login_required
-from flask_cors import cross_origin
 
 import boa.utils as utils
 import boa.config as config
@@ -69,7 +68,6 @@ def settings():
 
 @web.route("/scan", methods=["GET", "POST"])
 @login_required
-@cross_origin(origin="*")
 def scan():
     """
     Represents endpoint used to conduct a scan against an executable, which does so

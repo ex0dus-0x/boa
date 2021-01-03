@@ -16,34 +16,36 @@ class BaseConfig(object):
     """ Basic configuration for every boa instance """
 
     DEBUG = False
+    TEMPLATES_AUTO_RELOAD = True
+    WTF_CSRF_ENABLED = True
 
     # Basic settings
-    SECRET_KEY = os.urandom(16)
+    SECRET_KEY = os.environ.get("SECRET_KEY", os.urandom(16))
     CORS_HEADERS = "Content-Type"
     SSL_CONTEXT = "adhoc"
-    TEMPLATES_AUTO_RELOAD = True
 
     # Database configurations
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = None
 
-    # Points to redis URL instance for redis-queue
-    REDIS_URL = os.environ.get("REDISTOGO_URL")
+    # Redis configuration default points to local server
+    REDIS_URL = "redis://localhost:6379"
+    QUEUES = ["default"]
 
-    # File upload configurations
+    # File upload configurations for artifacts
     ALLOWED_EXTENSIONS = ["exe", "pe", "bin"]
     MAX_CONTENT_LENGTH = 1024 ** 3
     UPLOAD_FOLDER = os.path.join(os.getcwd(), "artifacts")
 
 
 class DevelopmentConfig(BaseConfig):
-    """ Retains most of BaseConfig configurations """
+    """ Retains most of BaseConfig configurations, but keeps database local """
 
     DEBUG = True
 
     # initializes local path to store database instead of a connection to service
     DB_FOLDER = os.path.join(os.getcwd(), "db")
-    SQLALCHEMY_DATABASE_URI = "postgresql:///{}/boa.db".format(DB_FOLDER)
+    SQLALCHEMY_DATABASE_URI = "sqlite:///{}/boa.db".format(DB_FOLDER)
 
 
 def ProductionConfig(BaseConfig):
@@ -53,7 +55,10 @@ def ProductionConfig(BaseConfig):
     DEBUG = False
     TEMPLATES_AUTO_RELOAD = False
 
-    # Points to PostgreSQL database instance
+    # Points to redis instance on another server/container
+    REDIS_URL = os.environ.get("REDISTOGO_URL")
+
+    # Points to PostgreSQL database instance on another server/container
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
 
     # Amazon S3 settings - get IAM user key and secret with permission to bucket

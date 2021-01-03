@@ -4,13 +4,14 @@ bidict==0.21.2
 boto3==1.14.37
 botocore==1.17.37
 certifi==2020.6.20
+cffi==1.14.4
 chardet==3.0.4
 click==7.1.2
+cryptography==3.3.1
 dnspython==1.16.0
 docutils==0.15.2
 eventlet==0.25.2
 Flask==1.1.2
-Flask-Cors==3.0.8
 Flask-Login==0.5.0
 Flask-SQLAlchemy==2.4.4
 Flask-WTF==0.14.3
@@ -31,6 +32,7 @@ monotonic==1.5
 pbr==5.4.5
 pefile==2019.4.18
 psycopg2-binary==2.8.5
+pycparser==2.20
 pylint==2.6.0
 python-dateutil==2.8.1
 python-dotenv==0.14.0
@@ -49,11 +51,11 @@ SQLAlchemy-Utils==0.36.8
 stdlib-list==0.7.0
 stevedore==3.2.0
 toml==0.10.1
-uncompyle6==3.7.2
+uncompyle6==3.7.4
 unpy2exe==0.4
 urllib3==1.25.10
 Werkzeug==1.0.1
 wrapt==1.12.1
 WTForms==2.3.3
-xdis==5.0.1
+xdis==5.0.6
 yara-python==4.0.2

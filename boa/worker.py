@@ -16,6 +16,7 @@ import hashlib
 import typing as t
 
 import pefile
+from flask import current_app
 
 from boa import models, config, utils
 from boa.core import unpack, decompile, sast
@@ -295,16 +296,22 @@ class BoaWorker:
         with open(metadata_path, "w") as mdata:
             mdata.write(metadata_content)
 
-        # commit as "key file" to bucket
-        bucket_key = self.uuid + "/metadata.json"
-        with open(metadata_path, "rb") as mdata:
-            _ = utils.upload_file(mdata, bucket_key)
+        # commit as "key file" to bucket, if not in development build
+        if not current_app.config["DEBUG"]:
+            bucket_key = self.uuid + "/metadata.json"
+            with open(metadata_path, "rb") as mdata:
+                _ = utils.upload_file(mdata, bucket_key)
 
         # zip up folder and commit zipped contents to S3
         zip_path = utils.zipdir(self.workspace)
-        zip_key = self.uuid + "/analyzed.zip"
-        with open(zip_path, "rb") as zipf:
-            zip_url = utils.upload_file(zipf, zip_key)
+
+        # if production, commit to S3 and save url, other save path
+        if not current_app.config["DEBUG"]:
+            zip_key = self.uuid + "/analyzed.zip"
+            with open(zip_path, "rb") as zipf:
+                zip_url = utils.upload_file(zipf, zip_key)
+        else:
+            zip_url = zip_path
 
         # delete the path to the zipped file and entire workspace once it's uploaded
         os.remove(zip_path)

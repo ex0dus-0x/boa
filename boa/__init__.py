@@ -9,18 +9,16 @@ import flask
 import sqlalchemy
 import sqlalchemy_utils as sqlutils
 
-from flask_cors import CORS
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+
+from boa.utils import UploadClient
 
 db = SQLAlchemy()
 
 # initilaize Flask app
 app = flask.Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(12)
-
-# create Socket.IO interface with CORS policy for endpoint
-cors = CORS(app, resources={r"/socket.io": {"origins": "*"}})
 
 
 def create_local_dirs(app):
@@ -66,6 +64,11 @@ def create_app(config):
     # initialize app from configuration
     app.config.from_object(config)
 
+    # instantiate a S3 bucket helper object if production build
+    if not app.config["DEBUG"]:
+        app.config["BUCKET_HELPER"] = UploadClient(app.config)
+
+    # create local workspace and configure database
     create_local_dirs(app)
     configure_database(app)
 
@@ -98,7 +101,6 @@ def create_app(config):
 
     # register blueprints
     from boa.routes import web
-
     app.register_blueprint(web)
 
     # TODO: api blueprint
