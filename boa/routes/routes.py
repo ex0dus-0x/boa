@@ -4,7 +4,8 @@ routes.py
     Defines all standard static and dynamic routes that can be interfaced by users.
 """
 from flask import redirect, render_template, request, flash, current_app, url_for
-from flask_login import login_required
+from flask_login import login_required, current_user
+from flask_sse import sse
 
 import boa.utils as utils
 import boa.config as config
@@ -102,15 +103,17 @@ def scan():
                 flash(str(err))
                 return redirect(request.url)
 
-            # register the namespace for socket communication once instantiated
-
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
 
         flash("Filetype not allowed!")
         return redirect(request.url)
 
-    return render_template("scan.html")
+    sse.publish({"message": "hello"}, type="events")
+
+    # get current user's scans for display
+    user_scans = Scan.query.filter_by(user_id=current_user.id)
+    return render_template("scan.html", user_scans=user_scans)
 
 
 @web.route("/report/<uuid>")

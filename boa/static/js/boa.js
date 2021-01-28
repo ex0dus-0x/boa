@@ -39,19 +39,11 @@ $(document).ready(function() {
         `);
     }
 
-    // helper to trigger success alert
+    // used to finalize the progress bar, and append an alert with the report link
     function success(msg, link) {
         loadingBar(100);
-
-        // return the link to the report back to the user
         var link = url + link;
         var link_href = "<a href='" + link + "'>" + link + "</a>";
         newAlert(msg + " View the report here: " + link_href);
-    }
-
-    // once file is uploaded and page reloaded, create hte loadingBar
-    if ($("#message").text().indexOf("Successfully uploaded!") > -1) {
-        console.log("Test");
- 	    loadingBar(0);
     }
 });

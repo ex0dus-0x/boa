@@ -4,7 +4,6 @@ services:
 
   boa:
     build: .
-    container_name: boa
     restart: always
     depends_on:
       - db

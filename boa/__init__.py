@@ -103,6 +103,10 @@ def create_app(config):
     from boa.routes import web
     app.register_blueprint(web)
 
+    # register server-sent event blueprint
+    from flask_sse import sse
+    app.register_blueprint(sse, url_prefix="/stream")
+
     # TODO: api blueprint
     # from boa.routes import api
     # app.register_blueprint(api)

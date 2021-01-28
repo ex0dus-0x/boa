@@ -2,12 +2,6 @@
 {% block content %}
 
 <div class="col-md-12 text-center">
-    <span id="progress">
-        <!-- Any changes in progress will be represented by an animated loading bar -->
-    </span>
-
-    <br>
-
 	{% with messages = get_flashed_messages() %}
 	  {% if messages %}
 		{% for message in messages %}
@@ -33,6 +27,7 @@
     </div>
 </div>
 
+<!-- Logs all of the previous scans conducted by the current user -->
 <div class="card">
   <div class="card-body">
 	<h4>Your Recent Activity</h4>
@@ -46,11 +41,26 @@
       </tr>
       </thead>
       <tbody>
+      {% for scan in user_scans %}
+      <tr>
+        <td>{{ scan.timestamp }}</td>
+        <td>{{ scan.uuid }}</td>
+        <td>
+          <form action="/scan-delete" method="POST">
+            <label class="btn btn-warning">
+              Delete
+            </label>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 <br>
+
+<!-- Will be dynamically changed for each job that is currently persisting -->
 <div class="card">
   <div class="card-body">
 	<h4>Current Jobs</h4>
@@ -67,11 +77,32 @@
       <tbody>
       </tbody>
     </table>
-
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/boa.js') }}" type="text/javascript" charset="utf-8"></script>
+<script>
+$(document).ready(function() {
+
+    // automatically submit after file upload
+    $("#file").change(function() {
+        $("#form").submit();
+    });
+
+    // initialize an interface to intercept server-sent events from redis pubsub
+    var source = new EventSource("{{ url_for("sse.stream") }}");
+
+    // listen for events and update table accordingly
+    source.addEventListener("events", function(event) {
+        var data = JSON.parse(event.data);
+        console.log(data);
+    }, false);
+
+    // listen specifically for errors and handle frontend accordingly
+    source.addEventListener("errors", function(event) {
+        console.log("Yikes");
+    }, false);
+});
+</script>
 {% endblock %}

@@ -20,7 +20,7 @@ class UploadClient:
     """
 
     def __init__(self, config):
-        """ 
+        """
         Given a Flask production configuration, instantiate the object with
         appropriate AWS S3 credentials.
         """
@@ -29,11 +29,10 @@ class UploadClient:
 
         # instantiate client with credentials for later use
         self.client = boto3.client(
-            "s3", 
+            "s3",
             aws_access_key_id=config["AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"]
+            aws_secret_access_key=config["AWS_SECRET_ACCESS_KEY"],
         )
-        
 
     def upload_file(self, obj, filename: str, acl: str = "public-read") -> str:
         """
@@ -55,7 +54,6 @@ class UploadClient:
             self.bucket_name, self.region, filename
         )
         return dl_url
-
 
     def get_metadata_file(filekey: str):
         """

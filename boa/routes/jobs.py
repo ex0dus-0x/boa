@@ -25,7 +25,7 @@ def run_job():
         "data": {
             "id": task.get_id(),
             "status": None,
-        }
+        },
     }
     return jsonify(response), 202
 
@@ -46,7 +46,7 @@ def job_status(job_id):
                 "id": task.get_id(),
                 "status": task.get_status(),
                 "result": task.result,
-            }
+            },
         }
     else:
         response = {"status": "error"}
@@ -54,10 +54,8 @@ def job_status(job_id):
     return jsonify(response)
 
 
-
 @web.route("/stop/<job_id>", methods=["GET"])
 def stop_job(job_id):
     """ If pinged, stops a given job ID and destroy artifacts created """
     response = {}
     return jsonify(response)
-
