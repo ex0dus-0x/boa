@@ -46,7 +46,6 @@ def configure_database(app):
                 sqlutils.create_database(db_url)
 
             from boa import models
-
             models.create_tables(engine)
 
         except sqlalchemy.exc.OperationalError as err:
@@ -65,8 +64,12 @@ def create_app(config):
     app.config.from_object(config)
 
     # instantiate a S3 bucket helper object if production build
-    if not app.config["DEBUG"]:
-        app.config["BUCKET_HELPER"] = UploadClient(app.config)
+    try:
+        if not app.config["DEBUG"]:
+            app.config["BUCKET_HELPER"] = UploadClient(app.config)
+    except KeyError:
+        print("Cannot run in production without S3 bucket and credential envvars set.")
+        exit(1)
 
     # create local workspace and configure database
     create_local_dirs(app)

@@ -29,7 +29,7 @@ class BaseConfig(object):
     SQLALCHEMY_DATABASE_URI = None
 
     # Redis configuration default points to local server
-    REDIS_URL = "redis://localhost:6379"
+    REDIS_URL =  "redis://redis:6379"
     QUEUES = ["default"]
 
     # File upload configurations for artifacts

@@ -11,7 +11,7 @@ services:
     ports:
       - 5000:5000
     environment:
-      - CONFIG=development
+      - CONFIG
       - REDISTOGO_URL
       - SQLALCHEMY_DATABASE_URI
       - S3_BUCKET
@@ -34,6 +34,8 @@ services:
   redis:
     image: redis:latest
     container_name: redis
+    ports:
+      - 6379:6379
 
   dashboard:
     build: ./dashboard
