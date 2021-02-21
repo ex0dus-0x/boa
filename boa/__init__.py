@@ -102,13 +102,13 @@ def create_app(config):
         """ Redirect to home if request method not allowed """
         return flask.redirect(flask.url_for("web.index"))
 
-    # register blueprints
-    from boa.routes import web
-    app.register_blueprint(web)
-
     # register server-sent event blueprint
     from flask_sse import sse
     app.register_blueprint(sse, url_prefix="/stream")
+
+    # register blueprints
+    from boa.routes import web
+    app.register_blueprint(web)
 
     # TODO: api blueprint
     # from boa.routes import api

@@ -26,4 +26,4 @@ def run_worker():
 
 
 if __name__ == "__main__":
-    app.run(ssl_context=app.config["SSL_CONTEXT"])
+    app.run(host="0.0.0.0", ssl_context=app.config["SSL_CONTEXT"])

@@ -91,7 +91,7 @@ $(document).ready(function() {
     });
 
     // initialize an interface to intercept server-sent events from redis pubsub
-    var source = new EventSource("{{ url_for("sse.stream") }}");
+    var source = new EventSource("{{ url_for('sse.stream') }}");
 
     // listen for events and update table accordingly
     source.addEventListener("events", function(event) {

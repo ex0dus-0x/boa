@@ -29,7 +29,7 @@ class BaseConfig(object):
     SQLALCHEMY_DATABASE_URI = None
 
     # Redis configuration default points to local server
-    REDIS_URL =  "redis://redis:6379"
+    REDIS_URL = os.environ.get("REDISTOGO_URL", "redis://redis:6379")
     QUEUES = ["default"]
 
     # File upload configurations for artifacts
@@ -54,9 +54,6 @@ def ProductionConfig(BaseConfig):
     # overrides from BaseConfig
     DEBUG = False
     TEMPLATES_AUTO_RELOAD = False
-
-    # Points to redis instance on another server/container
-    REDIS_URL = os.environ.get("REDISTOGO_URL")
 
     # Points to PostgreSQL database instance on another server/container
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
