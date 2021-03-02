@@ -17,6 +17,7 @@ import typing as t
 
 import pefile
 from flask import current_app
+from flask_sse import sse
 
 from boa import models, config, utils
 from boa.core import unpack, decompile, sast
@@ -133,11 +134,7 @@ class BoaWorker:
         # return the name of the workspace plus binary for user to interact with
         return workspace
 
-    # ============================
-    # Socket.io Channel Callbacks
-    # ============================
-
-    def on_identify(self):
+    def identify(self):
         """
         Server-side message handler used to identify and instantiate the packer for
         the executable in context. If parsing and instantiating failed, return error
@@ -171,12 +168,12 @@ class BoaWorker:
             shutil.rmtree(self.workspace)
 
         # send back payload to UI with appropriate response
-        self.emit(
-            "identify_reply",
+        sse.publish(
             {"packer": str(self.packer), "continue": cont, "error": self.error},
+            type="events",
         )
 
-    def on_unpack(self):
+    def unpack(self):
         """
         Server-side message handler to call unpacker routine against the executable stored
         in the workspace.
@@ -199,16 +196,16 @@ class BoaWorker:
 
         # add a bit of latency since this is pretty quick
         time.sleep(1)
-        self.emit(
-            "unpack_reply",
+        sse.publish(
             {
                 "extracted": len(self.bytecode_paths),
                 "continue": cont,
                 "error": self.error,
             },
+            type="events",
         )
 
-    def on_decompile(self):
+    def decompile(self):
         """
         Server-side message handler to interface our decompiler abstraction to
         decompile the bytecode source that has been recovered from unpacking.
@@ -233,20 +230,20 @@ class BoaWorker:
 
         # delete workspace if decompilation absolutely cannot be done
         cont = not self.error
-        # if not cont:
-        #    shutil.rmtree(self.workspace)
+        if not cont:
+            shutil.rmtree(self.workspace)
 
         # send back response with num of files decompiled
-        self.emit(
-            "decompile_reply",
+        sse.publish(
             {
                 "src_files": len(self.relevant_src),
                 "continue": cont,
                 "error": self.error,
             },
+            type="events",
         )
 
-    def on_sast(self):
+    def sast(self):
         """
         Runs a `SASTEngine` against all the recovered source files and parse out all potential
         security issues. Issues support leaked secrets and python code quality assurance.
@@ -262,12 +259,12 @@ class BoaWorker:
         self.sec_issues = engine.dump_results()
 
         # send back response with number of potential bugs found
-        self.emit(
-            "sast_reply",
+        sse.publish(
             {"issues_found": len(self.sec_issues["results"]), "error": self.error},
+            type="events",
         )
 
-    def on_finalize(self):
+    def finalize(self):
         """
         Finalizes the execution of the analysis, commiting the parsed out information from each step
         to a `metadata.json` file for the
@@ -333,4 +330,4 @@ class BoaWorker:
         models.db.session.commit()
 
         # send the finalized report link back to the user once everything is committed
-        self.emit("finalize_reply", {"link": "/report/" + str(self.uuid)})
+        sse.publish({"link": "/report/" + str(self.uuid)}, type="events")

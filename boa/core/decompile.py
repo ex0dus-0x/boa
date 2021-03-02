@@ -15,7 +15,11 @@ import ntpath
 import shutil
 
 import stdlib_list
-import uncompyle6
+
+try:
+    import uncompyle6
+except KeyError:
+    print("uncompyle6 is internally outdated, doesn't support Python version!")
 
 # import decompyle3
 

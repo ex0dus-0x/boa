@@ -46,6 +46,7 @@ def configure_database(app):
                 sqlutils.create_database(db_url)
 
             from boa import models
+
             models.create_tables(engine)
 
         except sqlalchemy.exc.OperationalError as err:
@@ -104,15 +105,13 @@ def create_app(config):
 
     # register server-sent event blueprint
     from flask_sse import sse
+
     app.register_blueprint(sse, url_prefix="/stream")
 
     # register blueprints
     from boa.routes import web
-    app.register_blueprint(web)
 
-    # TODO: api blueprint
-    # from boa.routes import api
-    # app.register_blueprint(api)
+    app.register_blueprint(web)
 
     db.init_app(app)
     return app

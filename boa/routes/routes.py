@@ -5,7 +5,6 @@ routes.py
 """
 from flask import redirect, render_template, request, flash, current_app, url_for
 from flask_login import login_required, current_user
-from flask_sse import sse
 
 import boa.utils as utils
 import boa.config as config
@@ -108,8 +107,6 @@ def scan():
 
         flash("Filetype not allowed!")
         return redirect(request.url)
-
-    sse.publish({"message": "hello"}, type="events")
 
     # get current user's scans for display
     user_scans = Scan.query.filter_by(user_id=current_user.id)
