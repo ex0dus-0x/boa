@@ -44,6 +44,7 @@ setuptools.setup(
         "boto3",
         "python-dotenv",
         "stdlib_list",
+        "cryptography",
 
         "pefile",
         "yara-python",

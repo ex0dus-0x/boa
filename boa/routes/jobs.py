@@ -4,42 +4,60 @@ jobs.py
     Defines routes that are used to interact with worker instantiation and
     execution given input samples.
 """
+import rq
 import redis
 
-from flask import jsonify, request, current_app
-from rq import Queue, Connection
+from flask import jsonify, request, current_app, g
+from rq import Queue
 
 from boa.routes import web
 from boa.worker import BoaWorker
 
 
+def get_redis_connection():
+    """ Get attribute to redis connecion object """
+    conn = getattr(g, "_redis_connection", None)
+    if conn is None:
+        url = current_app.config["REDIS_URL"]
+        conn = g._redis_connection = redis.from_url(url)
+    return conn
+
+
+@web.before_request
+def push_rq_connection():
+    rq.push_connection(get_redis_connection())
+
+
+@web.teardown_request
+def pop_rq_connection(execption=None):
+    rq.pop_connection()
+
+
+#########################################
+# Endpoints for starting background jobs
+#########################################
+
+
 @web.route("/new", methods=["POST"])
 def run_job():
     """ Instantiates a new background job conducting a scan """
-    with Connection(redis.from_url(current_app.config["REDIS_URL"])):
-        q = Queue()
-        task = q.enqueue()
-
-    response = {
-        "status": "started",
-        "data": {
-            "id": task.get_id(),
-            "status": None,
-        },
-    }
-    return jsonify(response), 202
+    job = request.form.get("task")
+    queue = Queue()
+    task = queue.enqueue(BoaWorker.run, job)
+    return jsonify({}), 202
 
 
 @web.route("/status/<job_id>", methods=["GET"])
 def job_status(job_id):
     """ Endpoint used to return status for a running job """
-    with Connection(redis.from_url(current_app.config["REDIS_URL"])):
-        q = Queue()
-        task = q.fetch_job(task_id)
+    queue = Queue()
+    task = queue.fetch_job(job_id)
 
-    # create response based on fetched job
+    # define response based on task
     response = {}
-    if task:
+    if task is None:
+        response = {"status": "unknown"}
+    else:
         response = {
             "status": "inprogress",
             "data": {
@@ -48,14 +66,5 @@ def job_status(job_id):
                 "result": task.result,
             },
         }
-    else:
-        response = {"status": "error"}
 
-    return jsonify(response)
-
-
-@web.route("/stop/<job_id>", methods=["GET"])
-def stop_job(job_id):
-    """ If pinged, stops a given job ID and destroy artifacts created """
-    response = {}
     return jsonify(response)
