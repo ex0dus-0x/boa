@@ -11,7 +11,7 @@ from rq import Queue
 from boa import utils, config
 from boa.routes import web
 from boa.models import Scan
-from boa.worker import BoaWorker
+from boa.worker import BoaWorker, WorkerException
 
 
 @web.route("/index")
@@ -88,7 +88,7 @@ def scan():
                 wker = BoaWorker(
                     filename, current_app.config["UPLOAD_FOLDER"], input_file
                 )
-            except worker.WorkerException as err:
+            except WorkerException as err:
                 flash(str(err))
                 return redirect(request.url)
 

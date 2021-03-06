@@ -25,7 +25,6 @@ def detect(args):
 def decompile(args):
     """ Given bytecode files, patch and decompile them back into original Python source code. """
     bytecode_files = args.bytecode
-    print(bytecode_files)
 
 
 @argparse.subcommand(

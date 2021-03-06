@@ -87,6 +87,9 @@ class BoaWorker:
         # stores any errors parsed out during execution
         self.error = None
 
+        # push event to represent new task initializing
+        sse.publish({"uuid": self.uuid}, type="events")
+
     @staticmethod
     def check_existence(checksum: str) -> t.Optional[str]:
         """
@@ -142,7 +145,7 @@ class BoaWorker:
         # if not config.BaseConfig.DEBUG_MODE:
         uid = BoaWorker.check_existence(self.checksum)
         if uid is not None:
-            self.emit("identify_reply", {"link": "/report/" + uid})
+            sse.publish({"link": "/report/" + uuid, "error": None}, type="events")
             return
 
         # info parsed out: version
@@ -160,13 +163,12 @@ class BoaWorker:
         # TODO: identify if the sample is malware from Virustotal API scan
 
         # delete workspace created if the packer is unknown
-        cont = self.packer is not None
-        if not cont:
+        if self.packer is None:
             shutil.rmtree(self.workspace)
 
         # send back payload to UI with appropriate response
         sse.publish(
-            {"packer": str(self.packer), "continue": cont, "error": self.error},
+            {"packer": str(self.packer), "error": self.error},
             type="events",
         )
 
@@ -184,8 +186,7 @@ class BoaWorker:
             self.error = str(err)
 
         # delete workspace if unpacking failed at some point
-        cont = not self.error
-        if not cont:
+        if self.error:
             shutil.rmtree(self.workspace)
 
         # get rid of binary on server at this point, we don't want live malware or big files.
@@ -196,7 +197,6 @@ class BoaWorker:
         sse.publish(
             {
                 "extracted": len(self.bytecode_paths),
-                "continue": cont,
                 "error": self.error,
             },
             type="events",
@@ -226,15 +226,13 @@ class BoaWorker:
                 self.error = str(err)
 
         # delete workspace if decompilation absolutely cannot be done
-        cont = not self.error
-        if not cont:
+        if self.error:
             shutil.rmtree(self.workspace)
 
         # send back response with num of files decompiled
         sse.publish(
             {
                 "src_files": len(self.relevant_src),
-                "continue": cont,
                 "error": self.error,
             },
             type="events",
