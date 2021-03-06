@@ -45,6 +45,8 @@ setuptools.setup(
         "python-dotenv",
         "stdlib_list",
         "cryptography",
+        "gunicorn",
+        "eventlet",
 
         "pefile",
         "yara-python",

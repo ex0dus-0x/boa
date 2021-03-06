@@ -12,13 +12,23 @@ services:
       - 5000:5000
     environment:
       - CONFIG
-      - REDISTOGO_URL
+      - REDIS_URL
       - SQLALCHEMY_DATABASE_URI
       - S3_BUCKET
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
     volumes:
-      - /tmp:/mnt/boa
+      - .:/app
+
+  worker:
+    image: .
+    container_name: worker
+    command: "python uwsgi.py taskworker"
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+
 
   db:
     image: postgres:latest
