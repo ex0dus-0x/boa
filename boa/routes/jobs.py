@@ -38,15 +38,6 @@ def pop_rq_connection(execption=None):
 #########################################
 
 
-@web.route("/new", methods=["POST"])
-def run_job():
-    """ Instantiates a new background job conducting a scan """
-    job = request.form.get("task")
-    queue = Queue()
-    task = queue.enqueue(BoaWorker.run, job)
-    return jsonify({}), 202
-
-
 @web.route("/status/<job_id>", methods=["GET"])
 def job_status(job_id):
     """ Endpoint used to return status for a running job """
@@ -66,5 +57,6 @@ def job_status(job_id):
                 "result": task.result,
             },
         }
-
     return jsonify(response)
+
+# TODO: stop job

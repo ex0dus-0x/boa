@@ -68,7 +68,7 @@ def webapp(args):
             worker = Worker(app.config["QUEUES"])
             worker.work()
     else:
-        app.run(host=args.url, ssl_context=app.config["SSL_CONTEXT"])
+        app.run(host=args.host, ssl_context=app.config["SSL_CONTEXT"])
 
 
 #############################

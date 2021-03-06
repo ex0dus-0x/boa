@@ -6,12 +6,12 @@ routes.py
 from flask import redirect, render_template, request, flash, current_app, url_for
 from flask_login import login_required, current_user
 
-import boa.utils as utils
-import boa.config as config
+from rq import Queue
 
-from . import web
-from boa import worker
+from boa import utils, config
+from boa.routes import web
 from boa.models import Scan
+from boa.worker import BoaWorker
 
 
 # ======================
@@ -95,12 +95,16 @@ def scan():
 
             # instantiate the workspace
             try:
-                wker = worker.BoaWorker(
+                wker = BoaWorker(
                     filename, current_app.config["UPLOAD_FOLDER"], input_file
                 )
             except worker.WorkerException as err:
                 flash(str(err))
                 return redirect(request.url)
+
+            # enqueue the long-running analysis job
+            queue = Queue()
+            task = queue.enqueue(wker.identify)
 
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
