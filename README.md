@@ -2,6 +2,8 @@
 
 Black-Box Python Reverse Engineering Platform
 
+> We are doing a full refactor to include both a CLI and better web version!
+
 ## Introduction
 
 __boa__ is an all-in-one reverse engineering platform for aiding with the unpacking and extrapolation 
@@ -13,7 +15,6 @@ of source from Python-compiled malwares and executables.
 
 ### Built With
 
-* FireEye's [Speakeasy](https://github.com/fireeye/speakeasy) for malware unpacking.
 * PyCQA's [Bandit](https://github.com/PyCQA/bandit) for static security analysis.
 
 ## Usage
