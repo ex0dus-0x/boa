@@ -2,16 +2,10 @@
 {% block content %}
 
 <div class="col-md-12 text-center">
-    <span id="progress">
-        <!-- Any changes in progress will be represented by an animated loading bar -->
-    </span>
-
-    <br>
-
 	{% with messages = get_flashed_messages() %}
 	  {% if messages %}
 		{% for message in messages %}
-        <div class="alert alert-danger" row="alert">
+        <div class="alert alert-primary" row="alert" id="message">
             {{ message }}
         </div>
 		{% endfor %}
@@ -28,14 +22,12 @@
     <br>
     <p style="opacity: 0.6;"><i>Only .exe files are supported for reversing at the moment.</i></p>
     <br>
-    <div id="statustable">
-        <!-- As analysis occurs, the status table will dynamically be updated here -->
-	</div>
     <div id="alerts">
         <!-- Any results from execution are dynamically appended to this specific div -->
     </div>
 </div>
 
+<!-- Logs all of the previous scans conducted by the current user -->
 <div class="card">
   <div class="card-body">
 	<h4>Your Recent Activity</h4>
@@ -49,11 +41,26 @@
       </tr>
       </thead>
       <tbody>
+      {% for scan in user_scans %}
+      <tr>
+        <td>{{ scan.timestamp }}</td>
+        <td>{{ scan.uuid }}</td>
+        <td>
+          <form action="/scan-delete" method="POST">
+            <label class="btn btn-warning">
+              Delete
+            </label>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 <br>
+
+<!-- Will be dynamically changed for each job that is currently persisting -->
 <div class="card">
   <div class="card-body">
 	<h4>Current Jobs</h4>
@@ -63,18 +70,17 @@
       <tr>
         <th>Timestamp</th>
         <th>UID</th>
+        <th>Progress</th>
         <th>Stop?</th>
       </tr>
       </thead>
       <tbody>
       </tbody>
     </table>
-
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/socket.io.js') }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ url_for('static', filename='js/boa.js') }}" type="text/javascript" charset="utf-8"></script>
+<script src="{{ url_for("static", filename="js/boa.js") }}"></script>
 {% endblock %}

@@ -1,22 +1,32 @@
-{% extends "layout.html" %}
-{% block content %}
-<div class="card">
-  <div class="card-body">
-	<h3 class="text-center">About Boa</h3>
-	<hr>
-    <p>Looking for a place to unpack, deobfuscate and dissect your python-compiled executables? <b>boa</b> will <s>automatically</s> automagically reverse them all for you, whether its an innocent desktop app,
-    or a scary piece of Python-based malware.</p>
-    <p><b>boa</b> is a (first of its kind) web-based automated reverse engineering platform that helps extrapolate original and readable Python source from compiled and packed executables.
-    It is useful for hackers and reverse engineers attempt to better understand the functionality of Python-built apps and/or malware.
-    It undergoes the following when an executable sample is processed through its pipeline:</p>
-    <ul>
-        <li><b>Executable Unpacking</b> - parse out resources and code from binaries created with various packers.</li>
-        <li><b>Bytecode Decompilation/Patching</b> - decompile and patch (if necessary) Python source from unpacked bytecode.</li>
-        <li><b>Static Analysis</b> - scan relevant source files for detrimental security issues.</li>
-        <li><b>Report Generation</b> - generate a user-friendly report on executable.</li>
-    </ul>
-    <br>
-
+  {% extends "layout.html" %} {% block content %}
+  <div class="card">
+    <div class="card-body">
+      <h3 class="text-center">About Boa</h3>
+      <hr>
+      <p>Looking for a place to unpack, deobfuscate and dissect
+      your python-compiled executables? <b>boa</b> will
+      <s>automatically</s> automagically reverse them all for you,
+      whether its an innocent desktop app, or a scary piece of
+      Python-based malware.</p>
+      <p><b>boa</b> is a (first of its kind) web-based automated
+      reverse engineering platform that helps extrapolate original
+      and readable Python source from compiled and packed
+      executables. It is useful for hackers and reverse engineers
+      attempt to better understand the functionality of
+      Python-built apps and/or malware. It undergoes the following
+      when an executable sample is processed through its
+      pipeline:</p>
+      <ul>
+        <li><b>Executable Unpacking</b> - parse out resources and
+        code from binaries created with various packers.</li>
+        <li><b>Bytecode Decompilation/Patching</b> - decompile and
+        patch (if necessary) Python source from unpacked
+        bytecode.</li>
+        <li><b>Static Analysis</b> - scan relevant source files for
+        detrimental security issues.</li>
+        <li><b>Report Generation</b> - generate a user-friendly
+        report on executable.</li>
+      </ul><br>
+    </div>
   </div>
-</div>
-{% endblock %}
+  {% endblock %}

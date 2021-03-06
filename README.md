@@ -2,56 +2,55 @@
 
 Black-Box Python Reverse Engineering Platform
 
-[Old Demo Version](http://boa.codemuch.tech)
+> We are doing a full refactor to include both a CLI and better web version!
 
 ## Introduction
 
-__boa__ is a (first of its kind) web-based automated reverse engineering platform that helps extrapolate original and readable Python source from a compiled and packed executables. It is useful for hackers and reverse engineers attempt to better understand the functionality of Python-built apps and/or malware. It undergoes the following when an executable sample is processed through its pipeline:
-
-* Executable Unpacking - parse out resources and code from binaries created with various packers.
-* Bytecode Decompilation/Patching - decompile and patch (if necessary) Python source from unpacked bytecode.
-* Deobfuscation - (TODO) attempt to recover readable source from bytecode and source-level obfuscation methods.
-* Static Analysis - scan relevant source files for detrimental security issues.
-* Report Generation - generate a user-friendly report on executable.
+__boa__ is an all-in-one reverse engineering platform for aiding with the unpacking and extrapolation 
+of source from Python-compiled malwares and executables.
 
 ### Features
 
-* Simple & intuitive web-based user interface to enhance workflow
-* Supports unpacking multiple types of Python-based packers/installers
-* Deep static analysis on decompiled source with `bandit` in order to discover low-hanging bugs and secrets
-* Report generation in order to display analysis results for consumption
-* File object storage with AWS S3 for successful samples
+* Standalone command-line and web applications
+
+### Built With
+
+* PyCQA's [Bandit](https://github.com/PyCQA/bandit) for static security analysis.
 
 ## Usage
 
-__boa__ is designed to be either a self-hosted security tool, or hosted on the cloud. In either case, Docker is conveniently setup for fast and containerized deployment.
+### Docker _(recommended, installs full platform)_
 
-### Docker
-
-Use `docker-compose up` to run a local development boa setup:
+Docker Compose is the recommended way to bootstrap the full platform, both the command line
+and 
 
 ```
 $ docker-compose up
 ```
 
-### Manual
-
-To build and start a local development instance:
+The hacker can now visit [http://0.0.0.0:5000](http://0.0.0.0:5000) to use the web-based automated
+solution, and invoke any tool component as so:
 
 ```
-$ pip install -r requirements.txt
+# start bash and operate in container ...
+$ docker run -it boa bash
 
-# set envvars for S3 integration
-$ export S3_BUCKET=<BUCKET_NAME>
-$ export AWS_ACCESS_KEY_ID=<KEY_HERE>
-$ export AWS_SECRET_ACCESS_KEY=<SECRET_FOR_KEY>
 
-# now we can run!
-$ python run.py
+# ... or exec command directly in host
+$ docker exec -t boa 
 ```
 
-With a manually-built version of __boa__, artifacts during scanning are loaded into the `artifacts/` folder in the project workspace, with a local PostgreSQL database
-instantiated at `db/boascans.db`.
+
+### Local _(CLI only)_
+
+You are also welcome to install __boa__ locally without a container through `pip`.
+If that's the case, only the CLI toolset is available, as the web application requires several
+moving parts to operate fully. This is recommended if you choose to not utilize the full web
+platform, only the command line tooling.
+
+```
+$ pip install boa
+```
 
 ## Contributions
 

@@ -13,8 +13,4 @@ WORKDIR /usr/src/boa
 # install requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
-# set envvars for use
-ENV FLASK_RUN_HOST 0.0.0.0
-ENV FLASK_APP /usr/src/boa/boa/app.py
-
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--worker-class", "eventlet", "--timeout", "120", "--threads", "3", "--log-level=debug", "--log-file=-", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--worker-class", "eventlet", "--timeout", "120", "--threads", "3", "--log-level=debug", "--log-file=-", "uwsgi:app"]

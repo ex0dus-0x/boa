@@ -1,22 +1,34 @@
 version: "3"
 
 services:
-  app:
+
+  boa:
     build: .
-    container_name: boa
     restart: always
     depends_on:
       - db
+      - redis
     ports:
       - 5000:5000
     environment:
+      - CONFIG
+      - REDIS_URL
       - SQLALCHEMY_DATABASE_URI
       - S3_BUCKET
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
-      - DEBUG_MODE=false
     volumes:
-      - /tmp:/mnt/boa
+      - .:/app
+
+  worker:
+    build: .
+    container_name: worker
+    command: python uwsgi.py taskworker
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+
 
   db:
     image: postgres:latest
@@ -28,3 +40,9 @@ services:
       - POSTGRES_PASSWORD=password
     ports:
       - 5432:5432
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379

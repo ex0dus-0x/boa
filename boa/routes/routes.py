@@ -4,20 +4,14 @@ routes.py
     Defines all standard static and dynamic routes that can be interfaced by users.
 """
 from flask import redirect, render_template, request, flash, current_app, url_for
-from flask_login import login_required
-from flask_cors import cross_origin
+from flask_login import login_required, current_user
 
-import boa.utils as utils
-import boa.config as config
+from rq import Queue
 
-from . import web
-from boa import worker, socketio
+from boa import utils, config
+from boa.routes import web
 from boa.models import Scan
-
-
-# ======================
-# Static Content Routes
-# ======================
+from boa.worker import BoaWorker
 
 
 @web.route("/index")
@@ -55,10 +49,6 @@ def about():
     return render_template("about.html")
 
 
-# =======================
-# Dynamic Content Routes
-# =======================
-
 @web.route("/settings")
 @login_required
 def settings():
@@ -68,7 +58,6 @@ def settings():
 
 @web.route("/scan", methods=["GET", "POST"])
 @login_required
-@cross_origin(origin="*")
 def scan():
     """
     Represents endpoint used to conduct a scan against an executable, which does so
@@ -94,17 +83,18 @@ def scan():
             # retrieve a secure version of the file's name
             # path = werkzeug.utils.secure_filename(filename)
 
-            # instantiate the workspace, and register namespace with socketio
+            # instantiate the workspace
             try:
-                wker = worker.BoaWorker(
+                wker = BoaWorker(
                     filename, current_app.config["UPLOAD_FOLDER"], input_file
                 )
             except worker.WorkerException as err:
                 flash(str(err))
                 return redirect(request.url)
 
-            # register the namespace for socket communication once instantiated
-            socketio.on_namespace(wker)
+            # enqueue the long-running analysis job
+            queue = Queue()
+            task = queue.enqueue(wker.identify)
 
             flash("Successfully uploaded! Starting scan.")
             return redirect(request.url)
@@ -112,7 +102,9 @@ def scan():
         flash("Filetype not allowed!")
         return redirect(request.url)
 
-    return render_template("scan.html")
+    # get current user's scans for display
+    user_scans = Scan.query.filter_by(user_id=current_user.id)
+    return render_template("scan.html", user_scans=user_scans)
 
 
 @web.route("/report/<uuid>")

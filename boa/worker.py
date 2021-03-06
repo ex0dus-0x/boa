@@ -16,7 +16,8 @@ import hashlib
 import typing as t
 
 import pefile
-import flask_socketio as sio
+from flask import current_app
+from flask_sse import sse
 
 from boa import models, config, utils
 from boa.core import unpack, decompile, sast
@@ -26,16 +27,16 @@ class WorkerException(Exception):
     """ Exception that gets raised with a displayed error message when worker fails """
 
 
-class BoaWorker(sio.Namespace):
+class BoaWorker:
     """
     Represents a stateful worker that consumes a checked Python-compiled executable path,
     instantiates a workspace, performs the necessary analysis workflow and implements handlers
     for WebSocket connections requesting functionality.
     """
 
-    def __init__(self, name, root, input_file) -> None:
+    def __init__(self, name, root, input_file):
 
-        # sanity-check: do not instantiate if PE is malforme
+        # sanity-check: do not instantiate if PE is malformed
         filecontent = input_file.read()
         try:
             _ = pefile.PE(data=filecontent)
@@ -86,9 +87,6 @@ class BoaWorker(sio.Namespace):
         # stores any errors parsed out during execution
         self.error = None
 
-        # initialize base object with no namespace identifier
-        super().__init__()
-
     @staticmethod
     def check_existence(checksum: str) -> t.Optional[str]:
         """
@@ -133,11 +131,7 @@ class BoaWorker(sio.Namespace):
         # return the name of the workspace plus binary for user to interact with
         return workspace
 
-    # ============================
-    # Socket.io Channel Callbacks
-    # ============================
-
-    def on_identify(self):
+    def identify(self):
         """
         Server-side message handler used to identify and instantiate the packer for
         the executable in context. If parsing and instantiating failed, return error
@@ -171,12 +165,12 @@ class BoaWorker(sio.Namespace):
             shutil.rmtree(self.workspace)
 
         # send back payload to UI with appropriate response
-        self.emit(
-            "identify_reply",
+        sse.publish(
             {"packer": str(self.packer), "continue": cont, "error": self.error},
+            type="events",
         )
 
-    def on_unpack(self):
+    def unpack(self):
         """
         Server-side message handler to call unpacker routine against the executable stored
         in the workspace.
@@ -199,16 +193,16 @@ class BoaWorker(sio.Namespace):
 
         # add a bit of latency since this is pretty quick
         time.sleep(1)
-        self.emit(
-            "unpack_reply",
+        sse.publish(
             {
                 "extracted": len(self.bytecode_paths),
                 "continue": cont,
                 "error": self.error,
             },
+            type="events",
         )
 
-    def on_decompile(self):
+    def decompile(self):
         """
         Server-side message handler to interface our decompiler abstraction to
         decompile the bytecode source that has been recovered from unpacking.
@@ -233,20 +227,20 @@ class BoaWorker(sio.Namespace):
 
         # delete workspace if decompilation absolutely cannot be done
         cont = not self.error
-        # if not cont:
-        #    shutil.rmtree(self.workspace)
+        if not cont:
+            shutil.rmtree(self.workspace)
 
         # send back response with num of files decompiled
-        self.emit(
-            "decompile_reply",
+        sse.publish(
             {
                 "src_files": len(self.relevant_src),
                 "continue": cont,
                 "error": self.error,
             },
+            type="events",
         )
 
-    def on_sast(self):
+    def sast(self):
         """
         Runs a `SASTEngine` against all the recovered source files and parse out all potential
         security issues. Issues support leaked secrets and python code quality assurance.
@@ -262,12 +256,12 @@ class BoaWorker(sio.Namespace):
         self.sec_issues = engine.dump_results()
 
         # send back response with number of potential bugs found
-        self.emit(
-            "sast_reply",
+        sse.publish(
             {"issues_found": len(self.sec_issues["results"]), "error": self.error},
+            type="events",
         )
 
-    def on_finalize(self):
+    def finalize(self):
         """
         Finalizes the execution of the analysis, commiting the parsed out information from each step
         to a `metadata.json` file for the
@@ -296,16 +290,22 @@ class BoaWorker(sio.Namespace):
         with open(metadata_path, "w") as mdata:
             mdata.write(metadata_content)
 
-        # commit as "key file" to bucket
-        bucket_key = self.uuid + "/metadata.json"
-        with open(metadata_path, "rb") as mdata:
-            _ = utils.upload_file(mdata, bucket_key)
+        # commit as "key file" to bucket, if not in development build
+        if not current_app.config["DEBUG"]:
+            bucket_key = self.uuid + "/metadata.json"
+            with open(metadata_path, "rb") as mdata:
+                _ = utils.upload_file(mdata, bucket_key)
 
         # zip up folder and commit zipped contents to S3
         zip_path = utils.zipdir(self.workspace)
-        zip_key = self.uuid + "/analyzed.zip"
-        with open(zip_path, "rb") as zipf:
-            zip_url = utils.upload_file(zipf, zip_key)
+
+        # if production, commit to S3 and save url, other save path
+        if not current_app.config["DEBUG"]:
+            zip_key = self.uuid + "/analyzed.zip"
+            with open(zip_path, "rb") as zipf:
+                zip_url = utils.upload_file(zipf, zip_key)
+        else:
+            zip_url = zip_path
 
         # delete the path to the zipped file and entire workspace once it's uploaded
         os.remove(zip_path)
@@ -327,4 +327,4 @@ class BoaWorker(sio.Namespace):
         models.db.session.commit()
 
         # send the finalized report link back to the user once everything is committed
-        self.emit("finalize_reply", {"link": "/report/" + str(self.uuid)})
+        sse.publish({"link": "/report/" + str(self.uuid)}, type="events")

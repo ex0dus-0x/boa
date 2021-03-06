@@ -8,21 +8,17 @@ import os
 import flask
 import sqlalchemy
 import sqlalchemy_utils as sqlutils
-import flask_socketio as sio
 
-from flask_cors import CORS
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
+
+from boa.utils import UploadClient
 
 db = SQLAlchemy()
 
 # initilaize Flask app
 app = flask.Flask(__name__, template_folder="templates")
 app.secret_key = os.urandom(12)
-
-# create Socket.IO interface with CORS policy for endpoint
-cors = CORS(app, resources={r"/socket.io": {"origins": "*"}})
-socketio = sio.SocketIO(app)
 
 
 def create_local_dirs(app):
@@ -32,9 +28,10 @@ def create_local_dirs(app):
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.mkdir(app.config["UPLOAD_FOLDER"])
 
-    # create directory to store database
-    if not os.path.exists(app.config["DB_FOLDER"]):
-        os.mkdir(app.config["DB_FOLDER"])
+    # if specified, create directory to store database
+    if "DB_FOLDER" in app.config:
+        if not os.path.exists(app.config["DB_FOLDER"]):
+            os.mkdir(app.config["DB_FOLDER"])
 
 
 def configure_database(app):
@@ -67,6 +64,15 @@ def create_app(config):
     # initialize app from configuration
     app.config.from_object(config)
 
+    # instantiate a S3 bucket helper object if production build
+    try:
+        if not app.config["DEBUG"]:
+            app.config["BUCKET_HELPER"] = UploadClient(app.config)
+    except KeyError:
+        print("Cannot run in production without S3 bucket and credential envvars set.")
+        exit(1)
+
+    # create local workspace and configure database
     create_local_dirs(app)
     configure_database(app)
 
@@ -97,14 +103,15 @@ def create_app(config):
         """ Redirect to home if request method not allowed """
         return flask.redirect(flask.url_for("web.index"))
 
+    # register server-sent event blueprint
+    from flask_sse import sse
+
+    app.register_blueprint(sse, url_prefix="/stream")
+
     # register blueprints
     from boa.routes import web
 
     app.register_blueprint(web)
-
-    # TODO: api blueprint
-    # from boa.routes import api
-    # app.register_blueprint(api)
 
     db.init_app(app)
     return app
