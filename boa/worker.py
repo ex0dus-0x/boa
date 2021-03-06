@@ -34,7 +34,7 @@ class BoaWorker:
     for WebSocket connections requesting functionality.
     """
 
-    def __init__(self, name, root, input_file) -> None:
+    def __init__(self, name, root, input_file):
 
         # sanity-check: do not instantiate if PE is malformed
         filecontent = input_file.read()
@@ -86,9 +86,6 @@ class BoaWorker:
 
         # stores any errors parsed out during execution
         self.error = None
-
-        # initialize base object with no namespace identifier
-        super().__init__()
 
     @staticmethod
     def check_existence(checksum: str) -> t.Optional[str]:

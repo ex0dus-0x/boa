@@ -82,27 +82,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-$(document).ready(function() {
-
-    // automatically submit after file upload
-    $("#file").change(function() {
-        $("#form").submit();
-    });
-
-    // initialize an interface to intercept server-sent events from redis pubsub
-    var source = new EventSource("{{ url_for('sse.stream') }}");
-
-    // listen for events and update table accordingly
-    source.addEventListener("events", function(event) {
-        var data = JSON.parse(event.data);
-        console.log(data);
-    }, false);
-
-    // listen specifically for errors and handle frontend accordingly
-    source.addEventListener("errors", function(event) {
-        console.log("Yikes");
-    }, false);
-});
-</script>
+<script src="{{ url_for("static", filename="js/boa.js") }}"></script>
 {% endblock %}

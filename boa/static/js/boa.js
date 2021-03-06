@@ -5,9 +5,29 @@ $(document).ready(function() {
     });
 
 
+    // initialize an interface to intercept server-sent events from redis pubsub
+    var source = new EventSource("/stream");
+
+    // listen for events and update table accordingly
+    source.addEventListener("events", function(event) {
+        var data = JSON.parse(event.data);
+        
+        // handle error if task failed
+        if data["error"] != null {
+            newAlert("Failed!");
+        } else {
+            newAlert(data.toSource())
+        }
+    }, false);
+
+
+    // create or update the current job
+    function updateJob(jobId) {
+        // TODO
+    }
+
     // convenient helper to create or update a loading bar during the scan
     function loadingBar(value) {
-
         // if the loading bar exists, update its values
  	   if ($("#bar").length) {
            $("#bar").css("width", value + "%");
@@ -37,13 +57,5 @@ $(document).ready(function() {
         </div>
         <br>
         `);
-    }
-
-    // used to finalize the progress bar, and append an alert with the report link
-    function success(msg, link) {
-        loadingBar(100);
-        var link = url + link;
-        var link_href = "<a href='" + link + "'>" + link + "</a>";
-        newAlert(msg + " View the report here: " + link_href);
     }
 });

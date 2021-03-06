@@ -13,6 +13,7 @@ from boa import create_app, config, argparse
 
 config = config.config[os.environ.get("CONFIG", "development")]
 app = create_app(config)
+app.app_context().push()
 
 
 @argparse.subcommand(

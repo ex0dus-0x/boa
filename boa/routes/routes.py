@@ -14,11 +14,6 @@ from boa.models import Scan
 from boa.worker import BoaWorker
 
 
-# ======================
-# Static Content Routes
-# ======================
-
-
 @web.route("/index")
 def home_redirect():
     """ Redirects to static home page """
@@ -52,11 +47,6 @@ def home():
 def about():
     """ Renders informational page """
     return render_template("about.html")
-
-
-# =======================
-# Dynamic Content Routes
-# =======================
 
 
 @web.route("/settings")

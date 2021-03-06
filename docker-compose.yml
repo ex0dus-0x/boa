@@ -21,9 +21,9 @@ services:
       - .:/app
 
   worker:
-    image: .
+    build: .
     container_name: worker
-    command: "python uwsgi.py taskworker"
+    command: python uwsgi.py taskworker
     depends_on:
       - redis
     volumes:
@@ -46,13 +46,3 @@ services:
     container_name: redis
     ports:
       - 6379:6379
-
-  dashboard:
-    build: ./dashboard
-    image: dashboard
-    container_name: dashboard
-    depends_on:
-      - redis
-    ports:
-      - 9181:9181
-    command: rq-dashboard -H redis
