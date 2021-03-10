@@ -13,15 +13,17 @@ import sys
 import json
 import ntpath
 import shutil
+import platform
 
 import stdlib_list
 
+"""
 try:
     import uncompyle6
 except KeyError:
-    print("uncompyle6 is internally outdated, doesn't support Python version!")
+    print("uncompyle6 is internally outdated, doesn't support your Python version!")
+"""
 
-# import decompyle3
 
 # other modules that we don't care about
 MOD_DONT_CARE = [
@@ -49,16 +51,24 @@ class BoaDecompiler:
     TODO: check and deal with files that are encrypted
     """
 
-    def __init__(self, pyver, paths, decomp_all=False):
+    def __init__(self, pyver, paths, decomp_all=False, use_interp_ver=False):
+        
+        # set the version used to enumerate with
+        if use_interp_ver:
+            stdver = ".".join(platform.python_version().split(".")[2:])
+        else:
+            stdver = ".".join(list(pyver))
 
         # instantiate list of all standard library modules
-        # TODO: convert pyver to str for stdlib_list
-        self.stdlib = stdlib_list.stdlib_list("3.8")
+        self.stdlib = stdlib_list.stdlib_list(stdver)
 
         # instantiate a local dataset of top PyPI packages
         self.packages = BoaDecompiler.iter_packages()
 
+        # TODO: dynamically import decompilers, exit if current Python versions don't work
         # Main decompiler used: uncompyle6
+        self.decompiler = "uncompyle6"
+
         # However, in case uncompyle6 fails decompilation, we fallback:
         #   Python 3.x: decompyle3
         #   Python 2.7.x: uncompyle2

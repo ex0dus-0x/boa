@@ -10,6 +10,8 @@ import typing as t
 
 import boa.argparse as argparse
 
+from boa.core.decompile import BoaDecompiler
+
 
 @argparse.subcommand(
     [
@@ -35,6 +37,29 @@ def detect(args):
     # detect executable packing
 
     # detect Python-specific packing
+
+
+@argparse.subcommand(
+    [
+        argparse.argument(
+            "executable", help="Path to packed executable to unpack and dissect apart."
+        ),
+        argparse.argument(
+            "-o",
+            "--out_dir",
+            help="Path to store unpacked resources in (default is `{executable}_out`)."
+        ),
+    ]
+)
+def unpack(args):
+    """ Given a packed target executable, do both generic executable unpacking (if detected) and Python-specific unpacking. """
+    app = args.executable
+    if not os.path.exists(app):
+        print("Cannot find path to executable. Exiting...")
+        return 1
+
+    # output path or set default
+    out_dir = f"{app}_out" if not args.out_dir else args.out_dir
 
 
 @argparse.subcommand(
