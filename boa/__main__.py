@@ -10,6 +10,7 @@ import typing as t
 
 import boa.argparse as argparse
 
+from boa.core import unpack
 from boa.core.decompile import BoaDecompiler
 
 
@@ -31,8 +32,6 @@ def detect(args):
     if not os.path.exists(app):
         print("Cannot find path to executable. Exiting...")
         return 1
-
-    # detect binary format
 
     # detect executable packing
 

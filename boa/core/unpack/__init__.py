@@ -6,12 +6,14 @@ __init__.py
     unpacker using Yara.
 """
 import os
+import mmap
 import typing as t
 
 import pefile
 import yara
 
-from . import pyinstaller, py2exe
+class UnpackException(Exception):
+    pass
 
 
 class BaseUnpacker:
@@ -23,11 +25,14 @@ class BaseUnpacker:
         self.file: t.Any = open(path, "rb")
         self.size: int = os.stat(path).st_size
 
+        # stores object with binary format
+        self.binary: t.Optional[t.Any] = None
+
         # Python version used to compile the binary
-        self.pyver: str = self.parse_pyver()
+        self.pyver: t.Optional[str] = None
 
         # Installer-specific version
-        self.packer_ver: str = self.parse_packer_ver()
+        self.packer_ver: t.Optional[str] = None
 
         # stores paths to all unpacked bytecode files
         self.bytecode_paths: t.List[str] = []
@@ -43,7 +48,7 @@ class BaseUnpacker:
         """ Output for identifying packer used """
         raise NotImplementedError()
 
-    def parse_pyver(self) -> str:
+    def parse_pyver(self) -> t.Optional[str]:
         """ Setter used to parse out Python interpreter version """
         raise NotImplementedError()
     
@@ -53,26 +58,37 @@ class BaseUnpacker:
 
     def unpack(self, unpack_dir: str):
         """ Implements the actual process of unpacking resources """
-        raise NotImplementedError()
+
+        # first, fingerprint the executable's Python and installer version
+        self.pyver = self.parse_pyver()
+        if self.pyver is None:
+            raise UnpackerException("Cannot parse out Python version from executable.")
+
+        self.packer_ver = self.parse_packer_ver()
+        if self.packer_ver is None:
+            raise UnpackerException("Cannot parse out packer version from executable.")
 
 
 class WindowsUnpacker(BaseUnpacker):
-    """ Base class used for all Windows PE unpackers """
+    """ Base class used for all Python PE unpackers """
 
     def __init__(self, path):
-        """ Initializes a PE file object for interaction """
-        self.pe = pefile.PE(path)
-        super().__init__()
-
+        super().__init__(path)
+        pe_data = mmap.mmap(fd.fileno(), 0, access=mmap.ACCESS_READ)
+        self.binary = pefile.PE(data=pe_data)
 
     def parse_pyver(self) -> str:
         """ Parse .rsrc and detect PYTHON*.dll dependency, and parse out version """
+
+        # check if resource entries exist
         pyver = None
-        for rsrc_type in self.pe.DIRECTORY_ENTRY_RESOURCE.entries:
+        if not hasattr(self.binary, "DIRECTORY_ENTRY_RESOURCE"):
+            return pyver
+
+        # enumerate and check for the PYTHON*.dll
+        for rsrc_type in self.binary.DIRECTORY_ENTRY_RESOURCE.entries:
             if rsrc_type.name is not None:
                 data = rsrc_type.name.string
-
-                # check if PYTHON*.dll exists as a dep and
                 if data[0:6] == b"PYTHON" and data[8:] == b".DLL":
                     pyver = data[6] - 0x30 + (data[7] - 0x30) / 10.0
                     break
@@ -80,12 +96,11 @@ class WindowsUnpacker(BaseUnpacker):
         return pyver
 
 
-class MacosUnpacker(BaseUnpacker):
-    pass
-
-
 class LinuxUnpacker(BaseUnpacker):
-    pass
+    """ Base class used for all Python ELF unpackers """
+
+    def __init__(self, path):
+        super().__init__(path)
 
 
 
@@ -94,6 +109,8 @@ def get_packer(filepath: str) -> t.Optional[t.Any]:
     Helper utility to help return the correct Unpacker based on the YARA rule that matches it.
     If `detect_only` is set, return only the 
     """
+    from . import pyinstaller, py2exe
+
     rules = yara.compile(filepath="ext/unpacker.yara")
     matches = rules.match(filepath=filepath)
 
