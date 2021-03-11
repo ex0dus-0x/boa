@@ -20,3 +20,12 @@ rule pyinstaller
     condition:
         pe.number_of_resources > 0 and $a
 }
+
+rule cxfreeze
+{
+    meta:
+        author = "ex0dus"
+        description = "Detect PE file produced by pyinstaller
+
+
+}
