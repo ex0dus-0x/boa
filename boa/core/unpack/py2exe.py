@@ -6,7 +6,7 @@ py2exe.py
     resource entry and enumerates over all entries with bytecode entries.
 
 """
-from . import WindowsUnpacker, UnpackerException
+from . import WindowsUnpacker, UnpackException
 
 
 class Py2Exe(WindowsUnpacker):
@@ -23,10 +23,11 @@ class Py2Exe(WindowsUnpacker):
         As per with other unpacker implementations, compressed bytecode all exists
         within the PYTHONSCRIPT resource in the `.rsrc` header.
         """
+        super().unpack(unpack_dir)
         
         # shouldn't happen, but error-check
         if not hasattr(self.binary, "DIRECTORY_ENTRY_RESOURCE"):
-            raise UnpackerException("Cannot find resources header in target PE.")
+            raise UnpackException("Cannot find resources header in target PE.")
         
         # get PYTHONSCRIPT resource entry
         script_entry = None
@@ -37,7 +38,7 @@ class Py2Exe(WindowsUnpacker):
 
         # again, shouldn't happen, but error-check
         if script_entry is None:
-            raise UnpackerException("Cannot find PYTHONSCRIPT resource entry in target PE.")
+            raise UnpackException("Cannot find PYTHONSCRIPT resource entry in target PE.")
 
         # given offset for PYTHONSCRIPT entry, dump data
         rva = script_entry.data.struct.OffsetToData

@@ -8,5 +8,10 @@ cxfreeze.py
         - Attach hook onto `Py_` and do a memory dump from offset with bytecode
 """
 
-class CxFreeze(BaseUnpacker):
+from . import WindowsUnpacker, LinuxUnpacker, UnpackException
+
+class WinCxFreeze(WindowsUnpacker):
+    pass
+
+class LinuxCxFreeze(LinuxUnpacker):
     pass
