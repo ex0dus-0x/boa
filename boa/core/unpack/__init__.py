@@ -29,7 +29,7 @@ class BaseUnpacker:
         self.binary: t.Optional[t.Any] = None
 
         # Python version used to compile the binary
-        self.pyver: t.Optional[str] = None
+        self.pyver: t.Optional[float] = None
 
         # Installer-specific version
         self.packer_ver: t.Optional[str] = None
@@ -48,11 +48,11 @@ class BaseUnpacker:
         """ Output for identifying packer used """
         raise NotImplementedError()
 
-    def parse_pyver(self) -> t.Optional[str]:
+    def parse_pyver(self) -> t.Optional[float]:
         """ Setter used to parse out Python interpreter version """
         raise NotImplementedError()
     
-    def parse_packer_ver(self) -> str:
+    def parse_packer_ver(self) -> t.Optional[float]:
         """ Setter used to parse out installer version """
         raise NotImplementedError()
 
@@ -77,22 +77,21 @@ class WindowsUnpacker(BaseUnpacker):
         pe_data = mmap.mmap(fd.fileno(), 0, access=mmap.ACCESS_READ)
         self.binary = pefile.PE(data=pe_data)
 
-    def parse_pyver(self) -> str:
-        """ Parse .rsrc and detect PYTHON*.dll dependency, and parse out version """
+    def parse_pyver(self) -> t.Optional[float]:
+        """ 
+        Python*.dll is typically dynamically loaded, so check .data for instances of the string.
+        """
+        pyver: t.Optional[float] = None
+        data: bytes = b""
+        for section in self.binary.sections:
+            name = section.Name.decode("utf-8").rstrip("\x00")
+            if name == ".data":
+                data = section.get_data()
 
-        # check if resource entries exist
-        pyver = None
-        if not hasattr(self.binary, "DIRECTORY_ENTRY_RESOURCE"):
-            return pyver
-
-        # enumerate and check for the PYTHON*.dll
-        for rsrc_type in self.binary.DIRECTORY_ENTRY_RESOURCE.entries:
-            if rsrc_type.name is not None:
-                data = rsrc_type.name.string
-                if data[0:6] == b"PYTHON" and data[8:] == b".DLL":
-                    pyver = data[6] - 0x30 + (data[7] - 0x30) / 10.0
-                    break
-
+        # search python*.dll pattern and parse out version
+        search = b"python37.dll"
+        if search in data:
+            pyver = 3.7
         return pyver
 
 
@@ -104,7 +103,7 @@ class LinuxUnpacker(BaseUnpacker):
 
 
 
-def get_packer(filepath: str) -> t.Optional[t.Any]:
+def get_packer(filepath: str, detect_only=False) -> t.Optional[t.Any]:
     """
     Helper utility to help return the correct Unpacker based on the YARA rule that matches it.
     If `detect_only` is set, return only the 
@@ -118,8 +117,10 @@ def get_packer(filepath: str) -> t.Optional[t.Any]:
     if len(matches) > 1:
         return None
 
-    # parse response from rule
+    # parse response from rule, return now, if `detect_only` is set
     res = matches[0].rule
+    if detect_only:
+        return res
 
     # determine which packer was used
     packer = None

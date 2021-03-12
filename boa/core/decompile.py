@@ -11,6 +11,7 @@ decompiler.py
 import os
 import sys
 import json
+import struct
 import ntpath
 import shutil
 import platform
@@ -23,6 +24,84 @@ try:
 except KeyError:
     print("uncompyle6 is internally outdated, doesn't support your Python version!")
 """
+
+#     Python 1.5:   20121
+#     Python 1.6:   50428
+#     Python 2.0:   50823
+#     Python 2.1:   60202
+#     Python 2.2:   60717
+#     Python 2.3:   62011
+#     Python 2.4:   62041
+#     Python 2.5a0: 62071
+#     Python 2.5a0: 62081
+#     Python 2.5a0: 62091
+#     Python 2.5a0: 62092
+#     Python 2.5b3: 62101
+#     Python 2.5b3: 62111
+#     Python 2.5c1: 62121
+#     Python 2.5c2: 62131
+#     Python 2.6a0: 62151
+#     Python 2.6a1: 62161
+#     Python 2.7a0: 62171
+#     Python 2.7a0: 62181
+#     Python 2.7a0  62191
+#     Python 2.7a0  62201
+#     Python 2.7a0  62211
+#     Python 3.0a4: 3111
+#     Python 3.0b1: 3131
+#     Python 3.1a1: 3141
+#     Python 3.1a1: 3151
+#     Python 3.2a1: 3160
+#     Python 3.2a2: 3170
+#     Python 3.2a3  3180
+#     Python 3.3a1  3190
+#     Python 3.3a1  3200
+#     Python 3.3a1  3210
+#     Python 3.3a2  3220
+#     Python 3.3a4  3230
+#     Python 3.4a1  3250
+#     Python 3.4a1  3260
+#     Python 3.4a1  3270
+#     Python 3.4a1  3280
+#     Python 3.4a4  3290
+#     Python 3.4a4  3300
+#     Python 3.4rc2 3310
+#     Python 3.5a1  3320
+#     Python 3.5b1  3330
+#     Python 3.5b2  3340
+#     Python 3.5b3  3350
+#     Python 3.5.2  3351
+#     Python 3.6a0  3360
+#     Python 3.6a1  3361
+#     Python 3.6a2  3370
+#     Python 3.6a2  3371
+#     Python 3.6a2  3372
+#     Python 3.6b1  3373
+#     Python 3.6b1  3375
+#     Python 3.6b1  3376
+#     Python 3.6b1  3377
+#     Python 3.6b2  3378
+#     Python 3.6rc1 3379
+#     Python 3.7a1  3390
+#     Python 3.7a2  3391
+#     Python 3.7a4  3392
+#     Python 3.7b1  3393
+#     Python 3.7b5  3394
+#     Python 3.8a1  3400
+#     Python 3.8a1  3401
+#     Python 3.8a1  3410
+#     Python 3.8b2  3411
+#     Python 3.8b2  3412
+#     Python 3.8b4  3413
+#     Python 3.9a0  3420
+#     Python 3.9a0  3421
+#     Python 3.9a0  3422
+#     Python 3.9a2  3423
+#     Python 3.9a2  3424
+#     Python 3.9a2  3425
+
+def magic(magic):
+    return struct.pack(b"Hcc", magic, b"\r", b"\n")
 
 
 # other modules that we don't care about
