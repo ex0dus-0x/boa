@@ -68,6 +68,7 @@ class PyInstaller(WindowsUnpacker):
 
         return None
 
+
     def unpack(self, unpack_dir: str):
         """
         Given a parsed out table of contents, iterate over each file, read it from the
@@ -76,7 +77,6 @@ class PyInstaller(WindowsUnpacker):
 
         When finalized, return a list of all bytecode file paths for decompilation.
         """
-        super().unpack(unpack_dir)
 
         if self.packer_ver == 2.0:
             (_, pkg_len, toc, toc_len, self.pyver) = struct.unpack(

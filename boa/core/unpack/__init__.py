@@ -8,6 +8,7 @@ __init__.py
 import os
 import mmap
 import typing as t
+import traceback
 
 import pefile
 import yara
@@ -32,7 +33,7 @@ class BaseUnpacker:
         self.pyver: t.Optional[float] = None
 
         # Installer-specific version
-        self.packer_ver: t.Optional[str] = None
+        self.packer_ver: t.Optional[float] = None
 
         # stores paths to all unpacked bytecode files
         self.bytecode_paths: t.List[str] = []
@@ -40,8 +41,10 @@ class BaseUnpacker:
     def __enter__(self):
         return self
 
-    def __exit__(self):
-        """ Destructor - close file descriptor to executable """
+    def __exit__(self, exc_type, exc_value, tb):
+        """ Destructor - handle exceptions and close file """
+        if exc_type is not None:
+            traceback.print_exception(exc_type, exc_value, tb)
         self.file.close()
 
     def __str__(self) -> str:
@@ -56,10 +59,13 @@ class BaseUnpacker:
         """ Setter used to parse out installer version """
         raise NotImplementedError()
 
-    def unpack(self, unpack_dir: str):
-        """ Implements the actual process of unpacking resources """
+    def detect(self):
+        """
+        Runs routine to fingerprint Python-specific metadata about the target.
+        Derived objects should implement any other metadata, ie archive type for PyInstaller,
+        or number of packed files.
+        """
 
-        # first, fingerprint the executable's Python and installer version
         self.pyver = self.parse_pyver()
         if self.pyver is None:
             raise UnpackException("Cannot parse out Python version from executable.")
@@ -67,6 +73,11 @@ class BaseUnpacker:
         self.packer_ver = self.parse_packer_ver()
         if self.packer_ver is None:
             raise UnpackException("Cannot parse out packer version from executable.")
+
+
+    def unpack(self, unpack_dir: str):
+        """ Implements the actual process of unpacking resources """
+        raise NotImplementedError()
 
 
 class WindowsUnpacker(BaseUnpacker):
@@ -103,10 +114,9 @@ class LinuxUnpacker(BaseUnpacker):
 
 
 
-def get_packer(filepath: str, detect_only=False) -> t.Optional[t.Any]:
+def get_packer(filepath: str) -> t.Optional[t.Any]:
     """
     Helper utility to help return the correct Unpacker based on the YARA rule that matches it.
-    If `detect_only` is set, return only the 
     """
     from . import pyinstaller, py2exe
 
@@ -119,8 +129,6 @@ def get_packer(filepath: str, detect_only=False) -> t.Optional[t.Any]:
 
     # parse response from rule, return now, if `detect_only` is set
     res: str = matches[0].rule
-    if detect_only:
-        return res
 
     # determine which packer was used
     packer: t.Optional[t.Any] = None
