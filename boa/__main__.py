@@ -10,7 +10,7 @@ import typing as t
 
 import boa.argparse as argparse
 
-from boa.core import unpack
+from boa.core.unpack import get_packer
 from boa.core.decompile import BoaDecompiler
 
 
@@ -59,6 +59,22 @@ def unpack(args):
 
     # output path or set default
     out_dir = f"{app}_out" if not args.out_dir else args.out_dir
+    if not os.path.exists(out_dir):
+        print("Creating output workspace for storing unpacked resources...")
+        os.mkdir(out_dir)
+
+    # instantiate unpacker
+    unpacker = get_packer(app)
+    if unpacker is None:
+        print("Unable to detect the installer used to pack the executable.")
+        return 1
+
+    print(f"Detected packer: {str(unpacker)}")
+
+    # given the output dir, run the unpacking routine
+    unpacker.unpack(out_dir)
+    print(f"Done unpacking in `{out_dir}`")
+    return 0
 
 
 @argparse.subcommand(

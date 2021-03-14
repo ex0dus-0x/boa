@@ -6,8 +6,9 @@ py2exe.py
     resource entry and enumerates over all entries with bytecode entries.
 
 """
-from . import WindowsUnpacker, UnpackException
+import typing as t
 
+from . import WindowsUnpacker, UnpackException
 
 class Py2Exe(WindowsUnpacker):
     def __str__(self) -> str:

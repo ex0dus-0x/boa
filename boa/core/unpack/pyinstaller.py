@@ -12,6 +12,7 @@ import zlib
 import uuid
 import struct
 import marshal
+import typing as t
 
 from . import WindowsUnpacker, UnpackException
 
@@ -40,7 +41,7 @@ class CTOCEntry:
         self.name = name
 
 
-class PyInstaller(WindowsPacker):
+class PyInstaller(WindowsUnpacker):
     """
     Implements unpacker for PyInstaller based applications, parsing out the ToC from a given
     PE executable, and recovering all Python archives from entries.
@@ -77,11 +78,11 @@ class PyInstaller(WindowsPacker):
         """
         super().unpack(unpack_dir)
 
-        if self.version == 2.0:
+        if self.packer_ver == 2.0:
             (_, pkg_len, toc, toc_len, self.pyver) = struct.unpack(
                 "!8siiii", self.file.read(PYINST20_COOKIE_SIZE)
             )
-        elif self.version == 2.1:
+        elif self.packer_ver == 2.1:
             (
                 _,
                 pkg_len,
@@ -140,7 +141,7 @@ class PyInstaller(WindowsPacker):
         curr_dir = os.getcwd()
 
         # go to `workspace/unpacked`
-        os.chdir(unpacked_dir)
+        os.chdir(unpack_dir)
         for entry in self.toc_list:
 
             # hacky: make paths Unix-friendly

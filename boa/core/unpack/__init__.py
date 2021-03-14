@@ -62,11 +62,11 @@ class BaseUnpacker:
         # first, fingerprint the executable's Python and installer version
         self.pyver = self.parse_pyver()
         if self.pyver is None:
-            raise UnpackerException("Cannot parse out Python version from executable.")
+            raise UnpackException("Cannot parse out Python version from executable.")
 
         self.packer_ver = self.parse_packer_ver()
         if self.packer_ver is None:
-            raise UnpackerException("Cannot parse out packer version from executable.")
+            raise UnpackException("Cannot parse out packer version from executable.")
 
 
 class WindowsUnpacker(BaseUnpacker):
@@ -74,7 +74,7 @@ class WindowsUnpacker(BaseUnpacker):
 
     def __init__(self, path):
         super().__init__(path)
-        pe_data = mmap.mmap(fd.fileno(), 0, access=mmap.ACCESS_READ)
+        pe_data = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_READ)
         self.binary = pefile.PE(data=pe_data)
 
     def parse_pyver(self) -> t.Optional[float]:
@@ -92,7 +92,7 @@ class WindowsUnpacker(BaseUnpacker):
         search = b"python37.dll"
         if search in data:
             pyver = 3.7
-        return pyver
+        return 3.7
 
 
 class LinuxUnpacker(BaseUnpacker):
@@ -118,12 +118,12 @@ def get_packer(filepath: str, detect_only=False) -> t.Optional[t.Any]:
         return None
 
     # parse response from rule, return now, if `detect_only` is set
-    res = matches[0].rule
+    res: str = matches[0].rule
     if detect_only:
         return res
 
     # determine which packer was used
-    packer = None
+    packer: t.Optional[t.Any] = None
     if res == "pyinstaller":
         packer = pyinstaller.PyInstaller(filepath)
     elif res == "py2exe":

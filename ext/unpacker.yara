@@ -25,7 +25,9 @@ rule cxfreeze
 {
     meta:
         author = "ex0dus"
-        description = "Detect PE file produced by pyinstaller
-
-
+        description = "Detect PE file produced by cx_freeze"
+    strings:
+        $a = "cx_Freeze" // TODO
+    condition:
+        $a
 }

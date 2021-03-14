@@ -1,6 +1,6 @@
 # boa
 
-Black-Box Python Reverse Engineering Platform
+Reverse Engineering Framework for Python-compiled Malware/Apps
 
 > We are doing a full refactor to include both a CLI and better web version!
 
@@ -9,17 +9,40 @@ Black-Box Python Reverse Engineering Platform
 __boa__ is an all-in-one reverse engineering platform for aiding with the unpacking and extrapolation 
 of source from Python-compiled malwares and executables.
 
-### Features
-
-* Standalone command-line and web applications
-
-### Built With
-
-* PyCQA's [Bandit](https://github.com/PyCQA/bandit) for static security analysis.
-
 ## Usage
 
-### Docker _(recommended, installs full platform)_
+### Command Line
+
+For simple and one-off use cases, __boa__ supports a command line tool. Given a Python-compiled
+sample, the follow will attempt to generate a full workspace with source:
+
+```
+$ boa reverse target.exe
+```
+
+However, if you only wish to conduct only specific operations, the following commands are also
+supported:
+
+__Detect__:
+
+Determine metadata regarding a specific executable, if a user chooses only to fingerprint it
+without doing any actual reversing:
+
+```
+$ boa detect target.exe
+```
+
+__Unpacking__:
+
+Detects the type of installer that was used to create the executable, and attempts to unpack
+bytecode from the given source:
+
+```
+$ boa unpack target.exe
+```
+
+
+### Web _(recommended, installs full platform)_
 
 Docker Compose is the recommended way to bootstrap the full platform, both the command line
 and 
@@ -35,21 +58,8 @@ solution, and invoke any tool component as so:
 # start bash and operate in container ...
 $ docker run -it boa bash
 
-
 # ... or exec command directly in host
 $ docker exec -t boa 
-```
-
-
-### Local _(CLI only)_
-
-You are also welcome to install __boa__ locally without a container through `pip`.
-If that's the case, only the CLI toolset is available, as the web application requires several
-moving parts to operate fully. This is recommended if you choose to not utilize the full web
-platform, only the command line tooling.
-
-```
-$ pip install boa
 ```
 
 ## Contributions
