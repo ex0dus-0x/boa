@@ -68,7 +68,6 @@ class PyInstaller(WindowsUnpacker):
 
         return None
 
-
     def unpack(self, unpack_dir: str):
         """
         Given a parsed out table of contents, iterate over each file, read it from the
@@ -136,7 +135,7 @@ class PyInstaller(WindowsUnpacker):
                 )
             )
             parsed_len += entry_size
- 
+
         # get curr_dir to revert to later
         curr_dir = os.getcwd()
 

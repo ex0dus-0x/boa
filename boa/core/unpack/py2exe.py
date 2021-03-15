@@ -10,6 +10,7 @@ import typing as t
 
 from . import WindowsUnpacker, UnpackException
 
+
 class Py2Exe(WindowsUnpacker):
     def __str__(self) -> str:
         return "Py2Exe"
@@ -18,18 +19,17 @@ class Py2Exe(WindowsUnpacker):
         """ TODO: detect Py2Exe  """
         return 0.10
 
-               
     def unpack(self, unpack_dir: str):
-        """ 
+        """
         As per with other unpacker implementations, compressed bytecode all exists
         within the PYTHONSCRIPT resource in the `.rsrc` header.
         """
         super().unpack(unpack_dir)
-        
+
         # shouldn't happen, but error-check
         if not hasattr(self.binary, "DIRECTORY_ENTRY_RESOURCE"):
             raise UnpackException("Cannot find resources header in target PE.")
-        
+
         # get PYTHONSCRIPT resource entry
         script_entry = None
         for entry in self.binary.DIRECTORY_ENTRY_RESOURCE.entries:
@@ -39,7 +39,9 @@ class Py2Exe(WindowsUnpacker):
 
         # again, shouldn't happen, but error-check
         if script_entry is None:
-            raise UnpackException("Cannot find PYTHONSCRIPT resource entry in target PE.")
+            raise UnpackException(
+                "Cannot find PYTHONSCRIPT resource entry in target PE."
+            )
 
         # given offset for PYTHONSCRIPT entry, dump data
         rva = script_entry.data.struct.OffsetToData

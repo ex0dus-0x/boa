@@ -19,11 +19,7 @@ from boa.core.decompile import BoaDecompiler
         argparse.argument(
             "executable", help="Path to Python-compiled executable to reverse engineer."
         ),
-        argparse.argument(
-            "-j",
-            "--json",
-            help="Output detection results in JSON."
-        )
+        argparse.argument("-j", "--json", help="Output detection results in JSON."),
     ]
 )
 def detect(args):
@@ -46,7 +42,7 @@ def detect(args):
         argparse.argument(
             "-o",
             "--out_dir",
-            help="Path to store unpacked resources in (default is `{executable}_out`)."
+            help="Path to store unpacked resources in (default is `{executable}_out`).",
         ),
     ]
 )
@@ -113,7 +109,7 @@ def decompile(args):
     if bfiles and bdir:
         print("Specify either `--bytecode_files` or `--bytecode_dir` but not both.")
         return 1
-    
+
     # bytecode files that are parsed out
     bytecode: t.List[str] = []
     if bfiles:
@@ -137,7 +133,7 @@ def decompile(args):
     # instantiate aggregate decompiler
     decomp = BoaDecomiler(bytecode)
 
-    
+
 @argparse.subcommand(
     [
         argparse.argument(
@@ -146,7 +142,7 @@ def decompile(args):
         argparse.argument(
             "-o",
             "--out_dir",
-            help="Path to store fully reversed Python application in (default is `{executable}_out`)."
+            help="Path to store fully reversed Python application in (default is `{executable}_out`).",
         ),
     ]
 )

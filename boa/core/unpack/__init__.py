@@ -13,6 +13,7 @@ import traceback
 import pefile
 import yara
 
+
 class UnpackException(Exception):
     pass
 
@@ -54,7 +55,7 @@ class BaseUnpacker:
     def parse_pyver(self) -> t.Optional[float]:
         """ Setter used to parse out Python interpreter version """
         raise NotImplementedError()
-    
+
     def parse_packer_ver(self) -> t.Optional[float]:
         """ Setter used to parse out installer version """
         raise NotImplementedError()
@@ -74,7 +75,6 @@ class BaseUnpacker:
         if self.packer_ver is None:
             raise UnpackException("Cannot parse out packer version from executable.")
 
-
     def unpack(self, unpack_dir: str):
         """ Implements the actual process of unpacking resources """
         raise NotImplementedError()
@@ -89,7 +89,7 @@ class WindowsUnpacker(BaseUnpacker):
         self.binary = pefile.PE(data=pe_data)
 
     def parse_pyver(self) -> t.Optional[float]:
-        """ 
+        """
         Python*.dll is typically dynamically loaded, so check .data for instances of the string.
         """
         pyver: t.Optional[float] = None
@@ -111,7 +111,6 @@ class LinuxUnpacker(BaseUnpacker):
 
     def __init__(self, path):
         super().__init__(path)
-
 
 
 def get_packer(filepath: str) -> t.Optional[t.Any]:

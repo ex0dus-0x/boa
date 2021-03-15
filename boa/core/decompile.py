@@ -11,101 +11,40 @@ decompiler.py
 import os
 import sys
 import json
-import struct
 import ntpath
 import shutil
-import platform
+import importlib
+import typing as t
 
 import stdlib_list
 
-"""
-try:
-    import uncompyle6
-except KeyError:
-    print("uncompyle6 is internally outdated, doesn't support your Python version!")
-"""
 
-#     Python 1.5:   20121
-#     Python 1.6:   50428
-#     Python 2.0:   50823
-#     Python 2.1:   60202
-#     Python 2.2:   60717
-#     Python 2.3:   62011
-#     Python 2.4:   62041
-#     Python 2.5a0: 62071
-#     Python 2.5a0: 62081
-#     Python 2.5a0: 62091
-#     Python 2.5a0: 62092
-#     Python 2.5b3: 62101
-#     Python 2.5b3: 62111
-#     Python 2.5c1: 62121
-#     Python 2.5c2: 62131
-#     Python 2.6a0: 62151
-#     Python 2.6a1: 62161
-#     Python 2.7a0: 62171
-#     Python 2.7a0: 62181
-#     Python 2.7a0  62191
-#     Python 2.7a0  62201
-#     Python 2.7a0  62211
-#     Python 3.0a4: 3111
-#     Python 3.0b1: 3131
-#     Python 3.1a1: 3141
-#     Python 3.1a1: 3151
-#     Python 3.2a1: 3160
-#     Python 3.2a2: 3170
-#     Python 3.2a3  3180
-#     Python 3.3a1  3190
-#     Python 3.3a1  3200
-#     Python 3.3a1  3210
-#     Python 3.3a2  3220
-#     Python 3.3a4  3230
-#     Python 3.4a1  3250
-#     Python 3.4a1  3260
-#     Python 3.4a1  3270
-#     Python 3.4a1  3280
-#     Python 3.4a4  3290
-#     Python 3.4a4  3300
-#     Python 3.4rc2 3310
-#     Python 3.5a1  3320
-#     Python 3.5b1  3330
-#     Python 3.5b2  3340
-#     Python 3.5b3  3350
-#     Python 3.5.2  3351
-#     Python 3.6a0  3360
-#     Python 3.6a1  3361
-#     Python 3.6a2  3370
-#     Python 3.6a2  3371
-#     Python 3.6a2  3372
-#     Python 3.6b1  3373
-#     Python 3.6b1  3375
-#     Python 3.6b1  3376
-#     Python 3.6b1  3377
-#     Python 3.6b2  3378
-#     Python 3.6rc1 3379
-#     Python 3.7a1  3390
-#     Python 3.7a2  3391
-#     Python 3.7a4  3392
-#     Python 3.7b1  3393
-#     Python 3.7b5  3394
-#     Python 3.8a1  3400
-#     Python 3.8a1  3401
-#     Python 3.8a1  3410
-#     Python 3.8b2  3411
-#     Python 3.8b2  3412
-#     Python 3.8b4  3413
-#     Python 3.9a0  3420
-#     Python 3.9a0  3421
-#     Python 3.9a0  3422
-#     Python 3.9a2  3423
-#     Python 3.9a2  3424
-#     Python 3.9a2  3425
-
-def magic(magic):
-    return struct.pack(b"Hcc", magic, b"\r", b"\n")
-
+MAGIC_NUMBERS: t.Dict[float, t.List[int]] = {
+    1.5: [20121],
+    1.6: [50428],
+    2.0: [50823],
+    2.1: [60202],
+    2.2: [60717],
+    2.3: [62011],
+    2.4: [62041],
+    2.5: [62071, 62081, 62091, 62092, 62101, 62111, 62121, 62131],
+    2.6: [62151, 62161],
+    2.7: [62171, 62181, 62191, 62201, 62211],
+    3.0: [3111, 3131],
+    3.1: [3141, 3151],
+    3.2: [3160, 3170],
+    3.2: [3180],
+    3.3: [3190, 3200, 3210, 3220, 3230],
+    3.4: [3250, 3260, 3270, 3280, 3290, 3300, 3310],
+    3.5: [3320, 3330, 3340, 3350, 3351],
+    3.6: [3360, 3361, 3370, 3371, 3372, 3373, 3375, 3376, 3377, 3378, 3379],
+    3.7: [3390, 3391, 3392, 3393, 3394],
+    3.8: [3400, 3401, 3410, 3411, 3412, 3413],
+    3.9: [3420, 3421, 3422, 3423, 3424, 3425],
+}
 
 # other modules that we don't care about
-MOD_DONT_CARE = [
+MOD_DONT_CARE: t.List[str] = [
     "pkg_resources",
     # Windows-specific Python runtime libraries
     "commctr",
@@ -121,39 +60,33 @@ MOD_DONT_CARE = [
 ]
 
 
+class DecompileException(Exception):
+    pass
+
+
 class BoaDecompiler:
-    """
-    Defines the decompiler interface used that aggregates different decompiler
-    modules for source recovery when given bytecode. Implements rudimentary
-    bytecode patching if decompilers are unable to parse the input further.
+    def __init__(self, pyver: float, paths, decomp_all=False):
 
-    TODO: check and deal with files that are encrypted
-    """
-
-    def __init__(self, pyver, paths, decomp_all=False, use_interp_ver=False):
-        
-        # set the version used to enumerate with
-        if use_interp_ver:
-            stdver = ".".join(platform.python_version().split(".")[2:])
-        else:
-            stdver = ".".join(list(pyver))
+        # get list of magic numbers
+        if not pyver in MAGIC_NUMBERS:
+            raise DecompileException("Python version not supported for decompilation")
+        self.magic: t.List[int] = MAGIC_NUMBERS[pyver]
 
         # instantiate list of all standard library modules
-        self.stdlib = stdlib_list.stdlib_list(stdver)
+        self.stdlib = stdlib_list.stdlib_list(pyver)
 
-        # instantiate a local dataset of top PyPI packages
+        # instantiate a local dataset of top PyPI packages to note waste time decompiling
+        # open-sourced projects
         self.packages = BoaDecompiler.iter_packages()
 
-        # TODO: dynamically import decompilers, exit if current Python versions don't work
-        # Main decompiler used: uncompyle6
-        self.decompiler = "uncompyle6"
-
-        # However, in case uncompyle6 fails decompilation, we fallback:
-        #   Python 3.x: decompyle3
-        #   Python 2.7.x: uncompyle2
-        self.fallback_decompiler = (
-            "uncompyle2" if 20 <= int(pyver) < 30 else "decompyle3"
-        )
+        # dynamically import decompilers based on version
+        # 3.7+: decompyle3
+        # other versions: uncompyle6
+        decomp: str = "decompyle3" if self.version >= 3.7 else "uncompyle6"
+        try:
+            self.decompiler: t.Any = importlib.import_module(decomp)
+        except KeyError:
+            raise DecompileEXception("Decompiler doesn't support Python version yet.")
 
         # used to cache deps already tested to ignore
         self.cached_ignore_deps = set()

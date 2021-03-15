@@ -10,8 +10,10 @@ cxfreeze.py
 
 from . import WindowsUnpacker, LinuxUnpacker, UnpackException
 
+
 class WinCxFreeze(WindowsUnpacker):
     pass
+
 
 class LinuxCxFreeze(LinuxUnpacker):
     pass
