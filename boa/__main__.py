@@ -8,8 +8,10 @@ import os
 import sys
 import typing as t
 
-import boa.argparse as argparse
+import beautifultable
 
+import boa.argparse as argparse
+import boa.runner as runner
 from boa.core.unpack import get_packer
 from boa.core.decompile import BoaDecompiler
 
@@ -32,6 +34,7 @@ def detect(args):
     # detect executable packing
 
     # detect Python-specific packing
+    return 0
 
 
 @argparse.subcommand(

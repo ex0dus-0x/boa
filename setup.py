@@ -31,41 +31,42 @@ setuptools.setup(
         ],
     },
     install_requires=[
-        # flask-specific modules
-        "flask",
-        "flask_sse",
-        "flask_login",
-        "flask_sqlalchemy",
-        "wtforms",
-        "sqlalchemy",
-        "sqlalchemy_utils",
-
-        # backend utilities
-        "rq",
-        "redis",
-        "boto3",
-        "python-dotenv",
-        "cryptography",
-        "gunicorn",
-        "eventlet",
-
-        # RE modules
+        "stdlib_list",
+        "beautifultable",
         "pefile",
         "yara-python",
         "uncompyle6",
         "bandit",
-        "stdlib_list",
     ],
     extras_require={
         "dev": [
             "black",
             "pylint",
-            "pytest",
             "mypy"
+        ],
+        "web": [
+            # flask-specific modules
+            "flask",
+            "flask_sse",
+            "flask_login",
+            "flask_sqlalchemy",
+            "wtforms",
+            "sqlalchemy == 1.3.23",
+            "sqlalchemy_utils == 0.36.8",
+
+            # backend utilities
+            "rq",
+            "redis",
+            "boto3",
+            "python-dotenv",
+            "cryptography",
+            "gunicorn",
+            "eventlet",
         ]
     },
     dependency_links=[
-        "http://github.com/fireeye/speakeasy/tarball/master#egg=package-1.0"
+        "http://github.com/fireeye/speakeasy/tarball/master#egg=package-1.0",
+        "https://github.com/rocky/python-decompile3/tarball/master#egg=package1.0"
     ],
     classifiers=[
         "Development Status :: 1 - Planning",
