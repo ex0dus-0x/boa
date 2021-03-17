@@ -7,12 +7,18 @@ pyinstaller.py
     Original Author : Extreme Coders
     URL : https://sourceforge.net/projects/pyinstallerextractor/
 """
-
 import os
 import zlib
 import uuid
 import struct
 import marshal
+import typing as t
+
+from . import BaseUnpacker, UnpackException
+
+PYINST20_COOKIE_SIZE = 24
+PYINST21_COOKIE_SIZE = 24 + 64
+PYINSTALLER_MAGIC = b"MEI\014\013\012\013\016"
 
 
 class CTOCEntry:
@@ -35,46 +41,52 @@ class CTOCEntry:
         self.name = name
 
 
-class PyInstaller:
+class PyInstaller(BaseUnpacker):
     """
     Implements unpacker for PyInstaller based applications, parsing out the ToC from a given
     PE executable, and recovering all Python archives from entries.
     """
 
-    PYINST20_COOKIE_SIZE = 24  # For pyinstaller 2.0
-    PYINST21_COOKIE_SIZE = 24 + 64  # For pyinstaller 2.1+
-    MAGIC = b"MEI\014\013\012\013\016"  # Magic number which identifies pyinstaller
-
     def __str__(self):
         return "PyInstaller"
 
-    def __init__(self, path):
+    def parse_pyver(self) -> t.Optional[float]:
+        """ TODO """
+        return 1.1
 
-        # get file pointer and size for further interaction
-        self.file = open(path, "rb")
-        self.file_size = os.stat(path).st_size
+    def parse_packer_ver(self) -> t.Optional[float]:
+        """
+        Given magic numbers, parse and seek through executable to find PyInstaller version
+        """
 
-        # try to figure out the version of Pyinstaller used
-        self.version = 0
+        self.file.seek(self.size - PYINST20_COOKIE_SIZE, os.SEEK_SET)
+        file_magic = self.file.read(len(PYINSTALLER_MAGIC))
+        if file_magic == PYINSTALLER_MAGIC:
+            self.file.seek(self.size - PYINST20_COOKIE_SIZE, os.SEEK_SET)
+            self.packer_ver = 2.0
 
-        # Check for pyinstaller 2.0 before bailing out
-        self.file.seek(self.file_size - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
-        file_magic = self.file.read(len(self.MAGIC))
-        if file_magic == self.MAGIC:
-            self.version = 20
-            self.file.seek(self.file_size - self.PYINST20_COOKIE_SIZE, os.SEEK_SET)
+        self.file.seek(self.size - PYINST21_COOKIE_SIZE, os.SEEK_SET)
+        file_magic = self.file.read(len(PYINSTALLER_MAGIC))
+        if file_magic == PYINSTALLER_MAGIC:
+            self.file.seek(self.size - PYINST21_COOKIE_SIZE, os.SEEK_SET)
+            self.packer_ver = 2.1
 
+        return self.packer_ver
+
+    def unpack(self, unpack_dir: str):
+        """
+        Given a parsed out table of contents, iterate over each file, read it from the
+        executable, and write it to the directory. For PYZ files specifically create another
+        extracted folder to store bytecode files.
+
+        When finalized, return a list of all bytecode file paths for decompilation.
+        """
+
+        if self.packer_ver == 2.0:
             (_, pkg_len, toc, toc_len, self.pyver) = struct.unpack(
-                "!8siiii", self.file.read(self.PYINST20_COOKIE_SIZE)
+                "!8siiii", self.file.read(PYINST20_COOKIE_SIZE)
             )
-
-        # Check for pyinstaller 2.1+ before bailing out
-        self.file.seek(self.file_size - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
-        file_magic = self.file.read(len(self.MAGIC))
-        if file_magic == self.MAGIC:
-            self.version = 21
-            self.file.seek(self.file_size - self.PYINST21_COOKIE_SIZE, os.SEEK_SET)
-
+        elif self.packer_ver == 2.1:
             (
                 _,
                 pkg_len,
@@ -82,16 +94,10 @@ class PyInstaller:
                 toc_len,
                 self.pyver,
                 _,
-            ) = struct.unpack("!8siiii64s", self.file.read(self.PYINST21_COOKIE_SIZE))
-
-        # if no version parsed out, return an exception
-        if self.version == 0:
-            raise Exception(
-                "Cannot determine PyInstaller version. Works with 2.0/2.1+."
-            )
+            ) = struct.unpack("!8siiii64s", self.file.read(PYINST21_COOKIE_SIZE))
 
         # Overlay is the data appended at the end of the PE
-        overlay_pos = self.file_size - pkg_len
+        overlay_pos = self.size - pkg_len
         toc_pos = overlay_pos + toc
         toc_size = toc_len
 
@@ -135,24 +141,11 @@ class PyInstaller:
             )
             parsed_len += entry_size
 
-        # other attributes to instantiate for unpacking
-        self.pyz_len = 0
-        self.bytecode_paths = []
-
-    def unpack(self, unpacked_dir):
-        """
-        Given a parsed out table of contents, iterate over each file, read it from the
-        executable, and write it to the directory. For PYZ files specifically create another
-        extracted folder to store bytecode files.
-
-        When finalized, return a list of all bytecode file paths for decompilation.
-        """
-
         # get curr_dir to revert to later
         curr_dir = os.getcwd()
 
         # go to `workspace/unpacked`
-        os.chdir(unpacked_dir)
+        os.chdir(unpack_dir)
         for entry in self.toc_list:
 
             # hacky: make paths Unix-friendly
@@ -257,6 +250,3 @@ class PyInstaller:
 
                 # add valid pyc path
                 self.bytecode_paths += [dest]
-
-            # done with executable, close file
-            self.file.close()

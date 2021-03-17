@@ -1,7 +1,7 @@
 FROM python:3.8.0-slim-buster
 
 # install requirements
-RUN apt-get update -y && apt-get install gcc libpq-dev -y
+RUN apt-get update -y && apt-get install gcc libpq-dev git -y
 
 # create working directory
 RUN mkdir -p /usr/src/boa
@@ -10,7 +10,7 @@ RUN mkdir -p /usr/src/boa
 COPY . /usr/src/boa
 WORKDIR /usr/src/boa
 
-# install requirements
-RUN pip install --no-cache-dir -r requirements.txt
+# install core and web requirements
+RUN pip install . .[web]
 
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--worker-class", "eventlet", "--timeout", "120", "--threads", "3", "--log-level=debug", "--log-file=-", "uwsgi:app"]

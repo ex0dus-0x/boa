@@ -5,7 +5,18 @@ argparse.py
 
     Credits: https://mike.depalatis.net/blog/simplifying-argparse.html
 """
+import sys
 import argparse
+
+HEADER = """
+___.                 
+\_ |__   _________   
+ | __ \ /  _ \__  \  
+ | \_\ (  <_> ) __ \_
+ |___  /\____(____  /
+     \/           \/ 
+    Reverse Engineering Framework for Python-Compiled Malware/Apps
+"""
 
 # globally instantiated parser for simplified subcommand parsing
 cli = argparse.ArgumentParser(
@@ -37,4 +48,5 @@ def parse_args():
     if args.subcommand is None:
         cli.print_help()
     else:
-        args.func(args)
+        print(HEADER)
+        sys.exit(args.func(args))

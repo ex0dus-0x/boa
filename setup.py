@@ -31,26 +31,10 @@ setuptools.setup(
         ],
     },
     install_requires=[
-        "flask",
-        "flask_sse",
-        "flask_login",
-        "flask_sqlalchemy",
-        "wtforms",
-        "sqlalchemy",
-        "sqlalchemy_utils",
-
-        "rq",
-        "redis",
-        "boto3",
-        "python-dotenv",
         "stdlib_list",
-        "cryptography",
-        "gunicorn",
-        "eventlet",
-
+        "beautifultable",
         "pefile",
         "yara-python",
-        "unpy2exe",
         "uncompyle6",
         "bandit",
     ],
@@ -58,11 +42,32 @@ setuptools.setup(
         "dev": [
             "black",
             "pylint",
-            "pytest",
-            "mock",
             "mypy"
+        ],
+        "web": [
+            # flask-specific modules
+            "flask",
+            "flask_sse",
+            "flask_login",
+            "flask_sqlalchemy",
+            "wtforms",
+            "sqlalchemy == 1.3.23",
+            "sqlalchemy_utils == 0.36.8",
+
+            # backend utilities
+            "rq",
+            "redis",
+            "boto3",
+            "python-dotenv",
+            "cryptography",
+            "gunicorn",
+            "eventlet",
         ]
     },
+    dependency_links=[
+        "http://github.com/fireeye/speakeasy/tarball/master#egg=package-1.0",
+        "https://github.com/rocky/python-decompile3/tarball/master#egg=package1.0"
+    ],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Intended Audience :: End Users/Desktop",
