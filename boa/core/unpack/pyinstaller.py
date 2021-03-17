@@ -50,7 +50,7 @@ class PyInstaller(BaseUnpacker):
     def __str__(self):
         return "PyInstaller"
 
-    def parse_python_ver(self) -> t.Optional[float]:
+    def parse_pyver(self) -> t.Optional[float]:
         """ TODO """
         return 1.1
 
@@ -58,19 +58,20 @@ class PyInstaller(BaseUnpacker):
         """
         Given magic numbers, parse and seek through executable to find PyInstaller version
         """
+
         self.file.seek(self.size - PYINST20_COOKIE_SIZE, os.SEEK_SET)
         file_magic = self.file.read(len(PYINSTALLER_MAGIC))
         if file_magic == PYINSTALLER_MAGIC:
             self.file.seek(self.size - PYINST20_COOKIE_SIZE, os.SEEK_SET)
-            return 2.0
+            self.packer_ver = 2.0
 
         self.file.seek(self.size - PYINST21_COOKIE_SIZE, os.SEEK_SET)
         file_magic = self.file.read(len(PYINSTALLER_MAGIC))
         if file_magic == PYINSTALLER_MAGIC:
             self.file.seek(self.size - PYINST21_COOKIE_SIZE, os.SEEK_SET)
-            return 2.1
+            self.packer_ver = 2.1
 
-        return None
+        return self.packer_ver
 
     def unpack(self, unpack_dir: str):
         """
