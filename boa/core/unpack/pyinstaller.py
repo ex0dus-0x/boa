@@ -14,7 +14,7 @@ import struct
 import marshal
 import typing as t
 
-from . import WindowsUnpacker, UnpackException
+from . import BaseUnpacker, UnpackException
 
 PYINST20_COOKIE_SIZE = 24
 PYINST21_COOKIE_SIZE = 24 + 64
@@ -41,7 +41,7 @@ class CTOCEntry:
         self.name = name
 
 
-class PyInstaller(WindowsUnpacker):
+class PyInstaller(BaseUnpacker):
     """
     Implements unpacker for PyInstaller based applications, parsing out the ToC from a given
     PE executable, and recovering all Python archives from entries.
@@ -49,6 +49,10 @@ class PyInstaller(WindowsUnpacker):
 
     def __str__(self):
         return "PyInstaller"
+
+    def parse_python_ver(self) -> t.Optional[float]:
+        """ TODO """
+        return 1.1
 
     def parse_packer_ver(self) -> t.Optional[float]:
         """

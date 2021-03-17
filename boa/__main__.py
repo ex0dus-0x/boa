@@ -31,9 +31,11 @@ def detect(args):
         print("Cannot find path to executable. Exiting...")
         return 1
 
-    # detect executable packing
+    # basic information
+    print(f"Name: {app}")
+    print(f"Executable Format: ELF")
+    print(f"Time Created: 12")
 
-    # detect Python-specific packing
     return 0
 
 
@@ -51,13 +53,13 @@ def detect(args):
 )
 def unpack(args):
     """ Given a packed target executable, do both generic executable unpacking (if detected) and Python-specific unpacking. """
-    app = args.executable
+    app: str = args.executable
     if not os.path.exists(app):
         print("Cannot find path to executable. Exiting...")
         return 1
 
     # output path or set default
-    out_dir = f"{app}_out" if not args.out_dir else args.out_dir
+    out_dir: str = f"{app}_out" if not args.out_dir else args.out_dir
     if not os.path.exists(out_dir):
         print("Creating output workspace for storing unpacked resources...")
         os.mkdir(out_dir)
@@ -71,9 +73,16 @@ def unpack(args):
             return 1
 
         # fingerprint packer and Python version
-        unpacker.detect()
-        print(f"Detected packer: {unpacker} {unpacker.packer_ver}")
-        print(f"Compiled with Python version: {unpacker.pyver}")
+        pyver: t.Optional[float] = unpacker.parse_pyver()
+        if pyver is None:
+            raise Exception()
+
+        print(f"Compiled with Python version: {pyver}")
+        print(f"Detected packer: {unpacker}", end=" ")
+
+        packer_ver: t.Optional[float] = unpacker.parse_packer_ver()
+        if not packer_ver is None:
+            print(f"{packer_ver}")
 
         # given the output dir, run the unpacking routine
         unpacker.unpack(out_dir)

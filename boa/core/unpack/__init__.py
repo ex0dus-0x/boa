@@ -6,11 +6,9 @@ __init__.py
     unpacker using Yara.
 """
 import os
-import mmap
 import typing as t
 import traceback
 
-import pefile
 import yara
 
 
@@ -60,66 +58,18 @@ class BaseUnpacker:
         """ Setter used to parse out installer version """
         raise NotImplementedError()
 
-    def detect(self):
-        """
-        Runs routine to fingerprint Python-specific metadata about the target.
-        Derived objects should implement any other metadata, ie archive type for PyInstaller,
-        or number of packed files.
-        """
-
-        self.pyver = self.parse_pyver()
-        if self.pyver is None:
-            raise UnpackException("Cannot parse out Python version from executable.")
-
-        self.packer_ver = self.parse_packer_ver()
-        if self.packer_ver is None:
-            raise UnpackException("Cannot parse out packer version from executable.")
-
     def unpack(self, unpack_dir: str):
         """ Implements the actual process of unpacking resources """
         raise NotImplementedError()
 
 
-class WindowsUnpacker(BaseUnpacker):
-    """ Base class used for all Python PE unpackers """
-
-    def __init__(self, path):
-        super().__init__(path)
-        pe_data = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_READ)
-        self.binary = pefile.PE(data=pe_data)
-
-    def parse_pyver(self) -> t.Optional[float]:
-        """
-        Python*.dll is typically dynamically loaded, so check .data for instances of the string.
-        """
-        pyver: t.Optional[float] = None
-        data: bytes = b""
-        for section in self.binary.sections:
-            name = section.Name.decode("utf-8").rstrip("\x00")
-            if name == ".data":
-                data = section.get_data()
-
-        # search python*.dll pattern and parse out version
-        search = b"python37.dll"
-        if search in data:
-            pyver = 3.7
-        return 3.7
-
-
-class LinuxUnpacker(BaseUnpacker):
-    """ Base class used for all Python ELF unpackers """
-
-    def __init__(self, path):
-        super().__init__(path)
-
-
-def get_packer(filepath: str) -> t.Optional[t.Any]:
+def get_packer(filepath: str) -> t.Optional[BaseUnpacker]:
     """
     Helper utility to help return the correct Unpacker based on the YARA rule that matches it.
     """
     from . import pyinstaller, py2exe
 
-    rules = yara.compile(filepath="ext/unpacker.yara")
+    rules = yara.compile(filepath="rules/installer.yara")
     matches = rules.match(filepath=filepath)
 
     # if multiple are present, return None
@@ -130,12 +80,12 @@ def get_packer(filepath: str) -> t.Optional[t.Any]:
     res: str = matches[0].rule
 
     # determine which packer was used
-    packer: t.Optional[t.Any] = None
+    packer: t.Optional[BaseUnpacker] = None
     if res == "pyinstaller":
         packer = pyinstaller.PyInstaller(filepath)
     elif res == "py2exe":
-        packer = py2exe.Py2exe(filepath)
-    elif res == "cx_freeze":
-        raise NotImplementedError()
+        packer = py2exe.Py2Exe(filepath)
+    elif res == "cxfreeze":
+        packer = cxfreeze.CxFreeze(filepath)
 
     return packer

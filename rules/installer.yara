@@ -3,7 +3,7 @@ import "pe"
 rule py2exe
 {
   meta:
-        author = "Didier Stevens (https://www.nviso.be)"
+        author = "Didier Stevens"
         description = "Detect PE file produced by py2exe"
   condition:
         for any i in (0 .. pe.number_of_resources - 1):
@@ -13,19 +13,21 @@ rule py2exe
 rule pyinstaller
 {
     meta:
-        author = "Didier Stevens (https://DidierStevens.com)"
-        description = "Detect PE file produced by pyinstaller"
+        description = "Detect any binary file produced by pyinstaller"
     strings:
         $a = "pyi-windows-manifest-filename"
+        $b = "pyi_carchive"
+        $c = "pyi_bootstrap"
+        $d = "spyiboot01_bootstrap"
     condition:
-        pe.number_of_resources > 0 and $a
+        any of them
 }
 
 rule cxfreeze
 {
     meta:
         author = "ex0dus"
-        description = "Detect PE file produced by cx_freeze"
+        description = "Detect any binary file produced by cxfreeze"
     strings:
         $a = "cx_Freeze" // TODO
     condition:

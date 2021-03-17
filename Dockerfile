@@ -10,7 +10,7 @@ RUN mkdir -p /usr/src/boa
 COPY . /usr/src/boa
 WORKDIR /usr/src/boa
 
-# install requirements
+# install core and web requirements
 RUN pip install . .[web]
 
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--worker-class", "eventlet", "--timeout", "120", "--threads", "3", "--log-level=debug", "--log-file=-", "uwsgi:app"]
