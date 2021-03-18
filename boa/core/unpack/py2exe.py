@@ -56,7 +56,6 @@ class Py2Exe(BaseUnpacker):
         if not self.binary.has_resources:
             raise UnpackException("Cannot find resources header in target PE.")
 
-
         # get PYTHONSCRIPT resource entry
         script_entry = None
         for entry in self.binary.resources.childs:
@@ -71,10 +70,9 @@ class Py2Exe(BaseUnpacker):
             )
 
         # given offset for PYTHONSCRIPT entry, dump data
+        # should be 53364
         rva: int = script_entry.offset
         size: int = len(script_entry.content)
-
-        print(rva, size)
         dump: bytes = bytes(self.binary.get_content_from_virtual_address(rva, size))
 
         # get offset where code objects are stored and unmarshal
