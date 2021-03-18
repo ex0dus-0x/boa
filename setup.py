@@ -33,7 +33,7 @@ setuptools.setup(
     install_requires=[
         "stdlib_list",
         "beautifultable",
-        "pefile",
+        "lief",
         "yara-python",
         "uncompyle6",
         "bandit",

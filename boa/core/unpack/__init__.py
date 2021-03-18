@@ -6,10 +6,11 @@ __init__.py
     unpacker using Yara.
 """
 import os
-import typing as t
 import traceback
+import typing as t
 
 import yara
+import lief
 
 
 class UnpackException(Exception):
@@ -25,8 +26,8 @@ class BaseUnpacker:
         self.file: t.Any = open(path, "rb")
         self.size: int = os.stat(path).st_size
 
-        # stores object with binary format
-        self.binary: t.Optional[t.Any] = None
+        # stores object with arbitrary binary format
+        self.binary: t.Any = lief.parse(path)
 
         # Python version used to compile the binary
         self.pyver: t.Optional[float] = None

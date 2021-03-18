@@ -8,6 +8,7 @@ pyinstaller.py
     URL : https://sourceforge.net/projects/pyinstallerextractor/
 """
 import os
+import re
 import zlib
 import uuid
 import struct
@@ -51,8 +52,28 @@ class PyInstaller(BaseUnpacker):
         return "PyInstaller"
 
     def parse_pyver(self) -> t.Optional[float]:
-        """ TODO """
-        return 1.1
+        """ Check for instances of Python*.dll in PE, since it is dynamically loaded """
+
+        # more generic check - iterate over symbols in .data
+        data: bytes = b""
+        for section in self.binary.sections:
+            name = section.Name.decode("utf-8").rstrip("\x00")
+            if name == ".data":
+                data = section.get_data()
+
+        # search python*.dll pattern and parse out version
+        expr: str = r"python(\d+)\.dll"
+        matches = re.search(expr, str(data))
+        if matches is None:
+            raise UnpackException("Cannot find Python DLL to parse version.")
+
+        # strip out name and file extension
+        res: t.List[str] = list(matches.group(0).split("python")[1].strip(".dll"))
+        res.insert(1, ".")
+
+        # insert dot for floating point and type convert
+        self.pyver = float("".join(res))
+        return self.pyver
 
     def parse_packer_ver(self) -> t.Optional[float]:
         """

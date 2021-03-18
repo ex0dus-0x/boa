@@ -14,18 +14,10 @@ import mmap
 import marshal
 import typing as t
 
-import pefile
-
 from . import BaseUnpacker, UnpackException
 
 
 class Py2Exe(BaseUnpacker):
-    def __init__(self, path: str):
-        """ Initialize base, and also instantiate PE object for parsing """
-        super().__init__(path)
-        pedata = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_READ)
-        self.binary = pefile.PE(data=pedata)
-
     def __str__(self) -> str:
         return "Py2Exe"
 
@@ -33,11 +25,8 @@ class Py2Exe(BaseUnpacker):
         """ Check for instances of Python*.dll in PE, since it is dynamically loaded """
 
         # more generic check - iterate over symbols in .data
-        data: bytes = b""
-        for section in self.binary.sections:
-            name = section.Name.decode("utf-8").rstrip("\x00")
-            if name == ".data":
-                data = section.get_data()
+        section = self.binary.get_section(".data")
+        data: bytes = bytearray(section.content)
 
         # search python*.dll pattern and parse out version
         expr: str = r"python(\d+)\.dll"
@@ -64,14 +53,15 @@ class Py2Exe(BaseUnpacker):
         """
 
         # shouldn't happen, but error-check
-        if not hasattr(self.binary, "DIRECTORY_ENTRY_RESOURCE"):
+        if not self.binary.has_resources:
             raise UnpackException("Cannot find resources header in target PE.")
+
 
         # get PYTHONSCRIPT resource entry
         script_entry = None
-        for entry in self.binary.DIRECTORY_ENTRY_RESOURCE.entries:
-            if entry.name and entry.name.string == b"PYTHONSCRIPT":
-                script_entry = entry.directory.entries[0].directory.entries[0]
+        for entry in self.binary.resources.childs:
+            if entry.name and entry.name == "PYTHONSCRIPT":
+                script_entry = entry.childs[0].childs[0]
                 break
 
         # again, shouldn't happen, but error-check
@@ -81,17 +71,18 @@ class Py2Exe(BaseUnpacker):
             )
 
         # given offset for PYTHONSCRIPT entry, dump data
-        rva: int = script_entry.data.struct.OffsetToData
-        size: int = script_entry.data.struct.Size
-        dump: bytes = self.binary.get_data(rva, size)
+        rva: int = script_entry.offset
+        size: int = len(script_entry.content)
+
+        print(rva, size)
+        dump: bytes = bytes(self.binary.get_content_from_virtual_address(rva, size))
 
         # get offset where code objects are stored and unmarshal
         codebytes: bytes = dump[0x010:]
-
         try:
             code_objs: t.List[t.Any] = marshal.loads(codebytes)
         except ValueError:
-            raise UnpackException("Unable to unmarshal Python code, possibly version incompatibility.")
+            raise UnpackException("Unable to unmarshal Python code, possible version incompatibility.")
         
         # for each code object entry, patch with Python version and timestamp,
         # and then write to output workspace
