@@ -71,12 +71,15 @@ class Py2Exe(BaseUnpacker):
 
         # given offset for PYTHONSCRIPT entry, dump data
         # should be 53364
-        rva: int = script_entry.offset
+        rva: int = self.binary.offset_to_virtual_address(script_entry.offset)
         size: int = len(script_entry.content)
+
+        print(rva, size)
         dump: bytes = bytes(self.binary.get_content_from_virtual_address(rva, size))
+        offset: int = dump.find(b"\x00")
 
         # get offset where code objects are stored and unmarshal
-        codebytes: bytes = dump[0x010:]
+        codebytes: bytes = dump[offset + 1:]
         try:
             code_objs: t.List[t.Any] = marshal.loads(codebytes)
         except ValueError:

@@ -55,11 +55,8 @@ class PyInstaller(BaseUnpacker):
         """ Check for instances of Python*.dll in PE, since it is dynamically loaded """
 
         # more generic check - iterate over symbols in .data
-        data: bytes = b""
-        for section in self.binary.sections:
-            name = section.Name.decode("utf-8").rstrip("\x00")
-            if name == ".data":
-                data = section.get_data()
+        section = self.binary.get_section(".data")
+        data: bytes = bytearray(section.content)
 
         # search python*.dll pattern and parse out version
         expr: str = r"python(\d+)\.dll"

@@ -8,13 +8,12 @@ import os
 import sys
 import typing as t
 
-import beautifultable
-
 import boa.argparse as argparse
 import boa.runner as runner
 from boa.core.unpack import get_packer
 from boa.core.decompile import BoaDecompiler
 
+from beautifultable import BeautifulTable
 
 @argparse.subcommand(
     [
@@ -32,10 +31,27 @@ def detect(args):
         return 1
 
     # basic information
-    print(f"Name: {app}")
-    print(f"Executable Format: ELF")
-    print(f"Time Created: 12")
+    basic_table = BeautifulTable()
+    basic_table.rows.header = ["Name", "Executable Format", "Timestamp"]
+    basic_table.columns.append([app, "ELF", "120"])
+    print("\nBasic Information")
+    print(basic_table)
 
+    # hashes
+    hashtable = BeautifulTable()
+    hashtable.rows.header = ["MD5", "SHA256", "Similarity"]
+    hashtable.columns.append(["", "", ""])
+    print("\nHashes")
+    print(hashtable)
+
+    # Virustotal
+    print("\nVirusTotal")
+    vtable = BeautifulTable()
+
+    # Python version
+    packtable = BeautifulTable()
+    packtable.rows.header = ["Executable Packing", "Python Version", "Installer"]
+    packtable.columns.append(["", "", ""])
     return 0
 
 
