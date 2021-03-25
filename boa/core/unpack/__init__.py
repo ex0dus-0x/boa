@@ -6,6 +6,7 @@ __init__.py
     unpacker using Yara.
 """
 import os
+import abc
 import traceback
 import typing as t
 
@@ -17,10 +18,11 @@ class UnpackException(Exception):
     pass
 
 
-class BaseUnpacker:
-    """ Base class used for all variants of Python unpacker implementations. """
+class BaseUnpacker(abc.ABC):
+    """ Abstract base class used for all variants of Python unpacker implementations. """
 
     def __init__(self, path: str):
+        self.path: str = path
 
         # get file pointer and size for later reading and seeking
         self.file: t.Any = open(path, "rb")
@@ -38,6 +40,8 @@ class BaseUnpacker:
         # stores paths to all unpacked bytecode files
         self.bytecode_paths: t.List[str] = []
 
+        super().__init__()
+
     def __enter__(self):
         return self
 
@@ -47,21 +51,25 @@ class BaseUnpacker:
             traceback.print_exception(exc_type, exc_value, tb)
         self.file.close()
 
+    @abc.abstractmethod
     def __str__(self) -> str:
         """ Output for identifying packer used """
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def parse_pyver(self) -> t.Optional[float]:
         """ Setter used to parse out Python interpreter version """
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def parse_packer_ver(self) -> t.Optional[float]:
         """ Setter used to parse out installer version """
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def unpack(self, unpack_dir: str):
         """ Implements the actual process of unpacking resources """
-        raise NotImplementedError()
+        pass
 
 
 def get_packer(filepath: str) -> t.Optional[BaseUnpacker]:

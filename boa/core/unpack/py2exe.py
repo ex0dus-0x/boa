@@ -11,7 +11,8 @@ py2exe.py
 import os
 import re
 import mmap
-import marshal
+import pickle
+import zipfile
 import typing as t
 
 from . import BaseUnpacker, UnpackException
@@ -46,10 +47,12 @@ class Py2Exe(BaseUnpacker):
         """ Doesn't seem to be deviations in unpacking based on installer version """
         return None
 
-    def unpack(self, unpack_dir: str):
+    def _legacy_unpack(self, unpack_dir: str):
         """
         As per with other unpacker implementations, compressed bytecode all exists
         within the PYTHONSCRIPT resource in the `.rsrc` header.
+
+        TODO: check what py2exe versions still support this
         """
 
         # shouldn't happen, but error-check
@@ -73,16 +76,14 @@ class Py2Exe(BaseUnpacker):
         # should be 53364
         rva: int = self.binary.offset_to_virtual_address(script_entry.offset)
         size: int = len(script_entry.content)
-
-        print(rva, size)
         dump: bytes = bytes(self.binary.get_content_from_virtual_address(rva, size))
         offset: int = dump.find(b"\x00")
 
         # get offset where code objects are stored and unmarshal
         codebytes: bytes = dump[offset + 1:]
         try:
-            code_objs: t.List[t.Any] = marshal.loads(codebytes)
-        except ValueError:
+            code_objs: t.List[t.Any] = pickle.loads(codebytes)
+        except Exception:
             raise UnpackException("Unable to unmarshal Python code, possible version incompatibility.")
         
         # for each code object entry, patch with Python version and timestamp,
@@ -98,4 +99,30 @@ class Py2Exe(BaseUnpacker):
                 fd.write(header)
                 fd.write(marshal.dumps(co))
 
+    def unpack(self, unpack_dir: str):
+        """ Most relevant technique for unpacking: simply unzipping the executable """
+    
+        # shouldn't happen, but error-check
+        if not zipfile.is_zipfile(self.path):
+            raise UnpackException("Executable cannot be decompressed")
+
+        # open as a zipfile
+        zf = zipfile.ZipFile(self.file, mode="r")
+        paths: t.List[str] = zf.namelist()
+
+        # read each path from zipfile and write to disk
+        for path in paths:
+            with zf.open(path) as fd:
+                contents = fd.read()
+
+            # check if we need to recursively create dirs
+            writepath = os.path.join(unpack_dir, path)
+            subpath = os.path.dirname(writepath)
+            if not os.path.exists(subpath):
+                os.makedirs(subpath, exist_ok=True)
+            
+            with open(writepath, "wb") as fd:
+                fd.write(contents)
+
+        zf.close()
         return None
