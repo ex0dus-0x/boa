@@ -1,14 +1,20 @@
 """
 cxfreeze.py
 
-    Unpacker for cxfreeze-compiled executable. This is very
-    simple to do, as we can either
-
-        - Find the associated `library.zip` and dump bytecode to path
-        - Attach hook onto `Py_` and do a memory dump from offset with bytecode
+    Unpacker for cxfreeze-compiled executable.
 """
 
 from . import BaseUnpacker, UnpackException
 
 class CxFreeze(BaseUnpacker):
-    pass
+    def __str__(self) -> str:
+        return "CxFreeze"
+
+    def parse_pyver(self) -> t.Optional[float]:
+        pass
+
+    def parse_packer_ver(self) -> t.Optional[str]:
+        pass
+
+    def unpack(self, unpack_dir: str):
+        pass

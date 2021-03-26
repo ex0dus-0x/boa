@@ -1,12 +1,11 @@
 """
 py2exe.py
 
-    Unpacker implementation for py2exe installers. Implements the simple unpacking algorithm
-    used similarly in `unpy2exe` and `decompile-py2exe` that parses out the PYTHONSCRIPT
-    resource entry and enumerates over all code objects, reconstructing a bytecode files.
+    Unpacker implementation for py2exe installers. Implements two unpacking algorithms
+        * Recursively unzipping the executable as an archive
+        * Iterating over resources in the `.rsrc` section
 
     Platforms Supported: Windows PEs Only
-
 """
 import os
 import re
@@ -101,7 +100,7 @@ class Py2Exe(BaseUnpacker):
 
     def unpack(self, unpack_dir: str):
         """ Most relevant technique for unpacking: simply unzipping the executable """
-    
+
         # shouldn't happen, but error-check
         if not zipfile.is_zipfile(self.path):
             raise UnpackException("Executable cannot be decompressed")

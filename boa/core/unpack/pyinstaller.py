@@ -54,13 +54,9 @@ class PyInstaller(BaseUnpacker):
     def parse_pyver(self) -> t.Optional[float]:
         """ Check for instances of Python*.dll in PE, since it is dynamically loaded """
 
-        # more generic check - iterate over symbols in .data
-        section = self.binary.get_section(".data")
-        data: bytes = bytearray(section.content)
-
         # search python*.dll pattern and parse out version
         expr: str = r"python(\d+)\.dll"
-        matches = re.search(expr, str(data))
+        matches = re.search(expr, str(self.file.read()))
         if matches is None:
             raise UnpackException("Cannot find Python DLL to parse version.")
 
