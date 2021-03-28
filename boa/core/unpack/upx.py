@@ -1,4 +1,3 @@
-import argparse
 import speakeasy
 
 
@@ -33,15 +32,13 @@ class UpxUnpacker(speakeasy.Speakeasy):
         return True
 
 
-def main(args):
-
-    unpacker = UpxUnpacker(args.outfile)
+def run_unpack(outfile: str):
+    unpacker = UpxUnpacker(outfile)
 
     # Load the module
     module = unpacker.load_module(args.file)
     base = module.get_base()
 
-    print("[*] Unpacking module with section hop")
     # Get the section info for "UPX0" to detect the section hop
     upx0 = module.get_section_by_name("UPX0")
 
@@ -54,26 +51,3 @@ def main(args):
 
     # Emulate the module
     unpacker.run_module(module)
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description="Generic UPX unpacker")
-    parser.add_argument(
-        "-f",
-        "--file",
-        action="store",
-        dest="file",
-        required=True,
-        help="Path of UPX file to unpack",
-    )
-    parser.add_argument(
-        "-o",
-        "--outfile",
-        action="store",
-        dest="outfile",
-        required=True,
-        help="Path to save unpacked file",
-    )
-    args = parser.parse_args()
-    main(args)

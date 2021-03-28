@@ -3,10 +3,6 @@ decompiler.py
 
     Provides an interface object for decompilation, consuming a codebase of bytecode paths
     and recovering the source from only the ones that are relevant to the program execution.
-
-    TODO: Aggregates fallback decompiler APIs besides `uncompyle6` in order to fix
-    potential bugs that may arise from the decompiler.
-
 """
 import os
 import sys
@@ -18,30 +14,8 @@ import typing as t
 
 import stdlib_list
 
+from boa.core import patch
 
-MAGIC_NUMBERS: t.Dict[float, t.List[int]] = {
-    1.5: [20121],
-    1.6: [50428],
-    2.0: [50823],
-    2.1: [60202],
-    2.2: [60717],
-    2.3: [62011],
-    2.4: [62041],
-    2.5: [62071, 62081, 62091, 62092, 62101, 62111, 62121, 62131],
-    2.6: [62151, 62161],
-    2.7: [62171, 62181, 62191, 62201, 62211],
-    3.0: [3111, 3131],
-    3.1: [3141, 3151],
-    3.2: [3160, 3170],
-    3.2: [3180],
-    3.3: [3190, 3200, 3210, 3220, 3230],
-    3.4: [3250, 3260, 3270, 3280, 3290, 3300, 3310],
-    3.5: [3320, 3330, 3340, 3350, 3351],
-    3.6: [3360, 3361, 3370, 3371, 3372, 3373, 3375, 3376, 3377, 3378, 3379],
-    3.7: [3390, 3391, 3392, 3393, 3394],
-    3.8: [3400, 3401, 3410, 3411, 3412, 3413],
-    3.9: [3420, 3421, 3422, 3423, 3424, 3425],
-}
 
 # other modules that we don't care about
 MOD_DONT_CARE: t.List[str] = [
@@ -68,9 +42,9 @@ class BoaDecompiler:
     def __init__(self, pyver: float, paths, decomp_all=False):
 
         # get list of magic numbers
-        if not pyver in MAGIC_NUMBERS:
+        if not pyver in patch.MAGIC_NUMBERS:
             raise DecompileException("Python version not supported for decompilation")
-        self.magic: t.List[int] = MAGIC_NUMBERS[pyver]
+        self.magic: t.List[int] = patch.MAGIC_NUMBERS[pyver]
 
         # instantiate list of all standard library modules
         self.stdlib = stdlib_list.stdlib_list(pyver)
@@ -87,6 +61,8 @@ class BoaDecompiler:
             self.decompiler: t.Any = importlib.import_module(decomp)
         except KeyError:
             raise DecompileEXception("Decompiler doesn't support Python version yet.")
+
+        # TODO: fallback with pycdc
 
         # used to cache deps already tested to ignore
         self.cached_ignore_deps = set()

@@ -26,10 +26,9 @@ rule pyinstaller
 rule cxfreeze
 {
     meta:
-        author = "ex0dus"
         description = "Detect any binary file produced by cxfreeze"
     strings:
-        $a = "cx_Freeze" // TODO
+        $a = "cx-freeze_"
     condition:
         $a
 }

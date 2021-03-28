@@ -15,7 +15,7 @@ import struct
 import marshal
 import typing as t
 
-from . import BaseUnpacker, UnpackException
+from . import BaseUnfreezer, UnfreezeException
 
 PYINST20_COOKIE_SIZE = 24
 PYINST21_COOKIE_SIZE = 24 + 64
@@ -42,7 +42,7 @@ class CTOCEntry:
         self.name = name
 
 
-class PyInstaller(BaseUnpacker):
+class PyInstaller(BaseUnfreezer):
     """
     Implements unpacker for PyInstaller based applications, parsing out the ToC from a given
     PE executable, and recovering all Python archives from entries.
@@ -58,7 +58,7 @@ class PyInstaller(BaseUnpacker):
         expr: str = r"python(\d+)\.dll"
         matches = re.search(expr, str(self.file.read()))
         if matches is None:
-            raise UnpackException("Cannot find Python DLL to parse version.")
+            raise UnfreezeException("Cannot find Python DLL to parse version.")
 
         # strip out name and file extension
         res: t.List[str] = list(matches.group(0).split("python")[1].strip(".dll"))
@@ -68,7 +68,7 @@ class PyInstaller(BaseUnpacker):
         self.pyver = float("".join(res))
         return self.pyver
 
-    def parse_packer_ver(self) -> t.Optional[float]:
+    def parse_version(self) -> t.Optional[float]:
         """
         Given magic numbers, parse and seek through executable to find PyInstaller version
         """
@@ -87,7 +87,7 @@ class PyInstaller(BaseUnpacker):
 
         return self.packer_ver
 
-    def unpack(self, unpack_dir: str):
+    def thaw(self, unpack_dir: str):
         """
         Given a parsed out table of contents, iterate over each file, read it from the
         executable, and write it to the directory. For PYZ files specifically create another

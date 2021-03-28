@@ -14,10 +14,10 @@ import pickle
 import zipfile
 import typing as t
 
-from . import BaseUnpacker, UnpackException
+from . import BaseUnfreezer, UnfreezeException
 
 
-class Py2Exe(BaseUnpacker):
+class Py2Exe(BaseUnfreezer):
     def __str__(self) -> str:
         return "Py2Exe"
 
@@ -32,7 +32,7 @@ class Py2Exe(BaseUnpacker):
         expr: str = r"python(\d+)\.dll"
         matches = re.search(expr, str(data))
         if matches is None:
-            raise UnpackException("Cannot find Python DLL to parse version.")
+            raise UnfreezeException("Cannot find Python DLL to parse version.")
 
         # strip out name and file extension
         res: t.List[str] = list(matches.group(0).split("python")[1].strip(".dll"))
@@ -42,7 +42,7 @@ class Py2Exe(BaseUnpacker):
         self.pyver = float("".join(res))
         return self.pyver
 
-    def parse_packer_ver(self) -> t.Optional[str]:
+    def parse_version(self) -> t.Optional[str]:
         """ Doesn't seem to be deviations in unpacking based on installer version """
         return None
 
@@ -56,7 +56,7 @@ class Py2Exe(BaseUnpacker):
 
         # shouldn't happen, but error-check
         if not self.binary.has_resources:
-            raise UnpackException("Cannot find resources header in target PE.")
+            raise UnfreezeException("Cannot find resources header in target PE.")
 
         # get PYTHONSCRIPT resource entry
         script_entry = None
@@ -67,7 +67,7 @@ class Py2Exe(BaseUnpacker):
 
         # again, shouldn't happen, but error-check
         if script_entry is None:
-            raise UnpackException(
+            raise UnfreezeException(
                 "Cannot find PYTHONSCRIPT resource entry in target PE."
             )
 
@@ -79,31 +79,33 @@ class Py2Exe(BaseUnpacker):
         offset: int = dump.find(b"\x00")
 
         # get offset where code objects are stored and unmarshal
-        codebytes: bytes = dump[offset + 1:]
+        codebytes: bytes = dump[offset + 1 :]
         try:
             code_objs: t.List[t.Any] = pickle.loads(codebytes)
         except Exception:
-            raise UnpackException("Unable to unmarshal Python code, possible version incompatibility.")
-        
+            raise UnfreezeException(
+                "Unable to unmarshal Python code, possible version incompatibility."
+            )
+
         # for each code object entry, patch with Python version and timestamp,
         # and then write to output workspace
         for co in code_objs:
 
             # TODO: check if module is to be ignored
             filename = os.path.join(unpack_dir, co.co_filename + ".pyc")
-            
+
             # generate header with version magic and timestamp, and write to disk
             header = self._generate_pyc_header()
             with open(filename, "wb") as fd:
                 fd.write(header)
                 fd.write(marshal.dumps(co))
 
-    def unpack(self, unpack_dir: str):
+    def thaw(self, unpack_dir: str):
         """ Most relevant technique for unpacking: simply unzipping the executable """
 
         # shouldn't happen, but error-check
         if not zipfile.is_zipfile(self.path):
-            raise UnpackException("Executable cannot be decompressed")
+            raise UnfreezeException("Executable cannot be decompressed")
 
         # open as a zipfile
         zf = zipfile.ZipFile(self.file, mode="r")
@@ -119,7 +121,7 @@ class Py2Exe(BaseUnpacker):
             subpath = os.path.dirname(writepath)
             if not os.path.exists(subpath):
                 os.makedirs(subpath, exist_ok=True)
-            
+
             with open(writepath, "wb") as fd:
                 fd.write(contents)
 

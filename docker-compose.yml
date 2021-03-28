@@ -12,23 +12,17 @@ services:
       - 5000:5000
     environment:
       - CONFIG
-      - REDIS_URL
-      - SQLALCHEMY_DATABASE_URI
+
+      # default, can be overriden
+      - REDIS_URL=redis://redis:6379
+      - SQLALCHEMY_DATABASE_URI=postgresql://manager:password@db:5432/boa
+
+      # user-supplied envvars for S3; if not set, not uploaded
       - S3_BUCKET
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
     volumes:
       - .:/app
-
-  worker:
-    build: .
-    container_name: worker
-    command: python uwsgi.py taskworker
-    depends_on:
-      - redis
-    volumes:
-      - .:/app
-
 
   db:
     image: postgres:latest

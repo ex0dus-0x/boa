@@ -4,17 +4,18 @@ cxfreeze.py
     Unpacker for cxfreeze-compiled executable.
 """
 
-from . import BaseUnpacker, UnpackException
+from . import BaseUnfreezer, UnfreezeException
 
-class CxFreeze(BaseUnpacker):
+
+class CxFreeze(BaseUnfreezer):
     def __str__(self) -> str:
         return "CxFreeze"
 
     def parse_pyver(self) -> t.Optional[float]:
         pass
 
-    def parse_packer_ver(self) -> t.Optional[str]:
+    def parse_version(self) -> t.Optional[str]:
         pass
 
-    def unpack(self, unpack_dir: str):
+    def thaw(self, unpack_dir: str):
         pass

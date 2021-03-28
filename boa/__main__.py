@@ -9,18 +9,33 @@ import sys
 import typing as t
 
 import boa.argparse as argparse
-import boa.runner as runner
-from boa.core.unpack import get_packer
+from boa.core.unpack import get_unpacker
+from boa.core.unfreeze import get_installer
 from boa.core.decompile import BoaDecompiler
 
 from beautifultable import BeautifulTable
 
+
+def display_table(header: t.List[str], body: t.List[str]):
+    """ Helper for generating and displaying ASCII table """
+    table = BeautifulTable()
+    table.rows.header = header
+    table.columns.append(body)
+    print(table)
+
+
 @argparse.subcommand(
     [
         argparse.argument(
-            "executable", help="Path to Python-compiled executable to reverse engineer."
+            "executable",
+            help="Path to Python-compiled executable to gather information.",
         ),
         argparse.argument("-j", "--json", help="Output detection results in JSON."),
+        argparse.argument(
+            "--vt_api",
+            type=str,
+            help="API key used to check sample against VirusTotal.",
+        ),
     ]
 )
 def detect(args):
@@ -30,28 +45,15 @@ def detect(args):
         print("Cannot find path to executable. Exiting...")
         return 1
 
-    # basic information
-    basic_table = BeautifulTable()
-    basic_table.rows.header = ["Name", "Executable Format", "Timestamp"]
-    basic_table.columns.append([app, "ELF", "120"])
     print("\nBasic Information")
-    print(basic_table)
+    display_table(["Name", "Executable Format", "Timestamp"], [app, "ELF", "120"])
 
-    # hashes
-    hashtable = BeautifulTable()
-    hashtable.rows.header = ["MD5", "SHA256", "Similarity"]
-    hashtable.columns.append(["", "", ""])
-    print("\nHashes")
-    print(hashtable)
+    print("\nHashing")
+    display_table(["MD5", "SHA256", "Similarity"], ["", "", ""])
 
-    # Virustotal
-    print("\nVirusTotal")
-    vtable = BeautifulTable()
+    print("\nVirusTotal Matches")
 
-    # Python version
-    packtable = BeautifulTable()
-    packtable.rows.header = ["Executable Packing", "Python Version", "Installer"]
-    packtable.columns.append(["", "", ""])
+    # Python-specific info
     return 0
 
 
@@ -63,7 +65,7 @@ def detect(args):
         argparse.argument(
             "-o",
             "--out_dir",
-            help="Path to store unpacked resources in (default is `{executable}_out`).",
+            help="Path to store unpacked artifacts in (default is `{executable}_out`).",
         ),
     ]
 )
@@ -80,30 +82,35 @@ def unpack(args):
         print("Creating output workspace for storing unpacked resources...")
         os.mkdir(out_dir)
 
+    """
     # detect executable packing
-
-    # instantiate unpacker
     with get_packer(app) as unpacker:
-        if unpacker is None:
-            print("Unable to detect the installer used to pack the executable.")
+        pass
+    """
+
+    # instantiate unfreezer
+    with get_installer(app) as unfreezer:
+        if unfreezer is None:
+            print("Unable to detect the installer used to freeze the executable.")
             return 1
 
         # fingerprint packer and Python version
-        pyver: t.Optional[float] = unpacker.parse_pyver()
+        pyver: t.Optional[float] = unfreezer.parse_pyver()
         if pyver is None:
-            raise Exception()
+            raise Exception("Unable to determine Python version for this")
 
         print(f"Compiled with Python version: {pyver}")
-        print(f"Detected packer: {unpacker}", end=" ")
+        print(f"Detected installer: {unfreezer}", end=" ")
 
-        packer_ver: t.Optional[float] = unpacker.parse_packer_ver()
-        if not packer_ver is None:
-            print(f"{packer_ver}")
+        # get potential version of installer used
+        version: t.Optional[float] = unfreezer.parse_version()
+        if not version is None:
+            print(f"{version}")
 
         # given the output dir, run the unpacking routine
-        unpacker.unpack(out_dir)
+        unfreezer.thaw(out_dir)
 
-    print(f"Done unpacking in `{out_dir}`")
+    print(f"\nDone unpacking all resources to `{out_dir}`")
     return 0
 
 
@@ -116,14 +123,15 @@ def unpack(args):
         ),
         argparse.argument(
             "--bytecode_dir",
+            type=str,
             help="Path to workspace with bytecode files for decompilation.",
         ),
         argparse.argument(
             "-o",
             "--out_dir",
             type=str,
-            default="out",
-            help="Workspace where multiple decompiled source files are all stored (default is `out`).",
+            default="decompiled",
+            help="Workspace where decompiled source files are all stored (default is `decompiled`).",
         ),
     ]
 )
@@ -158,8 +166,7 @@ def decompile(args):
             if bfile.endswith(".pyc")
         ]
 
-    # instantiate aggregate decompiler
-    decomp = BoaDecomiler(bytecode)
+    # decomp = BoaDecompiler(bytecode)
 
 
 @argparse.subcommand(
@@ -170,7 +177,7 @@ def decompile(args):
         argparse.argument(
             "-o",
             "--out_dir",
-            help="Path to store fully reversed Python application in (default is `{executable}_out`).",
+            help="Path to store fully reversed artifacts in (default is `{executable}_out`).",
         ),
     ]
 )
@@ -187,12 +194,14 @@ def reverse(args):
         print("Creating output workspace for storing unpacked resources...")
         os.mkdir(out_dir)
 
-    # first, unpack the executable
     print("Detecting and unpacking the executable...")
-    run_unpacking_routine(out_dir)
+    # run_unpacking_routine(out_dir)
 
-    # second, decompile source code
     print("Decompiling unpacked bytecode...")
+
+    print("Running static analysis on the source code...")
+
+    print("Done!")
 
 
 def main():

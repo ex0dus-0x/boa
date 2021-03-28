@@ -1,17 +1,30 @@
-# boa
-
-Reverse Engineering Framework for Python-compiled Malware/Apps
+<div align="center">
+    <h1>boa</h1><br>
+    <p>Reverse Engineering Framework for Python-Compiled Malware and Applications</p>
+</div>
 
 > We are doing a full refactor to include both a CLI and better web version!
 
-## Introduction
+## Features
 
-__boa__ is an all-in-one reverse engineering platform for aiding with the unpacking and extrapolation 
-of source from Python-compiled malwares and executables.
+* Implements rich and reliable reverse engineering functionality
+  * Info-Gathering and Initial Threat Detection
+  * Executable Unpacking
+    * Supports traditional packers like UPX, ASProtect, etc.
+    * Unfreezes code and resources from installer packers like PyInstaller, Py2exe, etc.
+  * Bytecode Patching and Decompilation
+  * Static Analysis
+    * Find low-hanging vulnerabilities and leaked secrets and private keys
+    * Detect malicious capabilities
+  * Dynamic Analysis (WIP)
+    * Automate bytecode/source recovery from advanced samples through binary emulation
+* Convenient use through both command line and a [web platform](https://boa.codemuch.tech).
 
 ## Usage
 
-### Command Line
+```
+$ pip install boa-re
+```
 
 For simple and one-off use cases, __boa__ supports a command line tool. Given a Python-compiled
 sample, the follow will attempt to generate a full workspace with source:
@@ -41,26 +54,14 @@ bytecode from the given source:
 $ boa unpack target.exe
 ```
 
+## Depends on:
 
-### Web _(recommended, installs full platform)_
+Here are some projects that __boa__ relies on that warrants some recognition:
 
-Docker Compose is the recommended way to bootstrap the full platform, both the command line
-and 
-
-```
-$ docker-compose up
-```
-
-The hacker can now visit [http://0.0.0.0:5000](http://0.0.0.0:5000) to use the web-based automated
-solution, and invoke any tool component as so:
-
-```
-# start bash and operate in container ...
-$ docker run -it boa bash
-
-# ... or exec command directly in host
-$ docker exec -t boa 
-```
+* YARA - pattern matching for feature detection
+* Qiling - dynamic binary emulation
+* uncompyle6 / decompyle3 - bytecode decompilation
+* Bandit - static analysis
 
 ## Contributions
 
