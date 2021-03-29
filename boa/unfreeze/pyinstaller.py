@@ -1,11 +1,10 @@
 """
 pyinstaller.py
 
-    Implements an unpacker for PyInstaller-compiled executables,
-    based on the previous work done by Extreme Coder's pyintxtractor
+    Implements unfreezing pyinstaller-compiled executables by generically
+    finding archives in binary format, and dumping to disk statically.
 
-    Original Author : Extreme Coders
-    URL : https://sourceforge.net/projects/pyinstallerextractor/
+    Platforms: Windows, macOS and Linux
 """
 import os
 import re

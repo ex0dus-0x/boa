@@ -8,9 +8,11 @@ import os
 import sys
 import typing as t
 
+import lief
+
 import boa.argparse as argparse
-from boa.unpack import get_unpacker
 from boa.unfreeze import get_installer
+from boa.unpack import get_packer
 from boa.decompile import BoaDecompiler
 
 @argparse.subcommand(
@@ -29,9 +31,9 @@ from boa.decompile import BoaDecompiler
 )
 def detect(args):
     """ Given a target executable, gather metadata about a sample without fully reverse engineering it. """
-    app = args.executable
+    app: str = args.executable
     if not os.path.exists(app):
-        print("Cannot find path to executable. Exiting...")
+        print("Cannot find path to executable.")
         return 1
 
     print("\nBasic Information")
@@ -47,7 +49,7 @@ def detect(args):
 @argparse.subcommand(
     [
         argparse.argument(
-            "executable", help="Path to packed executable to unpack and dissect apart."
+            "executable", help="Path to packaged executable to extrapolate resources from."
         ),
         argparse.argument(
             "-o",
@@ -60,7 +62,7 @@ def unpack(args):
     """ Given a packed target executable, do both generic executable unpacking (if detected) and Python-specific unpacking. """
     app: str = args.executable
     if not os.path.exists(app):
-        print("Cannot find path to executable. Exiting...")
+        print("Cannot find path to executable.")
         return 1
 
     # output path or set default
@@ -69,19 +71,21 @@ def unpack(args):
         print("Creating output workspace for storing unpacked resources...")
         os.mkdir(out_dir)
 
-    """
     # detect executable packing
-    with get_packer(app) as unpacker:
-        pass
-    """
-
+    up = get_packer(app)
+    if up is None:
+        print("Didn't detect any executable packing with the target executable.")
+    else:
+        with up as unpacker:
+            pass
+    
     # instantiate unfreezer
-    with get_installer(app) as unfreezer:
-        if unfreezer is None:
-            print("Unable to detect the installer used to freeze the executable.")
-            return 1
+    uf = get_installer(app)
+    if uf is None:
+        print("Unable to detect the installer used to freeze the executable.")
+        return 1
 
-        # fingerprint packer and Python version
+    with uf as unfreezer:
         pyver: t.Optional[float] = unfreezer.parse_pyver()
         if pyver is None:
             raise Exception("Unable to determine Python version for this")
@@ -104,14 +108,16 @@ def unpack(args):
 @argparse.subcommand(
     [
         argparse.argument(
-            "--bytecode_files",
+            "--bytecode",
             nargs="+",
-            help="Path to bytecode file(s) for decompilation.",
+            required=True,
+            help="Path to bytecode file(s) or raw dumped code object(s) for decompilation.",
         ),
         argparse.argument(
-            "--bytecode_dir",
-            type=str,
-            help="Path to workspace with bytecode files for decompilation.",
+            "-p",
+            "--pyver",
+            type=float,
+            help="Specify the major and minor version (x.y) of Python to decompile as. If not set, boa will figure it out.",
         ),
         argparse.argument(
             "-o",
@@ -124,36 +130,18 @@ def unpack(args):
 )
 def decompile(args):
     """ Given bytecode files, patch and decompile them back into original Python source code. """
-
-    bfiles = args.bytecode_files
-    bdir = args.bytecode_dir
-
-    # either specific files or a directory, not both
-    if bfiles and bdir:
-        print("Specify either `--bytecode_files` or `--bytecode_dir` but not both.")
-        return 1
-
-    # bytecode files that are parsed out
-    bytecode: t.List[str] = []
-    if bfiles:
-        bytecode = [
-            bfile
-            for bfile in bfiles
-            if os.path.exists(bfile) and bfile.endswith(".pyc")
-        ]
-
-    elif args.bytecode_dir:
-        if not os.path.exists(bdir):
-            print("Workspace with bytecode files does not exist.")
+    bfiles: t.List[str] = args.bytecode
+    for bfile in bfiles:
+        if not os.path.exists(bfile):
+            print(f"`{bfile}` does not exist")
             return 1
 
-        bytecode = [
-            os.path.join(bdir, bfile)
-            for bfile in os.listdir(bdir)
-            if bfile.endswith(".pyc")
-        ]
+    pyver = args.pyver
+    if not pyver:
+        print("No Python version specifed to decompile against.")
 
-    # decomp = BoaDecompiler(bytecode)
+    decomp = BoaDecompiler(pyver, bfiles)
+
 
 
 @argparse.subcommand(
@@ -172,7 +160,7 @@ def reverse(args):
     """ Subcommand to attempt to fully reverse engineering a target executable """
     app = args.executable
     if not os.path.exists(app):
-        print("Cannot find path to executable. Exiting...")
+        print("Cannot find path to executable.")
         return 1
 
     # output path or set default

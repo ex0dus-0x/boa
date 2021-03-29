@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""
-setup.py
-
-    Installs boa as both a client library and CLI application locally.
-
-"""
-
 import os
 import setuptools
 
@@ -32,7 +25,6 @@ setuptools.setup(
     },
     install_requires=[
         "stdlib_list",
-        "beautifultable",
         "lief",
         "yara-python",
         "uncompyle6",

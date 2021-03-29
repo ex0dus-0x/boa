@@ -1,3 +1,4 @@
+import os
 import abc
 import typing as t
 
@@ -14,15 +15,22 @@ class BaseUnpacker(abc.ABC):
     def __init__(self, path: str):
         self.path: str = path
 
+    def __enter__(self):
+        pass
 
-def get_unpacker(filepath: str) -> t.Optional[BaseUnpacker]:
+
+def get_packer(filepath: str) -> t.Optional[BaseUnpacker]:
     from . import upx
 
-    rules = yara.compile(filepath="rules/unpacker.yara")
+    # get path to rule relative to package
+    pkg_dir: str = os.path.dirname(os.path.abspath(__file__))
+    rulepath: str = os.path.join(pkg_dir, "packer.yara")
+
+    rules = yara.compile(filepath=rulepath)
     matches = rules.match(filepath=filepath)
 
     # if multiple are present, return None
-    if len(matches) > 1:
+    if len(matches) > 1 or len(matches) == 0:
         return None
 
     res: str = matches[0].rule

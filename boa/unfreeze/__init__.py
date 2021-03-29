@@ -75,12 +75,15 @@ class BaseUnfreezer(abc.ABC):
 def get_installer(filepath: str) -> t.Optional[BaseUnfreezer]:
     from . import pyinstaller, py2exe, cxfreeze
 
-    # TODO: match on blob of data
-    rules = yara.compile(filepath="rules/installer.yara")
+    # get path to rule relative to package
+    pkg_dir: str = os.path.dirname(os.path.abspath(__file__))
+    rulepath: str = os.path.join(pkg_dir, "installer.yara")
+
+    rules = yara.compile(filepath=rulepath)
     matches = rules.match(filepath=filepath)
 
     # if multiple are present, return None
-    if len(matches) > 1:
+    if len(matches) > 1 or len(matches) == 0:
         return None
 
     res: str = matches[0].rule

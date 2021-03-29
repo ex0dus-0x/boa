@@ -3,6 +3,7 @@ cxfreeze.py
 
     Unpacker for cxfreeze-compiled executable.
 """
+import typing as t
 
 from . import BaseUnfreezer, UnfreezeException
 
