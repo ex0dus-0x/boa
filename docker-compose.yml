@@ -3,7 +3,7 @@ version: "3"
 services:
 
   web:
-    build: .
+    build: boa-web/
     restart: always
     depends_on:
       - db

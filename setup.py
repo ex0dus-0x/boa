@@ -24,7 +24,7 @@ setuptools.setup(
     license = "MIT",
     url=REPO,
     download_url="{}/archive/v{}".format(REPO, VERSION),
-    packages = setuptools.find_packages(),
+    packages = setuptools.find_packages(exclude=["boa-web"]),
     entry_points = {
         "console_scripts": [
             "boa=boa.__main__:main"
@@ -65,7 +65,6 @@ setuptools.setup(
         ]
     },
     dependency_links=[
-        "http://github.com/fireeye/speakeasy/tarball/master#egg=package-1.0",
         "https://github.com/rocky/python-decompile3/tarball/master#egg=package1.0"
     ],
     classifiers=[

@@ -1,7 +1,4 @@
-import speakeasy
-
-
-class UpxUnpacker(speakeasy.Speakeasy):
+class UpxUnpacker:
     """
     Generic UPX unpacker class
     """

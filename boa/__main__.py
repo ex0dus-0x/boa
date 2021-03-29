@@ -9,20 +9,9 @@ import sys
 import typing as t
 
 import boa.argparse as argparse
-from boa.core.unpack import get_unpacker
-from boa.core.unfreeze import get_installer
-from boa.core.decompile import BoaDecompiler
-
-from beautifultable import BeautifulTable
-
-
-def display_table(header: t.List[str], body: t.List[str]):
-    """ Helper for generating and displaying ASCII table """
-    table = BeautifulTable()
-    table.rows.header = header
-    table.columns.append(body)
-    print(table)
-
+from boa.unpack import get_unpacker
+from boa.unfreeze import get_installer
+from boa.decompile import BoaDecompiler
 
 @argparse.subcommand(
     [
@@ -46,10 +35,8 @@ def detect(args):
         return 1
 
     print("\nBasic Information")
-    display_table(["Name", "Executable Format", "Timestamp"], [app, "ELF", "120"])
 
     print("\nHashing")
-    display_table(["MD5", "SHA256", "Similarity"], ["", "", ""])
 
     print("\nVirusTotal Matches")
 

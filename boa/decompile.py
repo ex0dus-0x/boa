@@ -14,7 +14,7 @@ import typing as t
 
 import stdlib_list
 
-from boa.core import patch
+from boa import patch
 
 
 # other modules that we don't care about
