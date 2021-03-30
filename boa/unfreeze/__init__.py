@@ -40,6 +40,9 @@ class BaseUnfreezer(abc.ABC):
         # stores paths to all unpacked bytecode files
         self.bytecode_paths: t.List[str] = []
 
+        # paths to potential entry points
+        self.entry_points: t.List[str] = []
+
         super().__init__()
 
     def __enter__(self):

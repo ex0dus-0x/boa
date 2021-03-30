@@ -51,7 +51,7 @@ class PyInstaller(BaseUnfreezer):
         return "PyInstaller"
 
     def parse_pyver(self) -> t.Optional[float]:
-        """ Check for instances of Python*.dll in PE, since it is dynamically loaded """
+        """ Check for instances of Python*.dll, since it is dynamically loaded """
 
         # search python*.dll pattern and parse out version
         expr: str = r"python(\d+)\.dll"
@@ -177,9 +177,6 @@ class PyInstaller(BaseUnfreezer):
 
             if entry.cmprs_flag == 1:
                 data = zlib.decompress(data)
-                # Malware may tamper with the uncompressed size
-                # Comment out the assertion in such a case
-                assert len(data) == entry.uncmprs_data_size  # Sanity Check
 
             # write to directory
             with open(entry_name, "wb") as dirpath:

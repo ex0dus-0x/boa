@@ -9,6 +9,7 @@ import sys
 import typing as t
 
 import lief
+import uncompyle6
 
 import boa.argparse as argparse
 from boa.unfreeze import get_installer
@@ -50,6 +51,12 @@ def detect(args):
     [
         argparse.argument(
             "executable", help="Path to packaged executable to extrapolate resources from."
+        ),
+        argparse.argument(
+            "-m",
+            "--minify",
+            action="store_true",
+            help="If set (default), only bytecode de",
         ),
         argparse.argument(
             "-o",
@@ -130,19 +137,26 @@ def unpack(args):
 )
 def decompile(args):
     """ Given bytecode files, patch and decompile them back into original Python source code. """
+    # if set, will tune decompiler to patch with version magic number(s) if encountered
+    # code objects, otherwise will have to iterate over each
+    pyver = args.pyver
+    if not pyver:
+        print("No Python version specifed to decompile against.")
+
+    outdir: str = args.out_dir
+    decomp = BoaDecompiler(outdir, pyver)
+
+    # iterate over each bytecode file and decompile
     bfiles: t.List[str] = args.bytecode
     for bfile in bfiles:
         if not os.path.exists(bfile):
             print(f"`{bfile}` does not exist")
             return 1
 
-    pyver = args.pyver
-    if not pyver:
-        print("No Python version specifed to decompile against.")
+        print(f"Decompiling {bfile}...")
+        decomp.decompile(bfile)
 
-    decomp = BoaDecompiler(pyver, bfiles)
-
-
+    return 0
 
 @argparse.subcommand(
     [
