@@ -36,8 +36,10 @@ MAGIC_NUMBERS: t.Dict[float, t.List[int]] = {
     3.9: [3420, 3421, 3422, 3423, 3424, 3425],
 }
 
+
 class DecompileException(Exception):
     pass
+
 
 class BoaDecompiler:
     def __init__(self, outdir: str, pyver: float = 3.7):
@@ -73,12 +75,13 @@ class BoaDecompiler:
                 uncompyle6.main.decompile_file(pycpath, decompiled)
 
     def _object_patch(self, data: bytes) -> bytes:
-        """ 
+        """
         Serializes a dumped code object into a proper bytecode by prepending appropriate headers.
         """
 
         # start by getting current magic number
         from importlib.util import MAGIC_NUMBER
+
         header = bytearray(MAGIC_NUMBER)
 
         # second word introduced after 3.7 represents bitfield to denote hashing

@@ -51,13 +51,13 @@ class PyInstaller(BaseUnfreezer):
         return "PyInstaller"
 
     def parse_pyver(self) -> t.Optional[float]:
-        """ Check for instances of Python*.dll, since it is dynamically loaded """
+        """ Check for instances of Python*., since it is dynamically loaded """
 
         # search python*.dll pattern and parse out version
-        expr: str = r"python(\d+)\.dll"
+        expr: str = r"python(\d+)"
         matches = re.search(expr, str(self.file.read()))
         if matches is None:
-            raise UnfreezeException("Cannot find Python DLL to parse version.")
+            raise UnfreezeException("Cannot find Python dependency to parse version.")
 
         # strip out name and file extension
         res: t.List[str] = list(matches.group(0).split("python")[1].strip(".dll"))
@@ -76,15 +76,15 @@ class PyInstaller(BaseUnfreezer):
         file_magic = self.file.read(len(PYINSTALLER_MAGIC))
         if file_magic == PYINSTALLER_MAGIC:
             self.file.seek(self.size - PYINST20_COOKIE_SIZE, os.SEEK_SET)
-            self.packer_ver = 2.0
+            self.version = 2.0
 
         self.file.seek(self.size - PYINST21_COOKIE_SIZE, os.SEEK_SET)
         file_magic = self.file.read(len(PYINSTALLER_MAGIC))
         if file_magic == PYINSTALLER_MAGIC:
             self.file.seek(self.size - PYINST21_COOKIE_SIZE, os.SEEK_SET)
-            self.packer_ver = 2.1
+            self.version = 2.1
 
-        return self.packer_ver
+        return self.version
 
     def thaw(self, unpack_dir: str):
         """
@@ -95,11 +95,11 @@ class PyInstaller(BaseUnfreezer):
         When finalized, return a list of all bytecode file paths for decompilation.
         """
 
-        if self.packer_ver == 2.0:
+        if self.version == 2.0:
             (_, pkg_len, toc, toc_len, self.pyver) = struct.unpack(
                 "!8siiii", self.file.read(PYINST20_COOKIE_SIZE)
             )
-        elif self.packer_ver == 2.1:
+        elif self.version == 2.1:
             (
                 _,
                 pkg_len,

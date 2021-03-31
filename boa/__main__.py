@@ -16,6 +16,7 @@ from boa.unfreeze import get_installer
 from boa.unpack import get_packer
 from boa.decompile import BoaDecompiler
 
+
 @argparse.subcommand(
     [
         argparse.argument(
@@ -50,7 +51,8 @@ def detect(args):
 @argparse.subcommand(
     [
         argparse.argument(
-            "executable", help="Path to packaged executable to extrapolate resources from."
+            "executable",
+            help="Path to packaged executable to extrapolate resources from.",
         ),
         argparse.argument(
             "-m",
@@ -85,7 +87,7 @@ def unpack(args):
     else:
         with up as unpacker:
             pass
-    
+
     # instantiate unfreezer
     uf = get_installer(app)
     if uf is None:
@@ -157,6 +159,7 @@ def decompile(args):
         decomp.decompile(bfile)
 
     return 0
+
 
 @argparse.subcommand(
     [

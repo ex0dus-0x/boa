@@ -19,15 +19,20 @@ app.app_context().push()
 @argparse.subcommand(
     [
         argparse.argument(
-            "--host", default="0.0.0.0", help="Set host URL to start webapp on (default is 0.0.0.0)."
+            "--host",
+            default="0.0.0.0",
+            help="Set host URL to start webapp on (default is 0.0.0.0).",
         ),
         argparse.argument(
-            "--port", default=5000, type=int, help="Set host port to start webapp on (default is 5000)."
+            "--port",
+            default=5000,
+            type=int,
+            help="Set host port to start webapp on (default is 5000).",
         ),
     ]
 )
 def webapp(args):
-    """ 
+    """
     Starts a non-Gunicorn development Flask server. This is useful for users that want to run locally without
     a full Docker build, or contributors/me for launching a dev server.
     """
