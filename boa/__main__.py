@@ -6,14 +6,11 @@ __main__.py
 """
 import os
 import sys
+import json
 import typing as t
 
-import lief
-import uncompyle6
-
 import boa.argparse as argparse
-from boa.unfreeze import get_installer
-from boa.unpack import get_packer
+import boa.runner as runner
 from boa.decompile import BoaDecompiler
 
 
@@ -24,102 +21,34 @@ from boa.decompile import BoaDecompiler
             help="Path to Python-compiled executable to gather information.",
         ),
         argparse.argument("-j", "--json", help="Output detection results in JSON."),
-        argparse.argument(
-            "--vt_api",
-            type=str,
-            help="API key used to check sample against VirusTotal.",
-        ),
     ]
 )
 def detect(args):
-    """ Given a target executable, gather metadata about a sample without fully reverse engineering it. """
+    """ Run initial info-gathering and reconassiance on the given executable """
     app: str = args.executable
     if not os.path.exists(app):
         print("Cannot find path to executable.")
         return 1
 
-    print("\nBasic Information")
+    with open(app, "rb") as fd:
+        binary = fd.read()
 
-    print("\nHashing")
-
-    print("\nVirusTotal Matches")
-
-    # Python-specific info
-    return 0
-
-
-@argparse.subcommand(
-    [
-        argparse.argument(
-            "executable",
-            help="Path to packaged executable to extrapolate resources from.",
-        ),
-        argparse.argument(
-            "-m",
-            "--minify",
-            action="store_true",
-            help="If set (default), only bytecode de",
-        ),
-        argparse.argument(
-            "-o",
-            "--out_dir",
-            help="Path to store unpacked artifacts in (default is `{executable}_out`).",
-        ),
-    ]
-)
-def unpack(args):
-    """ Given a packed target executable, do both generic executable unpacking (if detected) and Python-specific unpacking. """
-    app: str = args.executable
-    if not os.path.exists(app):
-        print("Cannot find path to executable.")
-        return 1
-
-    # output path or set default
-    out_dir: str = f"{app}_out" if not args.out_dir else args.out_dir
-    if not os.path.exists(out_dir):
-        print("Creating output workspace for storing unpacked resources...")
-        os.mkdir(out_dir)
-
-    # detect executable packing
-    up = get_packer(app)
-    if up is None:
-        print("Didn't detect any executable packing with the target executable.")
+    # get information and print tabulated or as json
+    data = runner.run_detect(binary)
+    if not args.json:
+        for key, value in data.items():
+            print(f"{key}\t\t\t:\t\t\t{value}")
     else:
-        with up as unpacker:
-            pass
+        print(json.dump(data))
 
-    # instantiate unfreezer
-    uf = get_installer(app)
-    if uf is None:
-        print("Unable to detect the installer used to freeze the executable.")
-        return 1
-
-    with uf as unfreezer:
-        pyver: t.Optional[float] = unfreezer.parse_pyver()
-        if pyver is None:
-            raise Exception("Unable to determine Python version for this")
-
-        print(f"Compiled with Python version: {pyver}")
-        print(f"Detected installer: {unfreezer}", end=" ")
-
-        # get potential version of installer used
-        version: t.Optional[float] = unfreezer.parse_version()
-        if not version is None:
-            print(f"{version}")
-
-        # given the output dir, run the unpacking routine
-        unfreezer.thaw(out_dir)
-
-    print(f"\nDone unpacking all resources to `{out_dir}`")
     return 0
 
 
 @argparse.subcommand(
     [
         argparse.argument(
-            "--bytecode",
+            "BYTECODE",
             nargs="+",
-            required=True,
             help="Path to bytecode file(s) or raw dumped code object(s) for decompilation.",
         ),
         argparse.argument(
@@ -138,9 +67,10 @@ def unpack(args):
     ]
 )
 def decompile(args):
-    """ Given bytecode files, patch and decompile them back into original Python source code. """
-    # if set, will tune decompiler to patch with version magic number(s) if encountered
-    # code objects, otherwise will have to iterate over each
+    """
+    Given bytecode files decompile them back into original Python source code using uncompyle6 or decompyle3.
+    If given dumped code objects, boa will bruteforce out an appropriate bytecode header before decompilation.
+    """
     pyver = args.pyver
     if not pyver:
         print("No Python version specifed to decompile against. Setting as 3.7")
@@ -150,7 +80,7 @@ def decompile(args):
     decomp = BoaDecompiler(outdir, pyver)
 
     # iterate over each bytecode file and decompile
-    bfiles: t.List[str] = args.bytecode
+    bfiles: t.List[str] = args.BYTECODE
     for bfile in bfiles:
         if not os.path.exists(bfile):
             print(f"`{bfile}` does not exist")
@@ -175,20 +105,29 @@ def decompile(args):
     ]
 )
 def reverse(args):
-    """ Subcommand to attempt to fully reverse engineering a target executable """
+    """
+    Given a Python-compiled executable, will attempt to fully reverse engineering and
+    extrapolate source code. If Boa can accurately detect the packing routine, it will statically
+    recover the bytecode. Otherwise, the binary will be instrumented to dump bytecode dynamically.
+    """
+
     app = args.executable
     if not os.path.exists(app):
         print("Cannot find path to executable.")
         return 1
 
     # output path or set default
-    out_dir = f"{app}_out" if not args.out_dir else args.out_dir
+    base: str = os.path.basename(app)
+    out_dir: str = f"{base}_out" if not args.out_dir else args.out_dir
     if not os.path.exists(out_dir):
         print("Creating output workspace for storing unpacked resources...")
         os.mkdir(out_dir)
 
+    # instantiate a cli worker to interface with when performing RE
+    # worker = BoaWorker(cli=True)
+
     print("Detecting and unpacking the executable...")
-    # run_unpacking_routine(out_dir)
+    runner.run_unpack_routine(app, out_dir=out_dir)
 
     print("Decompiling unpacked bytecode...")
 

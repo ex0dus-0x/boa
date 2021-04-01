@@ -10,7 +10,7 @@ import marshal
 import typing as t
 
 import uncompyle6
-import decompyle3 # TODO: integrate
+import decompyle3  # TODO: integrate
 
 # Contains magic number for each Python version, which we'll use for a bytecode header
 MAGIC_NUMBERS: t.Dict[float, t.List[int]] = {
@@ -37,9 +37,11 @@ MAGIC_NUMBERS: t.Dict[float, t.List[int]] = {
     3.9: [3420, 3421, 3422, 3423, 3424, 3425],
 }
 
+
 def _pack_uint32(val):
     """ Integer to 32-bit little-end bytes """
     return struct.pack("<I", val)
+
 
 def _generate_magic(version) -> bytes:
     return struct.pack(b"Hcc", version, b"\r", b"\n")

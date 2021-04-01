@@ -5,8 +5,8 @@ import setuptools
 NAME = "boa"
 VERSION = "2.0"
 
-REPO = "https://github.com/ex0dus-0x/boa"
-DESC = "Python Malware/App Reverse Engineering Framework"
+REPO = "https://github.com/boa-re/boa"
+DESC = "Reverse Engineering Framework for Python-Compiled Malwares/Apps"
 
 # Main setup method
 setuptools.setup(
