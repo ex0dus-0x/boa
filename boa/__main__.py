@@ -143,7 +143,8 @@ def decompile(args):
     # code objects, otherwise will have to iterate over each
     pyver = args.pyver
     if not pyver:
-        print("No Python version specifed to decompile against.")
+        print("No Python version specifed to decompile against. Setting as 3.7")
+        pyver = 3.7
 
     outdir: str = args.out_dir
     decomp = BoaDecompiler(outdir, pyver)

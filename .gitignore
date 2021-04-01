@@ -4,11 +4,10 @@ dist/
 build/
 *.egg-info/
 __pycache__/
+*_out/
 
 # created by boa
-temp
-samples/
-db/
+decompiled/
 artifacts/
 
 .env

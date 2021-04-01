@@ -10,6 +10,7 @@ import marshal
 import typing as t
 
 import uncompyle6
+import decompyle3 # TODO: integrate
 
 # Contains magic number for each Python version, which we'll use for a bytecode header
 MAGIC_NUMBERS: t.Dict[float, t.List[int]] = {
@@ -36,15 +37,35 @@ MAGIC_NUMBERS: t.Dict[float, t.List[int]] = {
     3.9: [3420, 3421, 3422, 3423, 3424, 3425],
 }
 
+def _pack_uint32(val):
+    """ Integer to 32-bit little-end bytes """
+    return struct.pack("<I", val)
+
+def _generate_magic(version) -> bytes:
+    return struct.pack(b"Hcc", version, b"\r", b"\n")
+
 
 class DecompileException(Exception):
     pass
 
 
 class BoaDecompiler:
-    def __init__(self, outdir: str, pyver: float = 3.7):
-        self.pyver = pyver
+    """
+    A wrapper over known Python decompilers with support for bytecode patching,
+    which will bruteforce out a header for the raw code object to makes it viable for decompilation.
+    """
 
+    def __init__(self, outdir: str, pyver: float):
+        self.pyver: float = pyver
+        self.magic: t.List[int] = MAGIC_NUMBERS[self.pyver]
+
+        # set callback to decompiler based on version
+        if self.pyver >= 3.7:
+            self.decompiler = decompyle3.main.decompile_file
+        else:
+            self.decompiler = uncompyle6.main.decompile_file
+
+        # create output workspace
         if not os.path.exists(outdir):
             os.mkdir(outdir)
         self.workspace: str = outdir
@@ -59,53 +80,45 @@ class BoaDecompiler:
         targetpath: str = os.path.join(self.workspace, basename + ".py")
         try:
             with open(targetpath, "w") as decompiled:
-                uncompyle6.main.decompile_file(path, decompiled)
+                self.decompiler(path, decompiled)
         except ValueError:
             with open(path, "rb") as fd:
-                data = marshal.load(fd)
-                bytecode = BoaDecompiler._object_patch(data)
+                code = fd.read()
 
-            # most likely doesn't end in pyc, so write to disk as one
-            pycpath: str = path + ".pyc"
-            with open(pycpath, "wb") as fd:
-                fd.write(bytecode)
+            # given the version, bruteforce out an appropriate header
+            for magic in self.magic:
+                bytecode = self._object_patch(code, magic)
 
-            # now try this again
-            with open(targetpath, "w") as decompiled:
-                uncompyle6.main.decompile_file(pycpath, decompiled)
+                # most likely doesn't end in pyc, so write to disk as one
+                pycpath: str = path + ".pyc"
+                with open(pycpath, "wb") as fd:
+                    fd.write(bytecode)
 
-    def _object_patch(self, data: bytes) -> bytes:
-        """
-        Serializes a dumped code object into a proper bytecode by prepending appropriate headers.
-        """
+                # now try this again, break if successful
+                try:
+                    with open(targetpath, "w") as decompiled:
+                        self.decompiler(pycpath, decompiled)
+                    break
+                except ValueError:
+                    continue
 
-        # start by getting current magic number
-        from importlib.util import MAGIC_NUMBER
+    def _object_patch(self, data: bytes, magic: int) -> bytearray:
+        """ Attempt to generate a patched bytecode with a given magic number permutations """
 
-        header = bytearray(MAGIC_NUMBER)
+        # start with magic num
+        bytecode = bytearray(_generate_magic(magic))
 
         # second word introduced after 3.7 represents bitfield to denote hashing
         if self.pyver >= 3.7:
-            header.extend(_pack_uint32(0))
+            bytecode.extend(_pack_uint32(0))
 
         # third component is timestamp, can be neglible
-        header.extend(_pack_uint32(0))
+        bytecode.extend(_pack_uint32(0))
 
         # source size word is added after 3.2
         if self.pyver >= 3.2:
-            header.extend(_pack_uint32(0))
+            bytecode.extend(_pack_uint32(0))
 
         # append rest of code objects to form full bytecode
-        header.extend(marshal.dumps(data))
-        return header
-
-    # TODO: bruteforce header
-
-    @staticmethod
-    def _pack_uint32(val):
-        """ Integer to 32-bit little-end bytes """
-        return struct.pack("<I", val)
-
-    @staticmethod
-    def _generate_magic(version) -> bytes:
-        return struct.pack(b"Hcc", MAGIC_NUMBERS[version], b"\r", b"\n")
+        bytecode.extend(data)
+        return bytecode
