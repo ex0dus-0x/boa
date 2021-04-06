@@ -13,7 +13,7 @@ import typing as t
 import coloredlogs
 
 import boa.argparse as argparse
-import boa.runner as runner
+from boa.worker import BoaWorker
 from boa.decompile import BoaDecompiler
 
 logger = logging.getLogger(__name__)
@@ -133,14 +133,14 @@ def reverse(args):
         os.mkdir(out_dir)
 
     # instantiate a cli worker to interface with when performing RE
-    # worker = BoaWorker(cli=True)
+    worker = BoaWorker(app, cli=True)
 
     logger.info("Detecting and unpacking the executable...")
-    runner.run_unpack_routine(app, out_dir=out_dir)
+    worker.run_unpack(out_dir)
 
     logger.info("Decompiling unpacked bytecode...")
-
     logger.info("Running static analysis on the source code...")
+
 
 def main():
     argparse.parse_args()

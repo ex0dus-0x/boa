@@ -12,6 +12,7 @@ import typing as t
 
 import yara
 
+
 class UnfreezeException(Exception):
     pass
 
