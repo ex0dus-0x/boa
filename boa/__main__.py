@@ -7,11 +7,17 @@ __main__.py
 import os
 import sys
 import json
+import logging
 import typing as t
+
+import coloredlogs
 
 import boa.argparse as argparse
 import boa.runner as runner
 from boa.decompile import BoaDecompiler
+
+logger = logging.getLogger(__name__)
+coloredlogs.install(level="INFO")
 
 
 @argparse.subcommand(
@@ -27,7 +33,7 @@ def detect(args):
     """ Run initial info-gathering and reconassiance on the given executable """
     app: str = args.executable
     if not os.path.exists(app):
-        print("Cannot find path to executable.")
+        logger.error("Cannot find path to executable.")
         return 1
 
     with open(app, "rb") as fd:
@@ -111,30 +117,30 @@ def reverse(args):
     recover the bytecode. Otherwise, the binary will be instrumented to dump bytecode dynamically.
     """
 
+    logger.info("Starting boa for reverse engineering")
+
     app = args.executable
     if not os.path.exists(app):
-        print("Cannot find path to executable.")
+        logger.error("Cannot find path to executable.")
         return 1
 
     # output path or set default
     base: str = os.path.basename(app)
     out_dir: str = f"{base}_out" if not args.out_dir else args.out_dir
+    logger.debug(f"{out_dir} for generated resources")
     if not os.path.exists(out_dir):
-        print("Creating output workspace for storing unpacked resources...")
+        logger.info("Creating output workspace for storing unpacked resources...")
         os.mkdir(out_dir)
 
     # instantiate a cli worker to interface with when performing RE
     # worker = BoaWorker(cli=True)
 
-    print("Detecting and unpacking the executable...")
+    logger.info("Detecting and unpacking the executable...")
     runner.run_unpack_routine(app, out_dir=out_dir)
 
-    print("Decompiling unpacked bytecode...")
+    logger.info("Decompiling unpacked bytecode...")
 
-    print("Running static analysis on the source code...")
-
-    print("Done!")
-
+    logger.info("Running static analysis on the source code...")
 
 def main():
     argparse.parse_args()

@@ -14,7 +14,7 @@ import struct
 import marshal
 import typing as t
 
-from . import BaseUnfreezer, UnfreezeException
+from . import Unfreeze, UnfreezeException
 
 PYINST20_COOKIE_SIZE = 24
 PYINST21_COOKIE_SIZE = 24 + 64
@@ -41,7 +41,7 @@ class CTOCEntry:
         self.name = name
 
 
-class PyInstaller(BaseUnfreezer):
+class PyInstaller(Unfreeze):
     """
     Implements unpacker for PyInstaller based applications, parsing out the ToC from a given
     PE executable, and recovering all Python archives from entries.
@@ -49,23 +49,6 @@ class PyInstaller(BaseUnfreezer):
 
     def __str__(self):
         return "PyInstaller"
-
-    def parse_pyver(self) -> t.Optional[float]:
-        """ Check for instances of Python*., since it is dynamically loaded """
-
-        # search python*.dll pattern and parse out version
-        expr: str = r"python(\d+)"
-        matches = re.search(expr, str(self.file.read()))
-        if matches is None:
-            raise UnfreezeException("Cannot find Python dependency to parse version.")
-
-        # strip out name and file extension
-        res: t.List[str] = list(matches.group(0).split("python")[1].strip(".dll"))
-        res.insert(1, ".")
-
-        # insert dot for floating point and type convert
-        self.pyver = float("".join(res))
-        return self.pyver
 
     def parse_version(self) -> t.Optional[float]:
         """

@@ -11,14 +11,12 @@ import traceback
 import typing as t
 
 import yara
-import lief
-
 
 class UnfreezeException(Exception):
     pass
 
 
-class BaseUnfreezer(abc.ABC):
+class Unfreeze(abc.ABC):
     """ Abstract base class used for all variants of Python uninstaller implementations. """
 
     def __init__(self, path: str):
@@ -27,12 +25,6 @@ class BaseUnfreezer(abc.ABC):
         # get file pointer and size for later reading and seeking
         self.file: t.Any = open(path, "rb")
         self.size: int = os.stat(path).st_size
-
-        # stores object with arbitrary binary format
-        self.binary: t.Any = lief.parse(path)
-
-        # Python version used to compile the binary
-        self.pyver: t.Optional[float] = None
 
         # Installer-specific version
         self.version: t.Optional[float] = None
@@ -60,11 +52,6 @@ class BaseUnfreezer(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def parse_pyver(self) -> t.Optional[float]:
-        """ Used to parse out and set Python interpreter version """
-        pass
-
-    @abc.abstractmethod
     def parse_version(self) -> t.Optional[float]:
         """ Used to parse out and set installer version """
         pass
@@ -75,8 +62,8 @@ class BaseUnfreezer(abc.ABC):
         pass
 
 
-def get_installer(filepath: str) -> t.Optional[BaseUnfreezer]:
-    from . import pyinstaller, py2exe, cxfreeze
+def get_installer(filepath: str) -> t.Optional[Unfreeze]:
+    from . import pyinstaller, py2exe
 
     # get path to rule relative to package
     pkg_dir: str = os.path.dirname(os.path.abspath(__file__))
@@ -90,7 +77,7 @@ def get_installer(filepath: str) -> t.Optional[BaseUnfreezer]:
         return None
 
     res: str = matches[0].rule
-    installer: t.Optional[BaseUnfreezer] = None
+    installer: t.Optional[Unfreeze] = None
     if res == "pyinstaller":
         installer = pyinstaller.PyInstaller(filepath)
     elif res == "py2exe":

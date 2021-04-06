@@ -71,14 +71,6 @@ def run_detect(data: bytes) -> t.Dict[str, str]:
 def run_unpack_routine(app: str, out_dir=None) -> int:
     """ Implements functionality for detecting any unpackers and extrapolating resources """
 
-    # detect executable packing
-    up = get_packer(app)
-    if up is None:
-        print("Didn't detect any executable packing with the target executable.")
-    else:
-        with up as unpacker:
-            pass
-
     # instantiate unfreezer
     unfreezer = get_installer(app)
     if unfreezer is None:
@@ -86,12 +78,6 @@ def run_unpack_routine(app: str, out_dir=None) -> int:
         return 1
 
     with unfreezer:
-        pyver: t.Optional[float] = unfreezer.parse_pyver()
-        if pyver is None:
-            print("Unable to determine Python version for this.")
-            return 1
-
-        print(f"Compiled with Python version: {pyver}")
         print(f"Detected installer: {unfreezer}", end=" ")
 
         # get potential version of installer used
