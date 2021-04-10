@@ -10,7 +10,6 @@
 * Implements rich and reliable reverse engineering functionality
   * Info-Gathering and Initial Threat Detection
   * Executable Unpacking
-    * Supports traditional packers like UPX, ASProtect, etc.
     * Unfreezes code and resources from installer packers like PyInstaller, Py2exe, etc.
   * Bytecode Patching and Decompilation
   * Static Analysis
@@ -45,13 +44,10 @@ without doing any actual reversing:
 $ boa detect target.exe
 ```
 
-__Unpacking__:
-
-Detects the type of installer that was used to create the executable, and attempts to unpack
-bytecode from the given source:
+__Decompile__:
 
 ```
-$ boa unpack target.exe
+$ boa decompile --bytecode test.pyc
 ```
 
 ## Depends on:

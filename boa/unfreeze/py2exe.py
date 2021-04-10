@@ -31,6 +31,10 @@ class Py2Exe(Unfreeze):
 
         # read each path from zipfile and write to disk
         for path in paths:
+
+            # check if we want to ignore
+            #if path in 
+
             with zf.open(path) as fd:
                 contents = fd.read()
 

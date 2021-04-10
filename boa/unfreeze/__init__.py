@@ -33,9 +33,6 @@ class Unfreeze(abc.ABC):
         # stores paths to all unpacked bytecode files
         self.bytecode_paths: t.List[str] = []
 
-        # paths to potential entry points
-        self.entry_points: t.List[str] = []
-
         super().__init__()
 
     def __enter__(self):
@@ -58,7 +55,7 @@ class Unfreeze(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def thaw(self, unpack_dir: str):
+    def thaw(self, unpack_dir: str) -> t.List[str]:
         """ Implements the actual process of unpacking resources """
         pass
 

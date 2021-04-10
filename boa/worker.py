@@ -45,23 +45,26 @@ def stdout_redirected(to=os.devnull):
 
 
 class BoaWorker:
-    def __init__(self, filepath, cli=False):
+    def __init__(self, filepath: str, out_dir: str, cli=False):
         self.filepath = filepath
+        self.out_dir = out_dir
 
         # if set, will not attempt to pingback any endpoints
         self.cli = cli
 
         # wrap LIEF over to parse executable
-        self.binary = lief.parse(self.filepath)
-        if isinstance(self.binary, lief.PE.Binary):
-            self.format = "PE"
-        elif isinstance(self.binary, lief.ELF.Binary):
-            self.format = "ELF"
-        elif isinstance(self, binary, lief.MachO.Binary):
-            raise WorkerException("Mach-O's are not supported yet.")
+        with stdout_redirected():
+            self.binary = lief.parse(self.filepath)
+            if isinstance(self.binary, lief.PE.Binary):
+                self.format = "PE"
+            elif isinstance(self.binary, lief.ELF.Binary):
+                self.format = "ELF"
+            elif isinstance(self, binary, lief.MachO.Binary):
+                raise WorkerException("Mach-O's are not supported yet.")
 
         # regex search for python dependency
         self.pyver: t.Optional[float] = self._parse_pyver()
+
 
     def _parse_pyver(self) -> t.Optional[float]:
         """ Generically searches for python dependency (DLL/SO) in executable format """
@@ -104,7 +107,7 @@ class BoaWorker:
 
         return hashes
 
-    def run_unpack(self, out_dir: str) -> int:
+    def run_unpack(self) -> int:
         """ Implements functionality for detecting any unpackers and extrapolating resources """
 
         # instantiate unfreezer
@@ -124,11 +127,12 @@ class BoaWorker:
                 logger.info(f"Installer Version: {version}")
 
             logger.info("Unfreezing resources from the given executable")
-            unfreezer.thaw(out_dir)
+            sources = unfreezer.thaw(self.out_dir)
 
-        # TODO: get potential paths to entry points
-        logger.info(f"Done unpacking all resources to `{out_dir}`")
+        logger.info(f"Found {len(sources)} relevant bytecode files for decompilation.")
+
+        logger.info(f"Done unpacking all resources to `{self.out_dir}`")
         return 0
 
     def run_decompile(self) -> int:
-        pass
+        return 0

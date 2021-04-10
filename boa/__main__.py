@@ -77,9 +77,12 @@ def decompile(args):
     Given bytecode files decompile them back into original Python source code using uncompyle6 or decompyle3.
     If given dumped code objects, boa will bruteforce out an appropriate bytecode header before decompilation.
     """
-    pyver = args.pyver
+
+    logger.info("Starting boa for bytecode decompilation.")
+
+    pyver: float = args.pyver
     if not pyver:
-        print("No Python version specifed to decompile against. Setting as 3.7")
+        logger.warn("No Python version specifed to decompile against. Setting as 3.7")
         pyver = 3.7
 
     outdir: str = args.out_dir
@@ -87,12 +90,13 @@ def decompile(args):
 
     # iterate over each bytecode file and decompile
     bfiles: t.List[str] = args.BYTECODE
+    logger.debug(f"Found {len(bfiles)} files for decompilation.")
     for bfile in bfiles:
         if not os.path.exists(bfile):
-            print(f"`{bfile}` does not exist")
+            logger.error(f"`{bfile}` does not exist")
             return 1
 
-        print(f"Decompiling {bfile}...")
+        logger.info(f"Decompiling {bfile}...")
         decomp.decompile(bfile)
 
     return 0
@@ -133,12 +137,14 @@ def reverse(args):
         os.mkdir(out_dir)
 
     # instantiate a cli worker to interface with when performing RE
-    worker = BoaWorker(app, cli=True)
+    worker = BoaWorker(app, out_dir, cli=True)
 
     logger.info("Detecting and unpacking the executable...")
-    worker.run_unpack(out_dir)
+    worker.run_unpack()
 
     logger.info("Decompiling unpacked bytecode...")
+    worker.run_decompile()
+
     logger.info("Running static analysis on the source code...")
 
 
